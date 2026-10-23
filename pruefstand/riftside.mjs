@@ -70,6 +70,7 @@ try {
   const falsch = z.figuren.filter((f) => f.textur !== `figur-${f.aussehen}`);
   pruefe(!falsch.length, `alle tragen ihr eigenes Aussehen (${z.figuren.map((f) => `${f.name}: ${f.textur}`).join(', ')})`);
   pruefe(z.gegner.length === 0, 'keine Gegner in der Stadt');
+  pruefe(z.kanten > 300, `${z.kanten} Ufer- und Wegkanten gezeichnet`);
   pruefe(z.risse.length === 1 && z.risse[0].sichtbar, 'der Riss in der Fischergasse flimmert');
   await p.screenshot({ path: join(bilder, 'riftside-hafen.png') });
 

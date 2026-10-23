@@ -117,6 +117,23 @@ export class Bild {
       }
   }
 
+  // Um 90° im Uhrzeigersinn, n-mal — für Kanten, die es in vier Richtungen gibt.
+  gedreht(n = 1) {
+    let b = this;
+    for (let k = 0; k < ((n % 4) + 4) % 4; k++) {
+      const neu = new Bild(b.h, b.b);
+      for (let y = 0; y < b.h; y++) for (let x = 0; x < b.b; x++) neu.setze(b.h - 1 - y, x, b.hole(x, y));
+      b = neu;
+    }
+    return b;
+  }
+
+  gespiegelt() {
+    const neu = new Bild(this.b, this.h);
+    neu.einfuegen(this, 0, 0, true);
+    return neu;
+  }
+
   speichern(pfad) {
     mkdirSync(dirname(pfad), { recursive: true });
     writeFileSync(pfad, png(this.b, this.h, this.d));

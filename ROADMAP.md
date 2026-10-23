@@ -36,6 +36,11 @@
   Hafenmeisterin Mara. Der Riss zum Tempel liegt jetzt in der Fischergasse.
 - Schonfrist ab „bereit" statt ab Beitreten; Antippen einer Richtung dreht.
 
+- Grafik-Durchgang 1: automatische Kanten (Schaum am Ufer, Grasbüschel an
+  Wegen und Pflaster) aus der Karte berechnet (`client/kanten.js`); Gras mit
+  Farbflecken, Wasser mit Lichtstreifen, Wege mit Kieseln.
+  Werkzeug `pruefstand/ansicht.mjs` für Vorher-/Nachher-Bilder.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -117,3 +122,5 @@
   zählten nur Figuren. Jetzt prüft riftside.mjs die Textur jeder Figur.
 - Phaser zentriert eine Karte nicht, die kleiner ist als der Bildschirm —
   Innenräume klebten links. Kamera-Grenzen selbst mittig setzen.
+- Eine Phaser-RenderTexture über der Karte legte einen dunklen Schleier über
+  alles (und verdeckte die Figur). Für viele kleine Bildchen: Blitter.

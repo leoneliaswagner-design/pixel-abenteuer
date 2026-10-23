@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Welt, bewege, erfuellt } from '../../gemeinsam/welt.js';
 import { Figur, FARBEN, ZEILE, animationenAnlegen } from '../figur.js';
 import { SCHRIFT } from '../schrift.js';
+import { kantenBerechnen } from '../kanten.js';
 
 const SENDE_ABSTAND = 50;
 
@@ -25,6 +26,7 @@ export class SpielSzene extends Phaser.Scene {
     this.load.image('kacheln', 'grafik/kacheln.png');
     for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
     this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('kanten', 'grafik/kanten.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
@@ -128,6 +130,7 @@ export class SpielSzene extends Phaser.Scene {
       szene: this,
       zustand: () => ({
         gebiet: this.gebiet,
+        kanten: this.kantenZahl,
         ich: { id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, tot: this.ich.tot, richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe })),
         gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
@@ -154,6 +157,16 @@ export class SpielSzene extends Phaser.Scene {
     const satz = karte.addTilesetImage('kacheln', 'kacheln');
     this.bodenEbene = karte.createLayer('boden', satz).setDepth(0);
     this.hindernisEbene = karte.createLayer('hindernisse', satz).setDepth(1);
+
+    // Ufer und Wegränder über dem Boden. Ein Blitter ist für viele gleiche
+    // Bildchen gemacht; eine RenderTexture hier legte einen dunklen Schleier
+    // über die ganze Karte.
+    const kanten = kantenBerechnen(this.welt);
+    const k0 = this.welt.kachel;
+    this.kantenBild = this.add.blitter(0, 0, 'kanten').setDepth(0.5);
+    for (const kk of kanten) this.kantenBild.create(kk.x * k0, kk.y * k0, kk.bild);
+    // Gezählt wird, was wirklich gezeichnet ist — nicht, was berechnet wurde.
+    this.kantenZahl = this.kantenBild.children.length;
 
     // Bäume sind höher als eine Kachel und müssen sich mit den Figuren nach
     // y sortieren — wer hinter einem Baum steht, verschwindet unter der Krone.

@@ -25,6 +25,12 @@ const P = {
 function grasGrund(b, saat, buescheln = 8) {
   const z = zufall(saat);
   b.rechteck(0, 0, K, K, P.gras);
+  // Weiche Flecken in zwei Tönen, damit eine Wiese nicht wie Tapete wirkt.
+  // Nur innen (Abstand zum Rand), sonst sähe man an Kachelkanten Schnitte.
+  for (let i = 0; i < 3; i++) {
+    const x = 6 + z() * 20, y = 6 + z() * 20, r = 3 + z() * 3;
+    b.ellipse(x, y, r, r * 0.7, i % 2 ? '#72b858' : '#61a849');
+  }
   for (let i = 0; i < buescheln; i++) {
     const x = Math.floor(z() * (K - 4)) + 1, y = Math.floor(z() * (K - 4)) + 2;
     b.setze(x, y + 1, P.grasDunkel);
@@ -43,6 +49,13 @@ function blume(b, x, y, bluete) {
 
 function wasser(b, versatz) {
   b.rechteck(0, 0, K, K, P.wasser);
+  // Schräge Lichtstreifen und ein Glitzerpunkt; sie wandern mit dem
+  // zweiten Bild (versatz), so bewegt sich das Wasser.
+  for (let i = 0; i < 3; i++) {
+    const x0 = (i * 11 + versatz * 2) % K;
+    for (let d = 0; d < 6; d++) b.setze((x0 + d) % K, 6 + i * 9 + Math.floor(d / 2), '#4a92da');
+  }
+  b.setze((19 + versatz * 3) % K, 21, '#d8f0ff');
   const z = zufall(7);
   for (let i = 0; i < 7; i++) {
     const x = (Math.floor(z() * K) + versatz) % K, y = Math.floor(z() * (K - 2)) + 1;
@@ -103,6 +116,12 @@ function weg(b) {
   b.rechteck(0, 0, K, K, P.weg);
   for (let i = 0; i < 14; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), P.wegDunkel);
   for (let i = 0; i < 8; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), P.wegHell);
+  // Ein paar Kiesel mit Licht oben.
+  for (let i = 0; i < 4; i++) {
+    const x = 3 + Math.floor(z() * 26), y = 3 + Math.floor(z() * 26);
+    b.rechteck(x, y, 2, 2, '#a88e5e');
+    b.setze(x, y, P.wegHell);
+  }
 }
 
 function bruecke(b) {
@@ -476,6 +495,45 @@ KACHELN.forEach((k, i) => {
   satz.einfuegen(b, (i % SPALTEN) * K, Math.floor(i / SPALTEN) * K);
 });
 satz.speichern(ziel + 'kacheln.png');
+
+// ---------- Automatische Kanten (s. client/kanten.js) ----------
+// Je ein Bild für „oben" und „Ecke oben-links", die anderen gedreht.
+{
+  const schaumOben = new Bild(K, K);
+  for (let x = 0; x < K; x++) {
+    const welle = Math.round(1.5 + Math.sin(x * 0.55) * 1.2);
+    for (let y = 0; y < 3 + welle; y++) schaumOben.setze(x, y, '#5aa0e0');
+    if ((x + 3) % 9 > 1) schaumOben.setze(x, 3 + welle, '#e0f4ff');
+    if (x % 7 === 2) schaumOben.setze(x, 6 + welle, '#a8d4f4');
+  }
+  const schaumEcke = new Bild(K, K);
+  schaumEcke.ellipse(0, 0, 6, 6, '#5aa0e0');
+  for (let w = 0; w <= 90; w += 9) {
+    const r = (w * Math.PI) / 180;
+    schaumEcke.setze(Math.round(Math.cos(r) * 6.5), Math.round(Math.sin(r) * 6.5), '#e0f4ff');
+  }
+
+  const grasOben = new Bild(K, K);
+  grasOben.rechteck(0, 0, K, 2, P.gras);
+  for (let x = 0; x < K; x += 2) {
+    const l = [2, 4, 1, 3, 5, 2, 3, 1][(x / 2) % 8];
+    for (let y = 2; y < 2 + l; y++) grasOben.setze(x, y, P.gras);
+    grasOben.setze(x, 2 + l, P.grasDunkel);
+    if (l > 2) grasOben.setze(x + 1, 2 + l - 2, P.grasDunkel);
+  }
+  const grasEcke = new Bild(K, K);
+  grasEcke.ellipse(0, 0, 4, 4, P.gras);
+  for (const [x, y] of [[4, 1], [3, 3], [1, 4], [5, 3]]) grasEcke.setze(x, y, P.grasDunkel);
+
+  const blatt = new Bild(8 * K, 2 * K);
+  const reihe = (oben, ecke, zeile) => {
+    [oben, oben.gedreht(2), oben.gedreht(3), oben.gedreht(1), ecke, ecke.gedreht(1), ecke.gedreht(3), ecke.gedreht(2)]
+      .forEach((b, i) => blatt.einfuegen(b, i * K, zeile * K));
+  };
+  reihe(schaumOben, schaumEcke, 0);
+  reihe(grasOben, grasEcke, 1);
+  blatt.speichern(ziel + 'kanten.png');
+}
 
 // ---------- Baum (64×80, steht mit dem Stamm auf seiner Kachel) ----------
 {

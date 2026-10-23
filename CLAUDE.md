@@ -77,6 +77,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - Jede neue Regel bekommt eine Zeile in `pruefstand/gegenprobe.sh`: absichtlich
   kaputt machen, Prüfung muss anschlagen.
 - Ein Prüfstand sagt, wie viel er angesehen hat (Zähler am Ende).
+- Wie eine Stelle im Spiel aussieht: `node pruefstand/ansicht.mjs <gebiet> <x> <y> bild.png`
+  (Kacheln; mehrere Viererpaare hintereinander möglich).
 - Grafiken ansehen: `node pruefstand/grafik-vorschau.mjs inhalte/grafik/ bild.png`
   legt alle PNGs vierfach vergrößert auf ein Bild.
 

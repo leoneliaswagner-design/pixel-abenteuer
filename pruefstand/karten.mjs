@@ -35,6 +35,15 @@ const tueren = r.layers[2].objects.filter((o) => o.name === 'uebergang' && o.pro
 const hausZiele = new Set(tueren.map((o) => o.properties.find((p) => p.name === 'ziel').value));
 pruefe(tueren.length === 3 && hausZiele.size === 3, `${tueren.length} Haustüren, ${hausZiele.size} verschiedene Häuser (${[...hausZiele].join(', ')})`);
 
+// Automatische Kanten (client/kanten.js) auf den echten Karten.
+const { kantenBerechnen } = await import('../client/kanten.js');
+const { Welt } = await import('../gemeinsam/welt.js');
+const kantenBei = (karte, x, y) => kantenBerechnen(new Welt(karte)).filter((k) => k.x === x && k.y === y).map((k) => k.bild);
+pruefe(kantenBei(r, 5, 24).includes(0), `Wasser am Strand bekommt oben Schaum (${kantenBei(r, 5, 24)})`);
+pruefe(kantenBei(r, 21, 1).includes(10), `Pflaster neben Gras bekommt links Grasbüschel (${kantenBei(r, 21, 1)})`);
+pruefe(!kantenBei(r, 7, 25).includes(3), `kein Schaum zur Brücke hin (${kantenBei(r, 7, 25)})`);
+pruefe(!kantenBei(r, 5, 27).length, 'mitten im Wasser keine Kante');
+
 // Jeder Übergang führt zu einer Ankunft, die es gibt.
 let uebergaenge = 0;
 for (const [name, k] of Object.entries(karten))
