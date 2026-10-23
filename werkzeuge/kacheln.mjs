@@ -27,6 +27,19 @@ export const KACHELN = [
   { name: 'treppe_hoch', zeichen: 'A' },
   { name: 'tempelboden', zeichen: ';' },
   { name: 'tempelwand', zeichen: 'W', fest: true, hindernis: true },
+  // Riftside. Kiste, Fass, Laterne und Brunnen haben einen durchsichtigen
+  // Hintergrund — sie stehen auf Pflaster wie auf Gras.
+  { name: 'pflaster', zeichen: 'p' },
+  { name: 'sand', zeichen: 's' },
+  { name: 'dach', zeichen: 'r', fest: true, hindernis: true },
+  { name: 'dachkante', zeichen: 'q', fest: true, hindernis: true },
+  { name: 'hauswand', zeichen: 'h', fest: true, hindernis: true },
+  { name: 'fenster', zeichen: 'f', fest: true, hindernis: true },
+  { name: 'haustuer', zeichen: 'n', fest: true, hindernis: true },
+  { name: 'brunnen', zeichen: 'B', fest: true, hindernis: true },
+  { name: 'kiste', zeichen: 'k', fest: true, hindernis: true },
+  { name: 'fass', zeichen: 'v', fest: true, hindernis: true },
+  { name: 'laterne', zeichen: 'l', fest: true, hindernis: true },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

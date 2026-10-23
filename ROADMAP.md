@@ -30,11 +30,17 @@
 - Erster Dimensionsriss: Höhle (hinter der Tür) → Dschungeltempel; der
   Rissstein schließt ihn, der alte Mann sagt danach etwas anderes.
 
+- **Riftside** als Startgebiet: Hafen mit Stegen, Marktplatz mit Brunnen,
+  Rathaus, Fachwerkhäuser, Stadttor nach Norden in den Inselwald (die alte
+  Wiese). Bewohner (Platzhalter): Torwache Bruno, Pip, Bürgermeister Aldric,
+  Hafenmeisterin Mara. Der Riss zum Tempel liegt jetzt in der Fischergasse.
+- Schonfrist ab „bereit" statt ab Beitreten; Antippen einer Richtung dreht.
+
 ## Grundgerüst — als Nächstes
 
-1. **Riftside**: die Hafenstadt auf der Startinsel als echtes Startgebiet
-   (Häuser, Hafen, Gassen mit Rissen) statt der Testwiese.
-   Braucht Kacheln für Stadt (Pflaster, Hauswände, Dächer, Türen ins Haus).
+1. **Häuser betreten**: Haustüren als Übergänge in Innenräume (Rathaus,
+   Hafenmeisterei, Wohnhäuser). Braucht Innenraum-Kacheln (Dielen, Wände,
+   Möbel).
 2. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
    und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
 3. **Töne.**
@@ -99,3 +105,11 @@
 - Ein Schleim stieß eine Spielerin rückwärts in den Riss, durch den sie
   gerade gekommen war. Ankünfte liegen jetzt zwei Kacheln vor einem
   Übergang, und im Rückstoß gibt es keinen Gebietswechsel.
+- Unter Hindernissen und Dingen lag immer der Grund der Karte — in Riftside
+  standen Kisten auf Pflasterflecken im Gras. Jetzt der Boden des Nachbarn.
+- Eine Schonfrist ab dem Beitreten war vorbei, bevor der Browser Karte und
+  Bilder geladen hatte; Spieler wurden getroffen, ohne steuern zu können.
+- Kurzes Antippen einer Pfeiltaste ging verloren (wie beim Schwert): Taste
+  im selben Bild losgelassen, `isDown` sieht sie nie. Auf `keydown` hören.
+- Spielstände von vor dem 24.10.2026 nennen das Gebiet „start" — das heißt
+  jetzt „wald"; solche Spieler beginnen neu in Riftside.

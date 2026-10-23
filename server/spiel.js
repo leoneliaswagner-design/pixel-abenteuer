@@ -55,7 +55,10 @@ export class Spiel {
       leben: Math.max(1, alt?.leben ?? this.w.spieler.leben), tot: false, wiederBei: 0,
       ankunft: alt?.ankunft && this.gebiete.has(alt.ankunft.gebiet) ? alt.ankunft : ort,
       inventar: { ...(alt?.inventar ?? {}) }, zuletztAngesprochen: 0,
-      unverwundbarBis: jetzt + 1500, naechsterHieb: 0,
+      // Unverwundbar, bis der Browser „bereit" meldet (höchstens 15 s), dann
+      // noch 1,5 s. Die Schonfrist lief früher ab dem Beitreten — und war
+      // vorbei, während der Browser noch Karte und Bilder lud.
+      unverwundbarBis: jetzt + 15000, naechsterHieb: 0,
       korrektur: 0, budget: 0, zuletzt: jetzt,
     };
     this.spieler.set(s.id, s);
@@ -133,6 +136,7 @@ export class Spiel {
     if (m.t === 'pos') this.position(s, m);
     else if (m.t === 'hieb') this.hieb(s, m);
     else if (m.t === 'ansprechen') this.ansprechen(s, m);
+    else if (m.t === 'bereit') s.unverwundbarBis = Math.min(s.unverwundbarBis, this.jetzt() + this.w.spieler.schonfrist);
   }
 
   position(s, m) {
@@ -181,7 +185,8 @@ export class Spiel {
     if (RICHTUNGEN[ort.eig.richtung]) s.richtung = ort.eig.richtung;
     s.korrektur++;
     s.ankunft = { gebiet: zielName, x: s.x, y: s.y };
-    s.unverwundbarBis = Math.max(s.unverwundbarBis, this.jetzt() + 800);
+    // Bis die neue Karte steht, kann niemand ausweichen — s. beitreten.
+    s.unverwundbarBis = Math.max(s.unverwundbarBis, this.jetzt() + 15000);
     s.senden({ t: 'gebiet', ...this.ortsangabe(s) });
     alt.anAlle({ t: 'nachricht', text: `${s.name} geht nach ${ziel.titel}.` });
     ziel.anAlle({ t: 'nachricht', text: `${s.name} kommt dazu.` }, s.id);

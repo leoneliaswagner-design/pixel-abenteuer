@@ -203,6 +203,145 @@ function tempelwand(b) {
   }
 }
 
+// ---------- Riftside ----------
+
+function pflaster(b) {
+  // Kopfsteine in versetzten Reihen; jeder Stein oben heller, unten dunkler.
+  b.rechteck(0, 0, K, K, '#857766');
+  const z = zufall(111);
+  for (let reihe = 0; reihe < 4; reihe++) {
+    const y = reihe * 8, v = reihe % 2 ? 4 : 0;
+    for (let x = -v; x < K; x += 8) {
+      const ton = ['#a89a86', '#b2a48e', '#9e907c'][Math.floor(z() * 3)];
+      b.rechteck(x + 1, y + 1, 6, 6, ton);
+      b.rechteck(x + 1, y + 1, 6, 1, '#c4b6a0');
+      b.rechteck(x + 1, y + 6, 6, 1, '#8e806e');
+    }
+  }
+}
+
+function sand(b) {
+  const z = zufall(121);
+  b.rechteck(0, 0, K, K, '#e6d3a0');
+  for (let i = 0; i < 18; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.5 ? '#d4bf88' : '#f2e4bc');
+  for (let i = 0; i < 2; i++) {
+    const x = 4 + Math.floor(z() * 22), y = 4 + Math.floor(z() * 22);
+    b.rechteck(x, y, 3, 1, '#c8b07a');
+  }
+}
+
+const DACH = { grund: '#a8483a', dunkel: '#7a3028', hell: '#c8604a' };
+function dach(b) {
+  // Ziegel in Reihen, jede Reihe mit Schatten unten — so liest man Schräge.
+  b.rechteck(0, 0, K, K, DACH.grund);
+  for (let reihe = 0; reihe < 4; reihe++) {
+    const y = reihe * 8, v = reihe % 2 ? 4 : 0;
+    b.rechteck(0, y + 6, K, 2, DACH.dunkel);
+    for (let x = -v; x < K; x += 8) {
+      b.rechteck(x, y, 1, 6, DACH.dunkel);
+      b.rechteck(x + 2, y + 1, 4, 1, DACH.hell);
+    }
+  }
+}
+
+function dachkante(b) {
+  dach(b);
+  b.rechteck(0, 20, K, 4, '#5a2a22');
+  b.rechteck(0, 24, K, 8, '#e8dcc0');
+  b.rechteck(0, 24, K, 2, '#b8aa90');
+}
+
+function hauswand(b, mitte) {
+  // Fachwerk: helle Wand, dunkle Balken, unten ein Sockel aus Stein.
+  b.rechteck(0, 0, K, K, '#e8dcc0');
+  b.rechteck(0, 0, K, 3, '#7a4f2a');
+  b.rechteck(0, 0, 3, 26, '#7a4f2a');
+  b.rechteck(29, 0, 3, 26, '#7a4f2a');
+  b.rechteck(0, 26, K, 6, '#9a8a7a');
+  b.rechteck(0, 26, K, 1, '#b8a895');
+  for (let x = 4; x < K; x += 8) b.rechteck(x, 29, 1, 3, '#7d6e60');
+  if (!mitte) {
+    b.linie(3, 25, 13, 3, '#7a4f2a');
+    b.linie(4, 25, 14, 3, '#7a4f2a');
+  }
+}
+
+function fenster(b) {
+  hauswand(b, true);
+  b.rechteck(7, 7, 18, 14, '#4e3420');
+  b.rechteck(9, 9, 14, 10, '#5a8ac0');
+  b.rechteck(9, 9, 6, 3, '#9ac0e8');
+  b.rechteck(15, 9, 2, 10, '#4e3420');
+  b.rechteck(9, 13, 14, 2, '#4e3420');
+  b.rechteck(6, 21, 20, 2, '#7a4f2a');
+  for (const x of [8, 13, 20]) b.rechteck(x, 19, 3, 2, x === 13 ? '#e05a7a' : '#f4d24a');
+}
+
+function haustuer(b) {
+  hauswand(b, true);
+  b.ellipse(16, 10, 9, 6, '#4e3420', (x, y) => y <= 10);
+  b.rechteck(7, 10, 18, 22, '#4e3420');
+  b.ellipse(16, 11, 7, 5, P.holz, (x, y) => y <= 11);
+  b.rechteck(9, 11, 14, 21, P.holz);
+  b.rechteck(15, 8, 2, 24, P.holzDunkel);
+  b.rechteck(19, 20, 2, 2, P.gold);
+}
+
+function brunnen(b) {
+  b.ellipse(16, 25, 15, 5, [0, 0, 0, 60]);
+  const s = new Bild(K, K);
+  s.ellipse(16, 20, 14, 9, '#9a9aa8');
+  s.ellipse(16, 19, 11, 6, '#4a8ad0');
+  s.ellipse(13, 17, 4, 2, '#8ac0f0');
+  s.rechteck(14, 6, 4, 13, '#b4b4c0');
+  s.rechteck(12, 4, 8, 3, '#9a9aa8');
+  s.rechteck(15, 1, 2, 4, '#8ac0f0');
+  s.setze(12, 9, '#8ac0f0');
+  s.setze(19, 9, '#8ac0f0');
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+}
+
+function kiste(b) {
+  b.ellipse(16, 28, 12, 3, [0, 0, 0, 70]);
+  const s = new Bild(K, K);
+  s.rechteck(5, 8, 22, 20, P.holz);
+  s.rechteck(5, 8, 22, 2, P.holzHell);
+  s.rechteck(5, 8, 2, 20, P.holzDunkel);
+  s.rechteck(25, 8, 2, 20, P.holzDunkel);
+  s.rechteck(5, 26, 22, 2, P.holzDunkel);
+  s.linie(7, 10, 24, 25, P.holzDunkel);
+  s.linie(7, 25, 24, 10, P.holzDunkel);
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+}
+
+function fass(b) {
+  b.ellipse(16, 28, 10, 3, [0, 0, 0, 70]);
+  const s = new Bild(K, K);
+  s.ellipse(16, 18, 10, 11, P.holz);
+  s.rechteck(6, 9, 21, 19, P.holz);
+  s.ellipse(16, 8, 10, 3, P.holzHell);
+  s.ellipse(16, 8, 7, 1.5, P.holzDunkel);
+  for (const y of [12, 23]) s.rechteck(6, y, 21, 2, '#5e5146');
+  s.rechteck(9, 10, 2, 17, P.holzHell);
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+}
+
+function laterne(b) {
+  b.ellipse(16, 29, 6, 2, [0, 0, 0, 70]);
+  const s = new Bild(K, K);
+  s.rechteck(15, 10, 3, 19, '#3a3440');
+  s.rechteck(12, 27, 9, 2, '#3a3440');
+  s.rechteck(11, 2, 11, 9, '#3a3440');
+  s.rechteck(13, 4, 7, 5, '#f4d24a');
+  s.rechteck(14, 4, 2, 2, '#fff2b0');
+  s.rechteck(10, 1, 13, 2, '#3a3440');
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+}
+
 const maler = {
   gras: (b) => grasGrund(b, 1),
   gras2: (b) => grasGrund(b, 2, 14),
@@ -223,6 +362,17 @@ const maler = {
   treppe_hoch: (b) => treppe(b, false),
   tempelboden,
   tempelwand,
+  pflaster,
+  sand,
+  dach,
+  dachkante,
+  hauswand: (b) => hauswand(b, false),
+  fenster,
+  haustuer,
+  brunnen,
+  kiste,
+  fass,
+  laterne,
 };
 
 const zeilen = Math.ceil(KACHELN.length / SPALTEN);
@@ -415,8 +565,52 @@ function kopfAlterMann(richtung) {
   return k;
 }
 
+// Ein Kopf für die Leute in Riftside: Haare (kurz oder lang), Schnurrbart,
+// oder ein Helm. Bewusst ohne Kapuze — die tragen nur die Spieler.
+function kopfMensch(richtung, { haar, lang = false, schnurr = false, helm = null }) {
+  const k = new Bild(32, 32);
+  const dunkel = helm ? '#5a5a6a' : haar;
+  if (richtung === 'oben') {
+    if (lang) k.rechteck(9, 12, 14, 8, haar);
+    k.ellipse(16, 11.5, 8.5, 7.5, helm ?? haar);
+    if (helm) k.rechteck(7, 11, 18, 2, dunkel);
+  } else if (richtung === 'links') {
+    if (lang) k.rechteck(17, 10, 7, 10, haar);
+    k.ellipse(15, 11.5, 8, 7.5, P.haut);
+    k.ellipse(16, 9.5, 8.5, 7, helm ?? haar, (x, y) => y <= (helm ? 9 : 6) || (!helm && x >= 18 && y <= 14));
+    if (helm) k.rechteck(7, 9, 18, 2, dunkel);
+    k.rechteck(10, 12, 2, 2, P.auge);
+    k.setze(6, 14, P.haut);
+    if (schnurr) k.rechteck(7, 15, 4, 1, haar);
+  } else {
+    if (lang) {
+      k.rechteck(7, 10, 3, 10, haar);
+      k.rechteck(22, 10, 3, 10, haar);
+    }
+    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
+    k.ellipse(16, 9, 9.5, 6, helm ?? haar, (x, y) => y <= (helm ? 9 : 7) || (!helm && (x <= 8 || x >= 24) && y <= 12));
+    if (helm) {
+      k.rechteck(7, 9, 18, 2, dunkel);
+      k.rechteck(15, 9, 2, 5, dunkel);
+    }
+    k.rechteck(12, 12, 2, 2, P.auge);
+    k.rechteck(18, 12, 2, 2, P.auge);
+    if (schnurr) k.rechteck(12, 15, 8, 2, haar);
+    else {
+      k.setze(11, 15, '#f0a08a');
+      k.setze(20, 15, '#f0a08a');
+    }
+  }
+  k.umriss(UMRISS);
+  return k;
+}
+
 const LEUTE = {
   alter_mann: { tunika: ['#6a6a9a', '#8c8cc0', '#4a4a72'], kopf: kopfAlterMann },
+  buergermeister: { tunika: ['#8a2a3a', '#b04a5a', '#5a1a26'], kopf: (r) => kopfMensch(r, { haar: '#5a3a22', schnurr: true }) },
+  hafenmeisterin: { tunika: ['#2a4a7a', '#4a6a9a', '#1a2a4a'], kopf: (r) => kopfMensch(r, { haar: '#a0402a', lang: true }) },
+  wache: { tunika: ['#6a6a7a', '#8a8a9a', '#4a4a5a'], kopf: (r) => kopfMensch(r, { haar: '#3a2a1a', helm: '#a8a8b8' }) },
+  kind: { tunika: ['#d0a030', '#e8c050', '#9a7020'], kopf: (r) => kopfMensch(r, { haar: '#e8c15a' }) },
 };
 for (const [name, l] of Object.entries(LEUTE)) {
   const blatt = new Bild(128, 128);

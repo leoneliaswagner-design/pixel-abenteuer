@@ -32,6 +32,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   in welchem Gebiet. Bedingungen prüft `erfuellt()` in gemeinsam/welt.js —
   Server (lässt durch) und Browser (zeigt den Riss) fragen dieselbe Funktion.
 - Wer zurückgestoßen wird, geht durch keinen Übergang (`s.stossBis`).
+- **Schonfrist**: unverwundbar ab Beitreten/Gebietswechsel, bis der Browser
+  `bereit` meldet (max. 15 s), dann noch `spieler.schonfrist` (1,5 s).
+- **Startgebiet** ist Riftside (keine Gegner). Prüfstände, die Schleime und
+  Büsche brauchen, starten den Server mit `STARTGEBIET=wald`.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -62,6 +66,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   ein dritter Spieler nimmt den Rissstein, der zweite sieht den Riss vergehen.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas
   prüft, tut es in der Schonfrist nach dem Beitreten (1,5 s).
+- `node pruefstand/riftside.mjs` — Start in der Stadt, Ansprechen, Stadttor.
+- `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner
+  (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge.
+- Nach `gegenprobe.sh` ist `dist/` mit absichtlich kaputtem Code gebaut —
+  vor dem nächsten `OHNE_BAU=1` neu bauen.
 - `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter
   davor (wie der Cloudflare-Tunnel von `npm run online`). Der echte Tunnel ist
   aus der Cloud-Sitzung nicht erreichbar.

@@ -1,10 +1,11 @@
 // Tür, Gruppenschlüssel und Dimensionsriss mit echten Browsern:
 //   Anna steht in der Höhle vor der verschlossenen Tür; die Gruppe hat einen
-//   Schlüssel (laut Spielstand). Ben steht auch in der Höhle.
-//   Anna schließt auf — beide sehen die Tür offen und den Schlüssel weg.
-//   Anna geht durch die Tür und in den Riss — sie ist im Tempel.
-//   Cora steht im Tempel vor der Truhe und nimmt den Rissstein — Ben sieht
-//   den Riss in der Höhle verschwinden.
+//   Schlüssel (laut Spielstand). Ben steht in Riftside vor dem Riss in der
+//   Fischergasse, Dana daneben.
+//   Anna schließt auf — sie geht durch, Ben sieht den Schlüssel verschwinden.
+//   Ben geht in den Riss — er ist im Tempel.
+//   Cora steht im Tempel vor der Truhe und nimmt den Rissstein — Dana sieht
+//   den Riss in der Gasse verschwinden.
 //
 //   node pruefstand/risse.mjs          (baut vorher mit vite)
 //   OHNE_BAU=1 node pruefstand/risse.mjs
@@ -31,8 +32,9 @@ writeFileSync(spielstand, JSON.stringify({
   welt: { gruppe: { schluessel: 1 } },
   spieler: {
     anna: stelle('Anna', 'gruen', 'hoehle', 20 * 32 + 16, 5 * 32 + 24, 'rechts'),
-    ben: stelle('Ben', 'rot', 'hoehle', 18 * 32 + 16, 6 * 32 + 24, 'rechts'),
+    ben: stelle('Ben', 'rot', 'riftside', 34 * 32 + 16, 16 * 32 + 24, 'oben'),
     cora: stelle('Cora', 'blau', 'tempel', 9 * 32 + 16, 3 * 32 + 16, 'oben'),
+    dana: stelle('Dana', 'lila', 'riftside', 33 * 32 + 16, 13 * 32 + 24, 'rechts'),
   },
 }));
 
@@ -87,30 +89,33 @@ try {
   const anna = await oeffnen('Anna');
   const ben = await oeffnen('Ben');
   let za = await zustand(anna), zb = await zustand(ben);
-  pruefe(za.anzeige === 'schluessel 1' && zb.anzeige === 'schluessel 1', `beide sehen den Gruppenschlüssel in der Anzeige („${za.anzeige}" / „${zb.anzeige}")`);
-  pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'Ben sieht den Riss hinter der Tür');
+  pruefe(za.anzeige === 'schluessel 1' && zb.anzeige === 'schluessel 1', `beide sehen den Gruppenschlüssel, obwohl in verschiedenen Gebieten („${za.anzeige}" / „${zb.anzeige}")`);
+  pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'Ben sieht den Riss in der Fischergasse');
   pruefe(za.hinweis, 'vor der Tür steht das „E"');
 
   await anna.keyboard.press('e');
   await warte(400);
   za = await zustand(anna);
   zb = await zustand(ben);
-  pruefe(za.tueren.includes('hoehle_tuer') && zb.tueren.includes('hoehle_tuer'), 'die Tür ist bei beiden offen');
-  pruefe(za.anzeige === '' && zb.anzeige === '', `der Schlüssel ist bei beiden aus der Anzeige verschwunden („${za.anzeige}")`);
+  pruefe(za.tueren.includes('hoehle_tuer'), 'die Tür ist offen');
+  pruefe(za.anzeige === '' && zb.anzeige === '', `der Schlüssel ist bei beiden aus der Anzeige verschwunden („${za.anzeige}" / „${zb.anzeige}")`);
   pruefe(!za.dialog, 'aufschließen braucht keine Textbox');
-
-  // Durch die Tür nach rechts bis unter den Riss (Spalte 24), dann hinauf.
-  await laufeBis(anna, 'ArrowRight', (z) => z.ich.x >= 24 * 32 + 10);
+  await laufeBis(anna, 'ArrowRight', (z) => z.ich.x >= 23 * 32);
   za = await zustand(anna);
   pruefe(za.ich.x > 22 * 32, `Anna ist durch die Tür gegangen (x = ${za.ich.x.toFixed(0)})`);
-  await laufeBis(anna, 'ArrowUp', (z) => z.gebiet === 'tempel');
-  await warte(800);
-  za = await zustand(anna);
-  pruefe(za.gebiet === 'tempel', `Anna ist durch den Riss im Tempel (${za.gebiet})`);
-  pruefe(za.gegner.length === 4 && za.gegner.every((g) => g.id.startsWith('tempel-')), `im Tempel: ${za.gegner.length} Tempel-Schleime`);
-  await anna.screenshot({ path: join(bilder, 'tempel.png') });
 
-  // --- Cora nimmt den Rissstein: der Riss in der Höhle schließt sich ---
+  // --- Ben geht in den Riss ---
+  await laufeBis(ben, 'ArrowUp', (z) => z.gebiet === 'tempel');
+  await warte(800);
+  zb = await zustand(ben);
+  pruefe(zb.gebiet === 'tempel', `Ben ist durch den Riss im Tempel (${zb.gebiet})`);
+  pruefe(zb.gegner.length === 4 && zb.gegner.every((g) => g.id.startsWith('tempel-')), `im Tempel: ${zb.gegner.length} Tempel-Schleime`);
+  await ben.screenshot({ path: join(bilder, 'tempel.png') });
+
+  // --- Cora nimmt den Rissstein: der Riss in der Gasse schließt sich ---
+  const dana = await oeffnen('Dana');
+  let zd = await zustand(dana);
+  pruefe(zd.risse[0]?.sichtbar, 'Dana in der Gasse sieht den Riss noch');
   // Sofort nach dem Beitreten, in der Schonfrist: zwei Schleime stehen in
   // Sichtweite der Truhe, und ein Treffer stieß Cora manchmal von ihr weg.
   const cora = await oeffnen('Cora', 150);
@@ -118,13 +123,16 @@ try {
   await warte(500);
   const zc = await zustand(cora);
   pruefe(zc.zustaende.tempel_geschlossen && zc.anzeige === 'rissstein 1',
-    `Cora hat den Rissstein (Anzeige „${zc.anzeige}"; Cora bei ${zc.ich.x.toFixed(0)},${zc.ich.y.toFixed(0)} ${zc.ich.richtung}, Leben ${zc.ich.leben}, Hinweis ${zc.hinweis}, Box ${zc.dialog?.text ?? '–'})`);
+    `Cora hat den Rissstein (Anzeige „${zc.anzeige}"; Cora bei ${zc.ich.x.toFixed(0)},${zc.ich.y.toFixed(0)}, Leben ${zc.ich.leben})`);
   await warte(1000);
+  zd = await zustand(dana);
+  pruefe(zd.zustaende.tempel_geschlossen && !zd.risse[0].sichtbar, 'Dana sieht den Riss in der Fischergasse verschwinden');
+  pruefe(zd.anzeige === 'rissstein 1', `Dana sieht den Rissstein der Gruppe („${zd.anzeige}")`);
   zb = await zustand(ben);
-  pruefe(zb.zustaende.tempel_geschlossen && !zb.risse[0].sichtbar, 'Ben in der Höhle sieht den Riss verschwinden');
-  pruefe(zb.anzeige === 'rissstein 1', `Ben sieht den Rissstein der Gruppe („${zb.anzeige}")`);
-  za = await zustand(anna);
-  pruefe(za.risse.length === 1 && za.risse[0].sichtbar, 'der Rückweg-Riss im Tempel bleibt offen');
+  pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'der Rückweg-Riss im Tempel bleibt offen');
+  await dana.screenshot({ path: join(bilder, 'riftside.png') });
+  // Dana ist seit gut 2 s spielbereit: die Schonfrist (1,5 s ab „bereit") ist vorbei.
+  pruefe(!zd.ich.unverwundbar, 'die Schonfrist endet, nachdem der Browser „bereit" gemeldet hat');
 } finally {
   await browser.close();
   server.kill();

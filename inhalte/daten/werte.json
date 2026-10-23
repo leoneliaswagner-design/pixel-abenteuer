@@ -1,12 +1,17 @@
 {
-  "startGebiet": "start",
+  "startGebiet": "riftside",
   "gebiete": [
-    "start",
+    "riftside",
+    "wald",
     "hoehle",
     "tempel"
   ],
   "aussehen": [
-    "alter_mann"
+    "alter_mann",
+    "buergermeister",
+    "hafenmeisterin",
+    "wache",
+    "kind"
   ],
   "spieler": {
     "leben": 6,
@@ -18,7 +23,8 @@
     "unverwundbar": 1000,
     "stossGeschwindigkeit": 220,
     "stossDauer": 160,
-    "wiederbelebung": 3000
+    "wiederbelebung": 3000,
+    "schonfrist": 1500
   },
   "gegner": {
     "schleim": {

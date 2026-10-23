@@ -23,10 +23,15 @@ mkdirSync(bilder, { recursive: true });
 if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wurzel, stdio: 'inherit' });
 
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
-const ruine = { gebiet: 'start', x: 34 * 32 + 16, y: 26 * 32 + 24 };
+const ruine = { gebiet: 'wald', x: 34 * 32 + 16, y: 26 * 32 + 24 };
 writeFileSync(spielstand, JSON.stringify({
   version: 1, welt: {},
-  spieler: { anna: { name: 'Anna', farbe: 'gruen', richtung: 'unten', ...ruine, leben: 5, ankunft: ruine } },
+  spieler: {
+    anna: { name: 'Anna', farbe: 'gruen', richtung: 'unten', ...ruine, leben: 5, ankunft: ruine },
+    // Ben steht im Wald (neue Spieler beginnen in Riftside — hier soll er
+    // aber im selben Gebiet wie Anna anfangen und dort bleiben).
+    ben: { name: 'Ben', farbe: 'rot', richtung: 'unten', gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24, leben: 6, ankunft: { gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24 } },
+  },
 }));
 
 async function serverStarten() {
@@ -94,7 +99,7 @@ try {
   let anna = await oeffnen('Anna');
   const ben = await oeffnen('Ben');
   let za = await zustand(anna), zb = await zustand(ben);
-  pruefe(za.gebiet === 'start' && Math.abs(za.ich.x - ruine.x) < 1 && Math.abs(za.ich.y - ruine.y) < 1,
+  pruefe(za.gebiet === 'wald' && Math.abs(za.ich.x - ruine.x) < 1 && Math.abs(za.ich.y - ruine.y) < 1,
     `Anna beginnt dort, wo ihr Spielstand sie hingestellt hat (${za.ich.x}, ${za.ich.y})`);
   pruefe(za.ich.leben === 5, `…mit den gespeicherten 5 Leben (${za.ich.leben})`);
 
@@ -110,8 +115,8 @@ try {
   zb = await zustand(ben);
   pruefe(za.gebiet === 'hoehle', `Anna ist in der Höhle (${za.gebiet})`);
   pruefe(za.gegner.length === 5 && za.gegner.every((g) => g.id.startsWith('hoehle-')), `Anna sieht die 5 Höhlen-Schleime (${za.gegner.length})`);
-  pruefe(zb.gebiet === 'start' && zb.andere.length === 0, `Ben ist oben geblieben und sieht Anna nicht mehr (${zb.andere.length} andere)`);
-  pruefe(zb.gegner.every((g) => g.id.startsWith('start-')), 'Ben sieht weiter nur die Oberwelt-Schleime');
+  pruefe(zb.gebiet === 'wald' && zb.andere.length === 0, `Ben ist oben geblieben und sieht Anna nicht mehr (${zb.andere.length} andere)`);
+  pruefe(zb.gegner.every((g) => g.id.startsWith('wald-')), 'Ben sieht weiter nur die Oberwelt-Schleime');
   zaehler.gegnerGeprueft = za.gegner.length + zb.gegner.length;
 
   const hellA = await helligkeit(anna), hellB = await helligkeit(ben);

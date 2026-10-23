@@ -19,8 +19,10 @@ export class Oberflaeche extends Phaser.Scene {
 
     this.herzen = [];
     this.liste = this.add.text(b - 6, 6, '', { ...schrift, align: 'right' }).setOrigin(1, 0);
-    // Meldungen oben, nicht unten: unten steht die Textbox.
-    this.meldung = this.add.text(b / 2, 8, '', schrift).setOrigin(0.5, 0).setAlpha(0);
+    // Meldungen oben, nicht unten: unten steht die Textbox. Unter der Zeile
+    // mit Herzen und Mitspielern, und umbrochen — eine lange Meldung lief
+    // sonst über den Rand und über die Herzen.
+    this.meldung = this.add.text(b / 2, 44, '', { ...schrift, align: 'center', lineSpacing: 4, wordWrap: { width: b - 60, useAdvancedWrap: true } }).setOrigin(0.5, 0).setAlpha(0);
     this.mitte = this.add.text(b / 2, h / 2, '', { ...schrift, align: 'center', lineSpacing: 6 }).setOrigin(0.5);
     this.dialogAufbauen(b, h);
     this.anzeige = [];

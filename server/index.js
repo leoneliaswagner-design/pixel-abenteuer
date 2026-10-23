@@ -17,6 +17,9 @@ const PORT = Number(process.env.PORT) || 3001;
 const TAKT = 50;
 
 const werte = lies('inhalte/daten/werte.json');
+// Für Prüfstände und zum Ausprobieren: in einem anderen Gebiet beginnen
+// (z. B. STARTGEBIET=wald, wo es Schleime und Büsche gibt).
+if (process.env.STARTGEBIET) werte.startGebiet = process.env.STARTGEBIET;
 const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/karten/${g}.json`)]));
 // Die Spielstände liegen neben dem Spiel, nicht im Repo (.gitignore). Mit
 // SPIELSTAND=… lässt sich eine andere Datei wählen — eine pro Kampagne,

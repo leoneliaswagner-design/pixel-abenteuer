@@ -11,8 +11,11 @@ const lies = (p) => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url),
 const werte = lies('inhalte/daten/werte.json');
 const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/karten/${g}.json`)]));
 let uhr = 100000;
-const spiel = new Spiel(karten, werte, { jetzt: () => uhr });
-const oberwelt = spiel.gebiete.get('start');
+// Die meisten Prüfungen spielen im Inselwald (Schleime, Büsche, Ruine);
+// Riftside, das echte Startgebiet, hat eigene Prüfungen weiter unten.
+const werteWald = { ...werte, startGebiet: 'wald' };
+const spiel = new Spiel(karten, werteWald, { jetzt: () => uhr });
+const oberwelt = spiel.gebiete.get('wald');
 const hoehle = spiel.gebiete.get('hoehle');
 const tick = (ms) => {
   for (let t = 0; t < ms; t += 50) {
@@ -38,10 +41,14 @@ pruefe(oberwelt.gegner.length === 6 && hoehle.gegner.length === 5,
 // Den Gegner festhalten: er soll treffen, nicht weglaufen.
 const festhalten = () => Object.assign(g, { x: s.x, y: s.y + 4, stossBis: uhr + 100000, vx: 0, vy: 0 });
 
-// --- Schonfrist nach dem Beitreten ---
+// --- Schonfrist nach dem Beitreten: solange der Browser lädt, und danach 1,5 s ---
+festhalten();
+tick(4000);
+pruefe(s.leben === werte.spieler.leben, 'solange der Browser noch lädt (4 s), kein Schaden');
+spiel.nachricht(s.id, { t: 'bereit' });
 festhalten();
 tick(50);
-pruefe(s.leben === werte.spieler.leben, 'in der Schonfrist nach dem Beitreten kein Schaden');
+pruefe(s.leben === werte.spieler.leben, 'in der Schonfrist nach „bereit" kein Schaden');
 
 // --- Treffer ---
 tick(1500);
@@ -141,27 +148,42 @@ pruefe(!s.tot && s.gebiet === 'hoehle' && s.x === ankunft.x, 'Wiederbelebung an 
 // --- Treppe hinauf zurück ---
 tick(500);
 spiel.nachricht(s.id, { t: 'pos', x: s.x, y: s.y + 10, r: 'unten', k: s.korrektur });
-pruefe(s.gebiet === 'start' && Math.abs(s.y - (26 * 32 + 24)) < 1, `Treppe hinauf: zurück in der Oberwelt, in der Ruine (y ${s.y})`);
+pruefe(s.gebiet === 'wald' && Math.abs(s.y - (26 * 32 + 24)) < 1, `Treppe hinauf: zurück in der Oberwelt, in der Ruine (y ${s.y})`);
 
 // --- Spielstand: wer geht und wiederkommt, steht wieder dort ---
 const ordner = mkdtempSync(join(tmpdir(), 'spielstand-'));
 const datei = join(ordner, 'stand.json');
 const stand = new Spielstand(datei);
-const spiel2 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: stand });
+const spiel2 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: stand });
 const mia = spiel2.beitreten('Mia', () => {});
 spiel2.wechseln(mia, 'hoehle', 'von_oben');
 mia.x += 20;
 mia.leben = 3;
 spiel2.verlassen(mia.id);
 pruefe(existsSync(datei), 'beim Verlassen wird die Datei geschrieben');
-const spiel3 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+const spiel3 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
 const nachricht3 = [];
 const mia2 = spiel3.beitreten('MIA', (m) => nachricht3.push(m));
 pruefe(mia2.gebiet === 'hoehle' && mia2.x === mia.x && mia2.leben === 3,
   `nach dem Neustart: Mia wieder in der Höhle, gleiche Stelle, 3 Leben (${mia2.gebiet}, ${mia2.x}, ${mia2.leben})`);
 pruefe(nachricht3[0]?.t === 'willkommen' && nachricht3[0].gebiet === 'hoehle' && nachricht3[0].wieder, 'Willkommen nennt das gespeicherte Gebiet');
 const neu = spiel3.beitreten('Jonas', () => {});
-pruefe(neu.gebiet === 'start', 'ein neuer Name beginnt in der Oberwelt');
+pruefe(neu.gebiet === 'wald', 'ein neuer Name beginnt in der Oberwelt');
+
+// --- Ohne Sonderwerte beginnt jeder in Riftside, am Hafen ---
+const echt = new Spiel(karten, werte, { jetzt: () => uhr });
+const neuling = echt.beitreten('Neu', () => {});
+pruefe(neuling.gebiet === 'riftside' && echt.gebiete.get('riftside').welt.frei(neuling.x, neuling.y), `neue Spieler beginnen in Riftside (${neuling.gebiet}, ${neuling.x}, ${neuling.y})`);
+pruefe(echt.gebiete.get('riftside').gegner.length === 0, 'in der Stadt gibt es keine Gegner');
+// Durchs Stadttor in den Wald und zurück
+Object.assign(neuling, { x: 21 * 32 + 16, y: 1 * 32 + 24 });
+uhr += 500;
+echt.nachricht(neuling.id, { t: 'pos', x: neuling.x, y: 0 * 32 + 28, r: 'oben', k: neuling.korrektur });
+pruefe(neuling.gebiet === 'wald', `durchs Stadttor: im Inselwald (${neuling.gebiet})`);
+Object.assign(neuling, { x: 8 * 32 + 16, y: 28 * 32 + 24 });
+uhr += 500;
+echt.nachricht(neuling.id, { t: 'pos', x: neuling.x, y: 29 * 32 + 10, r: 'unten', k: neuling.korrektur });
+pruefe(neuling.gebiet === 'riftside' && neuling.y < 4 * 32, `vom Wald nach Süden: zurück in Riftside, unter dem Tor (${neuling.gebiet}, y ${neuling.y})`);
 
 // --- Regelmäßig speichern, nicht nur beim Verlassen ---
 const vorSpeichern = readFileSync(datei, 'utf8');
@@ -177,7 +199,7 @@ pruefe(!!gerettet.daten.spieler.mia, 'kaputter Spielstand → Sicherung (.bak) w
 
 // --- Ansprechen: Schild, Figur, Truhe ---
 const datei4 = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
-const spiel4 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
+const spiel4 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postA = [], postB = [];
 const ana = spiel4.beitreten('Ana', (m) => postA.push(m));
 const bo = spiel4.beitreten('Bo', (m) => postB.push(m));
@@ -234,42 +256,52 @@ sprich(bo, ...vorTuer, 'rechts');
 pruefe(!postB.length, 'eine offene Tür spricht man nicht mehr an');
 void tuer;
 
-// --- Der Riss führt in den Tempel; der Rissstein schließt ihn ---
-const riss = hoehle.uebergaenge.find((u) => u.eig.art === 'riss');
-// Riss auf Kachel (24,2) = y 64…96. Erst ein Treffer: im Rückstoß geht
-// niemand hindurch.
-Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24, unverwundbarBis: 0 });
+// --- Der Riss in der Fischergasse führt in den Tempel; der Rissstein schließt ihn ---
+// Riss auf Kachel (34,15) in Riftside = y 480…512; davor die Gasse.
+const riftside = spiel4.gebiete.get('riftside');
+const riss = riftside.uebergaenge.find((u) => u.eig.art === 'riss');
+const vorRiss = { x: 34 * 32 + 16, y: 16 * 32 + 24 };
+const inRiss = 15 * 32 + 30;
+spiel4.wechseln(bo, 'riftside', 'aus_tempel');
+// Erst ein Treffer: im Rückstoß geht niemand hindurch.
+Object.assign(bo, { ...vorRiss, unverwundbarBis: 0 });
 const schleim = { x: bo.x, y: bo.y - 20, w: werte.gegner.schleim };
 spiel4.spielerTreffen(bo, schleim, uhr);
 uhr += 100;
-spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
-pruefe(bo.gebiet === 'hoehle', 'im Rückstoß in den Riss gedrückt: kein Gebietswechsel');
-Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24, leben: 6 });
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: inRiss, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'riftside', 'im Rückstoß in den Riss gedrückt: kein Gebietswechsel');
+Object.assign(bo, { ...vorRiss, leben: 6 });
 uhr += 500;
-spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
-pruefe(bo.gebiet === 'tempel', `durch den Riss: Bo ist im Tempel (${bo.gebiet}) — Riss ${riss?.eig.ziel}`);
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: inRiss, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'tempel', `durch den Riss in der Fischergasse: Bo ist im Tempel (${bo.gebiet}) — Riss nach ${riss?.eig.ziel}`);
 postA.length = 0;
 sprich(bo, 9 * 32 + 16, 3 * 32 + 16, 'oben');
 pruefe(spiel4.gruppe().rissstein === 1 && spiel4.zustaende().tempel_geschlossen, `Rissstein genommen: Zustand „tempel_geschlossen" gesetzt`);
 pruefe(postA.some((m) => m.t === 'zustand' && m.name === 'tempel_geschlossen') && postA.some((m) => m.t === 'nachricht' && m.text.includes('schließt sich')),
   'Ana in der Höhle erfährt es — mit Meldung');
-spiel4.wechseln(bo, 'hoehle', 'von_tempel');
-Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24 });
+spiel4.wechseln(bo, 'riftside', 'aus_tempel');
+Object.assign(bo, vorRiss);
 uhr += 500;
-spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
-pruefe(bo.gebiet === 'hoehle', 'der geschlossene Riss lässt niemanden mehr durch');
-spiel4.wechseln(ana, 'start', 'von_hoehle');
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: inRiss, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'riftside', 'der geschlossene Riss lässt niemanden mehr durch');
+spiel4.wechseln(ana, 'wald', 'von_hoehle');
 sprich(ana, 12 * 32 + 16, 13 * 32 + 16, 'oben');
-pruefe(dialogVon(postA)?.seiten[0].startsWith('Das Flimmern'), `der alte Mann sagt jetzt etwas anderes („${dialogVon(postA)?.seiten[0].slice(0, 30)}…")`);
+pruefe(dialogVon(postA)?.seiten[0].startsWith('Man erzählt sich'), `der alte Mann sagt jetzt etwas anderes („${dialogVon(postA)?.seiten[0].slice(0, 30)}…")`);
+// Der Bürgermeister in Riftside auch — Bo steht unter ihm (18,13) und schaut hoch.
+const postBvorher = postB.length;
+sprich(bo, 18 * 32 + 16, 14 * 32 + 16, 'oben');
+pruefe(dialogVon(postB)?.name === 'Bürgermeister Aldric' && dialogVon(postB).seiten[0].startsWith('Der Riss in der Fischergasse ist geschlossen'),
+  `der Bürgermeister bedankt sich („${dialogVon(postB)?.seiten[0].slice(0, 36)}…")`);
+void postBvorher;
 
 spiel4.verlassen(ana.id);
 spiel4.verlassen(bo.id);
-const spiel5 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
+const spiel5 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postC = [];
 const ana2 = spiel5.beitreten('Ana', (m) => postC.push(m));
 pruefe(ana2.inventar.gold === 20 && spiel5.gruppe().rissstein === 1, `nach dem Neustart: Ana hat noch 20 Gold, die Gruppe den Rissstein (${JSON.stringify(ana2.inventar)}, ${JSON.stringify(spiel5.gruppe())})`);
 pruefe(spiel5.gebiete.get('hoehle').welt.geoeffnet.has('hoehle_tuer') && spiel5.zustaende().tempel_geschlossen, 'nach dem Neustart: Tür offen, Riss geschlossen');
-spiel5.wechseln(ana2, 'start', 'von_hoehle');
+spiel5.wechseln(ana2, 'wald', 'von_hoehle');
 const wechsel5 = postC.find((m) => m.t === 'gebiet');
 pruefe(wechsel5?.offen.includes('oberwelt_gold'), 'nach dem Neustart steht die Truhe oben noch offen');
 

@@ -69,6 +69,17 @@ probe client/szenen/Spiel.js "      ich.aktualisieren(jetzt);
   "Figur läuft während der Textbox weiter"
 probe client/szenen/Spiel.js "    this.wechselt = false;" "" pruefstand/gebiete.mjs \
   "Figur bleibt nach dem Gebietswechsel stehen"
+probe server/spiel.js "      unverwundbarBis: jetzt + 15000, naechsterHieb: 0," "      unverwundbarBis: jetzt + 1500, naechsterHieb: 0," pruefstand/server-regeln.mjs \
+  "Schonfrist läuft ab dem Beitreten, nicht ab „bereit\""
+probe server/spiel.js "    else if (m.t === 'bereit') s.unverwundbarBis" "    else if (m.t === 'bereit') void s.unverwundbarBis" pruefstand/server-regeln.mjs \
+  "„bereit\" beendet die lange Schonfrist nicht"
+probe client/szenen/Spiel.js "        } else if (this.getippt) ich.richtung = this.getippt;" "        }" pruefstand/riftside.mjs \
+  "Antippen dreht die Figur nicht"
+probe client/szenen/Spiel.js "    this.netz.senden({ t: 'bereit' });" "" pruefstand/risse.mjs \
+  "Browser meldet sich nie bereit"
+probe werkzeuge/karte.mjs "  const grundBei = (x, y) => {" "  const grundBei = (x, y) => {
+    return nummer(def.grund);" pruefstand/karten.mjs \
+  "Kisten und Truhen stehen auf Pflasterflecken"
 probe server/gebiet.js "if (s.tot || jetzt < s.unverwundbarBis) continue;" "if (s.tot) continue;" pruefstand/server-regeln.mjs \
   "keine Unverwundbarkeit nach einem Treffer"
 probe server/gebiet.js "if (s.leben >= this.w.spieler.leben) continue;" "" pruefstand/server-regeln.mjs \

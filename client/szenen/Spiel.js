@@ -86,6 +86,12 @@ export class SpielSzene extends Phaser.Scene {
     // wird — bei 30 Bildern pro Sekunde verschluckte das schnelles Tippen.
     this.hiebGewuenscht = false;
     for (const taste of ['SPACE', 'J']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.hiebGewuenscht = true));
+    // Kurz eine Richtung antippen dreht die Figur — auch wenn die Taste im
+    // selben Bild wieder losgelassen ist (dann sieht isDown sie nie, und man
+    // kam vor einer Figur nicht dazu, sich ihr zuzuwenden).
+    this.getippt = null;
+    const RICHTUNG_DER_TASTE = { UP: 'oben', W: 'oben', DOWN: 'unten', S: 'unten', LEFT: 'links', A: 'links', RIGHT: 'rechts', D: 'rechts' };
+    for (const [taste, r] of Object.entries(RICHTUNG_DER_TASTE)) this.input.keyboard.on(`keydown-${taste}`, () => (this.getippt = r));
     this.ansprechGewuenscht = false;
     for (const taste of ['E', 'ENTER']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.ansprechGewuenscht = true));
     // Kleines „E" über dem Ding, vor dem man steht — damit man weiß, dass es
@@ -103,13 +109,16 @@ export class SpielSzene extends Phaser.Scene {
     // Stand neu bekommen; beim ersten Start holt sie ihn sich selbst.
     this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
     this.netz.bereit();
+    // Dem Server sagen, dass man jetzt steuern kann: ab hier läuft die
+    // Schonfrist (nach dem Beitreten und nach jedem Gebietswechsel).
+    this.netz.senden({ t: 'bereit' });
 
     // Für den Prüfstand: was der Browser glaubt, ohne Pixel raten zu müssen.
     window.__spiel = {
       szene: this,
       zustand: () => ({
         gebiet: this.gebiet,
-        ich: { id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, tot: this.ich.tot, richtung: this.ich.richtung },
+        ich: { id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, tot: this.ich.tot, richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe })),
         gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
         geschnitten: [...this.welt.geschnitten],
@@ -419,6 +428,7 @@ export class SpielSzene extends Phaser.Scene {
     if (this.dialogOffen) {
       if (this.ansprechGewuenscht || this.hiebGewuenscht) this.dialogOffen = this.oberflaeche().weiter();
       this.ansprechGewuenscht = this.hiebGewuenscht = false;
+      this.getippt = null;
       this.hinweis.setVisible(false);
       ich.laeuft = false;
       ich.aktualisieren(jetzt);
@@ -444,7 +454,7 @@ export class SpielSzene extends Phaser.Scene {
           const l = Math.hypot(ix, iy);
           dx = (ix / l) * ws.geschwindigkeit * dt;
           dy = (iy / l) * ws.geschwindigkeit * dt;
-        }
+        } else if (this.getippt) ich.richtung = this.getippt;
         const ding = this.welt.dingVor(ich.x, ich.y, ich.richtung);
         if (this.ansprechGewuenscht && ding) {
           // Erst die eigene Position, dann die Frage: der Server soll vom
@@ -472,6 +482,7 @@ export class SpielSzene extends Phaser.Scene {
     // schlägt die Figur nach, ohne dass man es will.
     this.hiebGewuenscht = false;
     this.ansprechGewuenscht = false;
+    this.getippt = null;
     ich.laeuft = laeuft;
     ich.aktualisieren(jetzt);
 

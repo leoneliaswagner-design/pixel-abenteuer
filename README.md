@@ -1,7 +1,9 @@
 # Pixel-Abenteuer
 
 Ein Koop-Abenteuer für 2–4 Leute im Browser, im Stil von *Link's Awakening* —
-mit 32er- statt 16er-Kacheln.
+mit 32er- statt 16er-Kacheln. Das Spiel zur D&D-Kampagne: Es beginnt in
+**Riftside**, einer Hafenstadt, in deren Gassen sich Dimensionsrisse öffnen
+(mehr in `konzept/KONZEPT.md`).
 
 ## Starten
 
@@ -66,6 +68,9 @@ beim Beenden mit Strg+C.
 Wer besiegt wird, steht an der Stelle wieder auf, an der er das Gebiet
 zuletzt betreten hat.
 
+Zum Ausprobieren in einem anderen Gebiet beginnen: `STARTGEBIET=wald`
+(Windows: `set STARTGEBIET=wald`) vor `npm run online` bzw. `npm start`.
+
 ## Aufbau
 
 | Ordner | Was drin ist |
@@ -82,7 +87,7 @@ zuletzt betreten hat.
 ## Grafik und Karten selbst bearbeiten
 
 - **Karten:** Jedes Gebiet ist eine Datei in `inhalte/karten/` (jetzt:
-  `start.json` = Oberwelt, `hoehle.json`), in Tiled zu öffnen. Welche es gibt,
+  `riftside.json` = Startgebiet, `wald.json` = Inselwald, `hoehle.json`, `tempel.json`), in Tiled zu öffnen. Welche es gibt,
   steht in `inhalte/daten/werte.json` unter `gebiete`.
   - Ebenen: `boden`, `hindernisse`, `orte`. Ob eine Kachel fest ist, steht
     als Eigenschaft im Kachelsatz.
@@ -129,6 +134,8 @@ node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
 node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
 node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
 node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
+node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
+node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
 ```

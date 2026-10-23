@@ -23,7 +23,7 @@ if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wu
 
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
 const stelle = (name, x, y, richtung) => {
-  const ort = { gebiet: 'start', x, y };
+  const ort = { gebiet: 'wald', x, y };
   return { name, farbe: name === 'Anna' ? 'gruen' : 'blau', richtung, ...ort, leben: 6, ankunft: ort };
 };
 writeFileSync(spielstand, JSON.stringify({
