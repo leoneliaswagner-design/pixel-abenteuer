@@ -19,6 +19,12 @@ export const KACHELN = [
   { name: 'busch_rest' },
   { name: 'baum', zeichen: 'T', fest: true, hindernis: true, baum: true },
   { name: 'mauer', zeichen: '#', fest: true, hindernis: true },
+  // Neue Kacheln immer hinten anhängen: die Karten speichern Nummern, und
+  // eine eingeschobene Kachel verschöbe alle dahinter.
+  { name: 'hoehlenboden', zeichen: ':' },
+  { name: 'fels', zeichen: 'X', fest: true, hindernis: true },
+  { name: 'treppe_runter', zeichen: 'E' },
+  { name: 'treppe_hoch', zeichen: 'A' },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

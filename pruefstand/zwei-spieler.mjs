@@ -9,7 +9,9 @@
 // aus Versehen leere Listen vergleicht, wäre sonst grün.
 import { chromium } from 'playwright';
 import { spawn, execSync } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const wurzel = fileURLToPath(new URL('..', import.meta.url));
@@ -19,7 +21,10 @@ mkdirSync(bilder, { recursive: true });
 
 if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wurzel, stdio: 'inherit' });
 
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT) } });
+// Eigener Wegwerf-Spielstand: der Prüfstand darf nie die echte Kampagne
+// anfassen — und soll mit leerer Welt beginnen.
+const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: spielstand } });
 let serverLog = '';
 server.stdout.on('data', (d) => (serverLog += d));
 server.stderr.on('data', (d) => (serverLog += d));
@@ -44,7 +49,12 @@ const pruefe = (bed, text) => {
 };
 const warte = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const browser = await chromium.launch();
+// Ohne Drosselung: alle Seiten laufen in einem Fenster, und Chromium zeichnet
+// Tabs im Hintergrund nur noch selten. Anna kam dann nach Bens Beitritt in
+// 1,8 s nicht mehr bis zum Busch — das Spiel war in Ordnung, der Tab schlief.
+const browser = await chromium.launch({
+  args: ['--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'],
+});
 try {
   const seiten = [];
   for (const name of ['Anna', 'Ben']) {
@@ -72,23 +82,37 @@ try {
   // kam Anna hinter dem https-Weiterleiter nicht ganz bis zum Busch.
   const laufeBisAnschlag = async (p, taste, hoechstens = 5000) => {
     await p.keyboard.down(taste);
-    let letztes = null;
-    for (let t = 0; t < hoechstens; t += 250) {
+    // Zweimal hintereinander still: ein einzelner Ruckler von 250 ms sah
+    // sonst schon wie „steht" aus, und Anna blieb 2 px vor dem Busch stehen.
+    let letztes = null, still = 0;
+    for (let t = 0; t < hoechstens && still < 2; t += 250) {
       await warte(250);
       const { x, y } = (await zustand(p)).ich;
-      if (letztes && Math.hypot(x - letztes.x, y - letztes.y) < 0.01) break;
+      still = letztes && Math.hypot(x - letztes.x, y - letztes.y) < 0.01 ? still + 1 : 0;
       letztes = { x, y };
     }
     await p.keyboard.up(taste);
   };
   const vorher = za.ich;
+  // Mitschreiben, was unterwegs passiert — wenn Anna zu kurz kommt, soll
+  // die Meldung sagen, warum (Treffer? Korrektur? zu wenige Bilder?).
+  await a.evaluate(() => {
+    window.__unterwegs = { bilder: 0, meldungen: [] };
+    const s = window.__spiel.szene;
+    s.events.on('postupdate', () => window.__unterwegs.bilder++);
+    for (const t of ['korrektur', 'getroffen']) s.netz.bei(t, (m) => window.__unterwegs.meldungen.push(m.t));
+  });
+  const startZeit = Date.now();
   await laufeBisAnschlag(a, 'ArrowDown');
   await warte(400);
   za = await zustand(a);
   zb = await zustand(b);
   const annaBeiBen = zb.andere.find((o) => o.id === za.ich.id);
   pruefe(za.ich.y - vorher.y > 50, `Anna ist gelaufen (${vorher.y.toFixed(0)} → ${za.ich.y.toFixed(0)})`);
-  pruefe(Math.abs(za.ich.y - 512) < 1, `Anna steht am Busch an (y = ${za.ich.y.toFixed(1)}, erwartet 512)`);
+  const unterwegs = await a.evaluate(() => window.__unterwegs);
+  const bps = (unterwegs.bilder / ((Date.now() - startZeit) / 1000)).toFixed(0);
+  pruefe(Math.abs(za.ich.y - 512) < 0.1,
+    `Anna steht am Busch an (y = ${za.ich.y.toFixed(1)}, erwartet 512; ${bps} Bilder/s, Meldungen: ${unterwegs.meldungen.join(', ') || 'keine'})`);
   pruefe(annaBeiBen && Math.hypot(annaBeiBen.x - za.ich.x, annaBeiBen.y - za.ich.y) < 3,
     `Ben sieht Anna an derselben Stelle (Abstand ${annaBeiBen ? Math.hypot(annaBeiBen.x - za.ich.x, annaBeiBen.y - za.ich.y).toFixed(1) : '—'} px)`);
 

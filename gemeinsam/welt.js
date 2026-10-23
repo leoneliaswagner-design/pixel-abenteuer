@@ -28,12 +28,14 @@ export class Welt {
     };
     this.boden = ebene('boden').data;
     this.hindernisse = ebene('hindernisse').data;
-    this.orte = ebene('orte').objects.map((o) => ({
-      name: o.name,
-      x: o.x,
-      y: o.y,
-      art: o.properties?.find((p) => p.name === 'art')?.value,
-    }));
+    const eigenschaften = (liste) => Object.fromEntries((liste ?? []).map((p) => [p.name, p.value]));
+    this.eigenschaftenKarte = eigenschaften(karte.properties);
+    // Punkte (Start, Gegner, Ankunft) und Rechtecke (Übergänge) aus Tiled.
+    // eig enthält die selbst vergebenen Eigenschaften, z. B. ziel/ankunft.
+    this.orte = ebene('orte').objects.map((o) => {
+      const eig = eigenschaften(o.properties);
+      return { name: o.name, x: o.x, y: o.y, b: o.width ?? 0, h: o.height ?? 0, eig, art: eig.art };
+    });
     this.geschnitten = new Set();
   }
 
@@ -98,6 +100,7 @@ export function bewege(welt, x, y, dx, dy, k = KOERPER) {
       if (welt.frei(x + sx, y, k)) x += sx;
       else {
         gestossen = true;
+        x = heranruecken(welt, x, y, sx, 0, k);
         if (!sy) y += eckeAusweichen(welt, x + sx, y, 0, 1, k, Math.abs(sx));
       }
     }
@@ -105,11 +108,25 @@ export function bewege(welt, x, y, dx, dy, k = KOERPER) {
       if (welt.frei(x, y + sy, k)) y += sy;
       else {
         gestossen = true;
+        y = heranruecken(welt, x, y, 0, sy, k);
         if (!sx) x += eckeAusweichen(welt, x, y + sy, 1, 0, k, Math.abs(sy));
       }
     }
   }
   return { x, y, gestossen };
+}
+
+// Passt der ganze Teilschritt nicht, bis an die Wand heran — in halben
+// Schritten. Ohne das blieb eine Figur je nach Bildrate 0,2 bis 3 px vor
+// der Wand stehen: bei wenigen Bildern pro Sekunde sind die Schritte größer.
+function heranruecken(welt, x, y, dx, dy, k) {
+  for (let rest = 0.5; Math.abs(dx || dy) * rest > 0.01; rest /= 2) {
+    if (welt.frei(x + dx * rest, y + dy * rest, k)) {
+      x += dx * rest;
+      y += dy * rest;
+    }
+  }
+  return dx ? x : y;
 }
 
 function eckeAusweichen(welt, x, y, ax, ay, k, tempo) {

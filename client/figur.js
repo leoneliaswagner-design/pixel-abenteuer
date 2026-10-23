@@ -15,7 +15,10 @@ const SCHWERT = {
   rechts: { dx: 8, dy: -10, winkel: 90 },
 };
 
+// Animationen gehören dem ganzen Spiel, nicht der Szene — nach einem
+// Gebietswechsel sind sie schon da.
 export function animationenAnlegen(szene) {
+  if (szene.anims.exists('schleim')) return;
   for (const f of FARBEN)
     for (const [r, z] of Object.entries(ZEILE))
       szene.anims.create({

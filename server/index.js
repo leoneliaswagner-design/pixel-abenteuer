@@ -6,6 +6,7 @@ import { readFileSync, existsSync, createReadStream, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { WebSocketServer } from 'ws';
 import { Spiel } from './spiel.js';
+import { Spielstand } from './spielstand.js';
 import { fileURLToPath } from 'node:url';
 
 // fileURLToPath statt .pathname: unter Windows ergibt .pathname „/C:/…“,
@@ -15,7 +16,14 @@ const lies = (p) => JSON.parse(readFileSync(join(wurzel, p), 'utf8'));
 const PORT = Number(process.env.PORT) || 3001;
 const TAKT = 50;
 
-const spiel = new Spiel(lies('inhalte/karten/start.json'), lies('inhalte/daten/werte.json'));
+const werte = lies('inhalte/daten/werte.json');
+const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/karten/${g}.json`)]));
+// Die Spielstände liegen neben dem Spiel, nicht im Repo (.gitignore). Mit
+// SPIELSTAND=… lässt sich eine andere Datei wählen — eine pro Kampagne,
+// oder eine Wegwerf-Datei für die Prüfstände.
+const spielstand = new Spielstand(process.env.SPIELSTAND || join(wurzel, 'spielstaende', 'spielstand.json'));
+const spiel = new Spiel(karten, werte, { spielstand });
+console.log(`Spielstand: ${spielstand.pfad} (${Object.keys(spielstand.daten.spieler).length} bekannte Spieler)`);
 
 const ARTEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.json': 'application/json', '.svg': 'image/svg+xml' };
 const dist = join(wurzel, 'dist');
@@ -52,11 +60,13 @@ wss.on('connection', (ws) => {
     }
     if (!ich) {
       if (m.t !== 'hallo') return;
-      ich = spiel.beitreten(m.name, senden);
-      if (!ich) {
-        senden({ t: 'voll' });
+      const ergebnis = spiel.beitreten(m.name, senden);
+      if (ergebnis.fehler) {
+        senden({ t: 'abgelehnt', text: ergebnis.fehler });
         ws.close();
+        return;
       }
+      ich = ergebnis;
       return;
     }
     spiel.nachricht(ich.id, m);
@@ -77,10 +87,17 @@ setInterval(() => {
 let zuletzt = Date.now();
 setInterval(() => {
   const jetzt = Date.now();
-  spiel.schritt(Math.min(0.1, (jetzt - zuletzt) / 1000));
+  spiel.takt(Math.min(0.1, (jetzt - zuletzt) / 1000));
   zuletzt = jetzt;
-  const stand = JSON.stringify(spiel.stand());
-  for (const ws of wss.clients) if (ws.readyState === ws.OPEN) ws.send(stand);
 }, TAKT);
+
+// Beim Beenden (Strg+C) noch einmal speichern. Unter Windows kommt Strg+C
+// als SIGINT auch beim Server an, den `npm run online` gestartet hat.
+for (const signal of ['SIGINT', 'SIGTERM'])
+  process.on(signal, () => {
+    for (const s of spiel.spieler.values()) spiel.merken(s);
+    spiel.speichern();
+    process.exit(0);
+  });
 
 http.listen(PORT, () => console.log(`Spielserver auf http://localhost:${PORT}`));

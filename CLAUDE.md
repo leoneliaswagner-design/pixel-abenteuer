@@ -15,6 +15,14 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   das Laufen bei Ping zäh an). Der Server prüft Tempo und Wände und schickt
   `korrektur`. Jede Korrektur zählt `k` hoch; Positionen mit altem `k` verwirft
   er — sonst würden Pakete von vor der Korrektur sie wieder rückgängig machen.
+- **Gebiete**: jede Karte ein `Gebiet` (server/gebiet.js) mit eigenen Gegnern,
+  Büschen, Herzen. Jeder Spieler hat `gebiet`; Stand und Ereignisse gehen nur
+  an die im selben Gebiet. Gebiete ohne Spieler stehen still.
+  Wechsel: Server erkennt den Übergang am Fußpunkt, setzt um, `k` steigt,
+  Browser startet die Szene neu (`scene.restart` — dasselbe Objekt! Alles,
+  was beim Wechsel gesetzt wird, in `create` zurücksetzen).
+- **Spielstand**: Spieler am Namen erkannt, `spielstaende/spielstand.json`
+  (oder `SPIELSTAND=…`). Prüfstände nehmen **immer** eine Wegwerf-Datei.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -35,6 +43,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/zwei-spieler.mjs` — baut, startet einen Server und zwei
   Chromium-Fenster und misst, was im **anderen** Browser ankommt (und
   Bildpunkte, nicht nur Zustände).
+- `node pruefstand/gebiete.mjs` — Treppe in die Höhle, zweiter Spieler bleibt
+  oben, Server-Neustart mit Spielstand; misst die Helligkeit des Bildes.
+- Chromium in Prüfständen ohne Hintergrund-Drosselung starten (s. dort):
+  sonst schläft der Tab des ersten Spielers, sobald der zweite aufgeht.
 - `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter
   davor (wie der Cloudflare-Tunnel von `npm run online`). Der echte Tunnel ist
   aus der Cloud-Sitzung nicht erreichbar.

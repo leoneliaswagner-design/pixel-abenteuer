@@ -15,7 +15,11 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.tilemapTiledJSON('karte', 'karten/start.json');
+    // Jedes Gebiet hat seine eigene Karte; geladen wird nur, wo man steht.
+    // Beim Wechsel startet die Szene neu und lädt die nächste dazu.
+    this.kartenSchluessel = `karte-${this.willkommen.gebiet}`;
+    if (!this.cache.tilemap.exists(this.kartenSchluessel))
+      this.load.tilemapTiledJSON(this.kartenSchluessel, `karten/${this.willkommen.gebiet}.json`);
     this.load.json('werte', 'daten/werte.json');
     this.load.image('kacheln', 'grafik/kacheln.png');
     for (const n of ['baum', 'schatten', 'schwert']) this.load.image(n, `grafik/${n}.png`);
@@ -27,8 +31,12 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   create() {
+    // restart() benutzt dasselbe Szenen-Objekt wieder: alles, was beim
+    // Wechsel gesetzt wurde, hier zurücksetzen. (wechselt blieb einmal
+    // stehen — die Figur ließ sich in der Höhle nicht mehr bewegen.)
+    this.wechselt = false;
     this.w = this.cache.json.get('werte');
-    this.welt = new Welt(this.cache.tilemap.get('karte').data);
+    this.welt = new Welt(this.cache.tilemap.get(this.kartenSchluessel).data);
     animationenAnlegen(this);
     this.karteAufbauen();
 
@@ -37,8 +45,10 @@ export class SpielSzene extends Phaser.Scene {
     this.ich = new Figur(this, wk.farbe, null);
     this.ich.x = wk.x;
     this.ich.y = wk.y;
+    this.ich.richtung = wk.r ?? 'unten';
     this.korrektur = wk.k;
-    this.leben = this.w.spieler.leben;
+    this.leben = wk.leben ?? this.w.spieler.leben;
+    this.gebiet = wk.gebiet;
     this.naechsterHieb = 0;
     this.stoss = null;
     this.gesendet = { zeit: 0, x: 0, y: 0, r: '', l: false };
@@ -61,13 +71,17 @@ export class SpielSzene extends Phaser.Scene {
     for (const taste of ['SPACE', 'J']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.hiebGewuenscht = true));
 
     this.netzAnschliessen();
-    this.scene.launch('oberflaeche');
+    // Die Oberfläche läuft über Gebietswechsel hinweg weiter; ein zweites
+    // launch hängte ihre Zuhörer doppelt an.
+    if (!this.scene.isActive('oberflaeche')) this.scene.launch('oberflaeche');
+    this.cameras.main.fadeIn(180, 27, 20, 36);
     this.netz.bereit();
 
     // Für den Prüfstand: was der Browser glaubt, ohne Pixel raten zu müssen.
     window.__spiel = {
       szene: this,
       zustand: () => ({
+        gebiet: this.gebiet,
         ich: { id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, tot: this.ich.tot, richtung: this.ich.richtung },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe })),
         gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
@@ -77,7 +91,7 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   karteAufbauen() {
-    const karte = this.make.tilemap({ key: 'karte' });
+    const karte = this.make.tilemap({ key: this.kartenSchluessel });
     const satz = karte.addTilesetImage('kacheln', 'kacheln');
     this.bodenEbene = karte.createLayer('boden', satz).setDepth(0);
     this.hindernisEbene = karte.createLayer('hindernisse', satz).setDepth(1);
@@ -147,6 +161,7 @@ export class SpielSzene extends Phaser.Scene {
       this.ich.tot = false;
       this.cameras.main.flash(250, 255, 255, 255);
     });
+    n.bei('gebiet', (m) => this.gebietWechseln(m));
     n.bei('busch', (m) => this.buschSetzen(m.i, m.weg));
     n.bei('gegner_treffer', (m) => this.aufblitzen(this.gegner.get(m.id)?.sprite));
     n.bei('gegner_tot', (m) => {
@@ -160,6 +175,18 @@ export class SpielSzene extends Phaser.Scene {
     });
     n.bei('nachricht', (m) => this.events.emit('nachricht', m.text));
     n.bei('getrennt', () => this.events.emit('getrennt'));
+  }
+
+  // Ab sofort gehört alles, was vom Server kommt, zum neuen Gebiet. Deshalb
+  // die Zuhörer gleich abhängen (sonst setzte ein Stand aus der Höhle noch
+  // Gegner in die Oberwelt) und erst nach dem Abblenden neu starten.
+  gebietWechseln(m) {
+    this.netz.zuruecksetzen();
+    this.ich.laeuft = false;
+    this.wechselt = true;
+    this.cameras.main.fadeOut(180, 27, 20, 36);
+    this.cameras.main.once('camerafadeoutcomplete', () =>
+      this.scene.restart({ netz: this.netz, willkommen: { ...this.willkommen, ...m, leben: this.leben } }));
   }
 
   aufblitzen(sprite) {
@@ -231,6 +258,7 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   update(jetzt, delta) {
+    if (this.wechselt) return;
     const dt = Math.min(delta, 100) / 1000;
     this.eigeneFigur(jetzt, dt);
 

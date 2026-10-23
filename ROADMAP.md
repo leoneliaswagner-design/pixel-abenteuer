@@ -14,7 +14,25 @@
 - Allein-Modus (`?allein`, oder `VITE_ALLEIN=1` beim Bauen): die Regeln aus
   `server/spiel.js` laufen im Browser. Daraus ist die Vorschau-Seite gebaut.
 
-## Als Nächstes (Vorschlag — Reihenfolge offen)
+- Gebiete mit Übergängen (Oberwelt ↔ Höhle über die Treppe in der Ruine);
+  Spieler können sich aufteilen.
+- Spielstände: am Namen erkannt, Gebiet/Stelle/Leben, alle 5 s und beim
+  Verlassen/Beenden gespeichert, mit Sicherung (.bak). Wiederbelebung an der
+  letzten Ankunft.
+
+## Grundgerüst — als Nächstes
+
+1. **Interaktion**: Taste zum Ansprechen/Lesen — Schilder, Figuren mit Dialog
+   (Textbox wie im Original), Truhen. Truhen-Zustand gehört in `spielstand.welt`.
+2. **Gegenstände und Inventar**: pro Spieler im Spielstand; Schlüssel und
+   verschlossene Türen als erstes Rätselelement.
+3. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
+   und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
+4. **Töne.**
+5. **Handy-Steuerung.**
+6. **Weltkarte der Kampagne** in Gebiete zerlegen (wartet auf die Karte).
+
+## Später (Vorschlag — Reihenfolge offen)
 
 1. **Bildschirmweise Kamera wie im Original** oder bleibt es beim Mitlaufen?
    Mit mehreren Spielern ist Mitlaufen einfacher; eine Mischform wäre: Räume
@@ -56,3 +74,10 @@
 - Wer in Windows „Node.js“ aus dem Startmenü öffnet, landet in der Node-Konsole
   (`>`), nicht in `cmd` — dort scheitert schon `cd`. GitHub-ZIPs entpacken in
   einen Unterordner `pixel-abenteuer-main`.
+- `scene.restart()` benutzt dasselbe Szenen-Objekt. Eine beim Gebietswechsel
+  gesetzte Sperre blieb stehen, die Figur ließ sich in der Höhle nicht
+  bewegen. Zustand in `create` zurücksetzen.
+- `bewege()` blieb einen Teilschritt vor der Wand stehen — bei 8 Bildern/s
+  bis zu 3 px. Jetzt rückt sie in halben Schritten heran.
+- Chromium drosselt Hintergrund-Tabs; im Prüfstand mit zwei Seiten in einem
+  Fenster schlief so der erste Spieler. Startargumente gegen die Drosselung.

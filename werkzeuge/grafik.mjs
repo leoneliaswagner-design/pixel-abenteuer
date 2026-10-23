@@ -133,6 +133,44 @@ function baumKachel(b) {
   b.rechteck(14, 20, 4, 9, P.holz);
 }
 
+function hoehlenboden(b) {
+  const z = zufall(71);
+  b.rechteck(0, 0, K, K, '#4a4050');
+  for (let i = 0; i < 16; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.5 ? '#3a3240' : '#5a5062');
+  for (let i = 0; i < 3; i++) {
+    const x = Math.floor(z() * (K - 4)), y = Math.floor(z() * (K - 3));
+    b.rechteck(x, y, 3, 2, '#5a5062');
+    b.rechteck(x + 1, y + 2, 3, 1, '#2e2834');
+  }
+}
+
+function fels(b) {
+  // Höhlenwand: oben die dunkle Kante, darunter Gestein mit Lichtkante —
+  // wie die Klippen in Link's Awakening, damit man sie als Wand liest.
+  b.rechteck(0, 0, K, K, '#6b5e72');
+  const z = zufall(81);
+  for (const [x, y, w, h] of [[1, 3, 14, 12], [17, 2, 14, 13], [2, 17, 12, 13], [15, 18, 16, 12]]) {
+    b.rechteck(x, y, w, h, '#7d7084');
+    b.rechteck(x, y, w, 1, '#9a8ea2');
+    b.rechteck(x, y + h - 1, w, 1, '#4e4456');
+  }
+  for (let i = 0; i < 10; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#4e4456');
+  b.rechteck(0, 0, K, 2, '#2a1e2e');
+}
+
+function treppe(b, runter) {
+  b.rechteck(0, 0, K, K, runter ? '#2a1e2e' : '#4a4050');
+  for (let stufe = 0; stufe < 5; stufe++) {
+    const y = 3 + stufe * 6;
+    // Abwärts werden die Stufen dunkler (sie führen ins Dunkle), aufwärts heller.
+    const hell = runter ? ['#b8a895', '#9b8b7a', '#7d6e60', '#5e5146', '#433a32'][stufe] : ['#5e5146', '#7d6e60', '#9b8b7a', '#b8a895', '#d0c2ae'][stufe];
+    b.rechteck(3, y, K - 6, 5, hell);
+    b.rechteck(3, y + 4, K - 6, 1, '#2a1e2e');
+  }
+  b.rechteck(0, 0, 3, K, '#5e5146');
+  b.rechteck(K - 3, 0, 3, K, '#5e5146');
+}
+
 const maler = {
   gras: (b) => grasGrund(b, 1),
   gras2: (b) => grasGrund(b, 2, 14),
@@ -147,6 +185,10 @@ const maler = {
   busch_rest: buschRest,
   baum: baumKachel,
   mauer,
+  hoehlenboden,
+  fels,
+  treppe_runter: (b) => treppe(b, true),
+  treppe_hoch: (b) => treppe(b, false),
 };
 
 const zeilen = Math.ceil(KACHELN.length / SPALTEN);

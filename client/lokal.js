@@ -13,8 +13,9 @@ export class LokalNetz extends Netz {
       if (!r.ok) throw new Error(`${pfad} fehlt (${r.status})`);
       return r.json();
     });
-    const [karte, werte] = await Promise.all([lade('karten/start.json'), lade('daten/werte.json')]);
-    this.spiel = new Spiel(karte, werte);
+    const werte = await lade('daten/werte.json');
+    const karten = Object.fromEntries(await Promise.all(werte.gebiete.map(async (g) => [g, await lade(`karten/${g}.json`)])));
+    this.spiel = new Spiel(karten, werte);
     let willkommen = null;
     // Kopie über JSON, wie beim echten Netz: sonst teilten sich Spiel und
     // Szene dieselben Objekte, und was die Szene ändert, änderte die Regeln.
@@ -27,9 +28,8 @@ export class LokalNetz extends Netz {
     let zuletzt = Date.now();
     setInterval(() => {
       const jetzt = Date.now();
-      this.spiel.schritt(Math.min(0.1, (jetzt - zuletzt) / 1000));
+      this.spiel.takt(Math.min(0.1, (jetzt - zuletzt) / 1000));
       zuletzt = jetzt;
-      this.verteilen(JSON.parse(JSON.stringify(this.spiel.stand())));
     }, TAKT);
     return willkommen;
   }

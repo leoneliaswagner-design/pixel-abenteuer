@@ -1,4 +1,9 @@
 {
+  "startGebiet": "start",
+  "gebiete": [
+    "start",
+    "hoehle"
+  ],
   "spieler": {
     "leben": 6,
     "geschwindigkeit": 90,
@@ -24,6 +29,12 @@
       "herzChance": 0.35
     }
   },
-  "busch": { "nachwachsen": 30000, "herzChance": 0.15 },
-  "herz": { "heilung": 2, "verschwinden": 15000 }
+  "busch": {
+    "nachwachsen": 30000,
+    "herzChance": 0.15
+  },
+  "herz": {
+    "heilung": 2,
+    "verschwinden": 15000
+  }
 }

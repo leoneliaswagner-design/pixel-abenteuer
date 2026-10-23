@@ -20,7 +20,7 @@ export class Netz {
         if (m.t === 'willkommen') {
           angekommen = true;
           gut(m);
-        } else if (m.t === 'voll') schlecht(new Error('Das Spiel ist voll — es sind schon vier Leute da.'));
+        } else if (m.t === 'abgelehnt') schlecht(new Error(m.text));
         else this.verteilen(m);
       };
       ws.onclose = () => {
@@ -33,6 +33,14 @@ export class Netz {
   bei(art, fn) {
     if (!this.hoerer.has(art)) this.hoerer.set(art, []);
     this.hoerer.get(art).push(fn);
+  }
+
+  // Beim Gebietswechsel: alle Zuhörer weg, und bis die neue Szene steht,
+  // wieder aufstauen.
+  zuruecksetzen() {
+    this.hoerer.clear();
+    this.offen = false;
+    this.wartend = [];
   }
 
   // Ab jetzt hört die Szene zu: Aufgestautes nachliefern.

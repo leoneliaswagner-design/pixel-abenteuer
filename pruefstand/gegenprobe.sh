@@ -25,17 +25,29 @@ PY
   mv "$1.gegenprobe" "$1"
 }
 
-probe server/spiel.js "this.anAlle({ t: 'busch', i, weg: true });" "" pruefstand/zwei-spieler.mjs \
+probe server/gebiet.js "this.anAlle({ t: 'busch', i, weg: true });" "" pruefstand/zwei-spieler.mjs \
   "Server meldet geschnittene Büsche nicht weiter"
-probe server/spiel.js "|| !this.welt.frei(x, y)" "" pruefstand/server-regeln.mjs \
+probe server/spiel.js "|| !gebiet.welt.frei(x, y)" "" pruefstand/server-regeln.mjs \
   "Server glaubt Positionen im Wasser"
 probe server/spiel.js "weg > s.budget + 2 ||" "" pruefstand/zwei-spieler.mjs \
   "Server glaubt jedes Tempo"
 probe client/netz.js "location.protocol === 'https:' ? 'wss' : 'ws'" "'ws'" pruefstand/zwei-spieler.mjs \
   "Browser verbindet fest über ws:// (hinter dem Tunnel gesperrt)" UEBER_HTTPS=1
-probe server/spiel.js "if (s.tot || jetzt < s.unverwundbarBis) continue;" "if (s.tot) continue;" pruefstand/server-regeln.mjs \
+probe server/spiel.js "if (u) this.wechseln(s, u.eig.ziel, u.eig.ankunft);" "" pruefstand/server-regeln.mjs \
+  "Treppe führt nirgendwohin"
+probe server/spiel.js "gebiet: tot ? s.ankunft.gebiet : s.gebiet," "gebiet: 'start'," pruefstand/server-regeln.mjs \
+  "Spielstand vergisst das Gebiet"
+probe server/gebiet.js "if (!hier.length) return;" "" pruefstand/server-regeln.mjs \
+  "Gebiete ohne Spieler laufen weiter"
+probe server/spiel.js "if (!staende.has(s.gebiet)) staende.set(s.gebiet, this.gebiete.get(s.gebiet).stand(jetzt));" "if (!staende.has(s.gebiet)) staende.set(s.gebiet, this.startGebiet.stand(jetzt));" pruefstand/server-regeln.mjs \
+  "alle bekommen den Stand der Oberwelt"
+probe gemeinsam/welt.js "        y = heranruecken(welt, x, y, 0, sy, k);" "" pruefstand/server-regeln.mjs \
+  "Figur bleibt je nach Bildrate vor der Wand stehen"
+probe client/szenen/Spiel.js "    this.wechselt = false;" "" pruefstand/gebiete.mjs \
+  "Figur bleibt nach dem Gebietswechsel stehen"
+probe server/gebiet.js "if (s.tot || jetzt < s.unverwundbarBis) continue;" "if (s.tot) continue;" pruefstand/server-regeln.mjs \
   "keine Unverwundbarkeit nach einem Treffer"
-probe server/spiel.js "if (s.leben >= this.w.spieler.leben) continue;" "" pruefstand/server-regeln.mjs \
+probe server/gebiet.js "if (s.leben >= this.w.spieler.leben) continue;" "" pruefstand/server-regeln.mjs \
   "Herz wird auch mit vollem Leben verbraucht"
 
 echo

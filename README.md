@@ -49,12 +49,28 @@ vielen Kabel-/Glasfaser-Anschlüssen nicht — Stichwort „DS-Lite"):
 
 Die IP ändert sich meist einmal am Tag.
 
+## Spielstände
+
+Der Server merkt sich jeden Spieler an seinem **Namen** (Groß-/Kleinschreibung
+egal): Gebiet, Stelle, Leben. Wer mit demselben Namen wiederkommt, steht da,
+wo er aufgehört hat. Gespeichert wird alle 5 Sekunden, beim Verlassen und
+beim Beenden mit Strg+C.
+
+- Datei: `spielstaende/spielstand.json` neben dem Spiel (nicht im Repo).
+  Daneben liegt `spielstand.json.bak` mit der vorigen Fassung.
+- Andere Datei, z. B. eine pro Kampagne: `set SPIELSTAND=C:\Pfad\kampagne.json`
+  (Windows) bzw. `SPIELSTAND=… npm run online`.
+- Neu anfangen: die Datei löschen oder umbenennen.
+
+Wer besiegt wird, steht an der Stelle wieder auf, an der er das Gebiet
+zuletzt betreten hat.
+
 ## Aufbau
 
 | Ordner | Was drin ist |
 |---|---|
 | `client/` | Das Spiel im Browser (Phaser 3). `szenen/Spiel.js` ist die Welt, `szenen/Oberflaeche.js` Herzen und Meldungen, `figur.js` eine Spielfigur. |
-| `server/` | Node-Server mit WebSockets. `spiel.js` entscheidet über Leben, Treffer, Gegner, Büsche, Herzen. |
+| `server/` | Node-Server mit WebSockets. `spiel.js`: Spieler, Übergänge, Spielstand. `gebiet.js`: eine Karte mit ihren Gegnern, Büschen, Herzen. `spielstand.js`: die Datei. |
 | `gemeinsam/` | Was Browser und Server beide brauchen: Kollision, Schwert-Trefferfläche. |
 | `inhalte/grafik/` | Alle Bilder (PNG). |
 | `inhalte/karten/` | Karten im Format von [Tiled](https://www.mapeditor.org). |
@@ -64,10 +80,19 @@ Die IP ändert sich meist einmal am Tag.
 
 ## Grafik und Karten selbst bearbeiten
 
-- **Karte:** `inhalte/karten/start.json` in Tiled öffnen. Ebenen: `boden`,
-  `hindernisse`, `orte` (Punkte `spieler_start` und `gegner`). Ob eine
-  Kachel fest ist, steht als Eigenschaft im Kachelsatz.
-  Danach **nicht mehr** `npm run karte` ausführen — das überschreibt die Karte.
+- **Karten:** Jedes Gebiet ist eine Datei in `inhalte/karten/` (jetzt:
+  `start.json` = Oberwelt, `hoehle.json`), in Tiled zu öffnen. Welche es gibt,
+  steht in `inhalte/daten/werte.json` unter `gebiete`.
+  - Ebenen: `boden`, `hindernisse`, `orte`. Ob eine Kachel fest ist, steht
+    als Eigenschaft im Kachelsatz.
+  - In `orte`: Punkte `spieler_start` (nur im Startgebiet), `gegner`
+    (Eigenschaft `art`), `ankunft` (Eigenschaft `id`, optional `richtung`)
+    und Rechtecke `uebergang` (Eigenschaften `ziel` = Gebiet, `ankunft` = id
+    der Ankunft dort). Wer mit den Füßen in einen Übergang tritt, wechselt.
+  - Die Karte selbst hat die Eigenschaft `titel` („die Höhle") für Meldungen.
+  - Ein Übergang, dessen Ziel es nicht gibt, fällt schon beim Serverstart auf.
+  - Nach Handarbeit an einer Karte **nicht mehr** `npm run karte` ausführen —
+    das überschreibt sie (`npm run karte -- hoehle` schreibt nur die Höhle).
 - **Grafik:** Die PNGs in `inhalte/grafik/` lassen sich mit jedem
   Pixelprogramm (Aseprite, LibreSprite, Piskel) übermalen. Danach **nicht mehr**
   `npm run grafik` ausführen. Raster: Kacheln 32×32, Held 32×32 (Zeilen:
@@ -78,6 +103,7 @@ Die IP ändert sich meist einmal am Tag.
 ```sh
 node pruefstand/server-regeln.mjs   # Regeln des Servers, ohne Browser
 node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
+node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
 ```
