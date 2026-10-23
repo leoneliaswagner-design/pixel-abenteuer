@@ -1,0 +1,44 @@
+# Arbeitsweise in diesem Projekt
+
+## Was es ist
+
+Koop-Abenteuer für 2–4 Spieler im Browser, Stil *Link's Awakening*, 32er-Kacheln.
+Phaser 3 im Browser, Node + `ws` auf dem Server. Ein späterer Umzug nach Godot
+ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
+`werte.json`), nicht im Code.
+
+## Wer entscheidet was
+
+- **Der Server** entscheidet alles, worüber sich Spieler einig sein müssen:
+  Leben, Treffer, Gegner, Büsche, Herzen.
+- **Der Browser** bewegt nur die eigene Figur sofort selbst (sonst fühlt sich
+  das Laufen bei Ping zäh an). Der Server prüft Tempo und Wände und schickt
+  `korrektur`. Jede Korrektur zählt `k` hoch; Positionen mit altem `k` verwirft
+  er — sonst würden Pakete von vor der Korrektur sie wieder rückgängig machen.
+- Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
+  werden von beiden Seiten benutzt. Nicht doppelt schreiben.
+
+## Regeln
+
+- Deutsch in Oberfläche und Bezeichnern.
+- Kommentare erklären, **warum** — gern mit dem Fehler, der dazu geführt hat.
+- Zahlen zum Feinschleifen gehören nach `inhalte/daten/werte.json`.
+- `npm run grafik` / `npm run karte` überschreiben die Inhalte. Sobald
+  jemand eine PNG oder die Karte von Hand bearbeitet hat, laufen sie für diese
+  Datei nicht mehr.
+
+## Prüfen
+
+- `node pruefstand/server-regeln.mjs` — schnell, ohne Browser.
+- `node pruefstand/zwei-spieler.mjs` — baut, startet einen Server und zwei
+  Chromium-Fenster und misst, was im **anderen** Browser ankommt (und
+  Bildpunkte, nicht nur Zustände).
+- Jede neue Regel bekommt eine Zeile in `pruefstand/gegenprobe.sh`: absichtlich
+  kaputt machen, Prüfung muss anschlagen.
+- Ein Prüfstand sagt, wie viel er angesehen hat (Zähler am Ende).
+- Grafiken ansehen: `node pruefstand/grafik-vorschau.mjs inhalte/grafik/ bild.png`
+  legt alle PNGs vierfach vergrößert auf ein Bild.
+
+## Berichten
+
+Kurz: was gebaut, was gemessen, was offen. Offenes und Gelerntes ins `ROADMAP.md`.

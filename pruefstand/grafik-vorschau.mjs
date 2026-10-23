@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+const dir = process.argv[2];
+const namen = ['kacheln','baum','held-gruen','held-rot','schleim','schwert','herz','rauch','blaetter','schatten'];
+const imgs = namen.map(n => `<div><img src="data:image/png;base64,${readFileSync(dir+n+'.png').toString('base64')}"></div>`).join('');
+const b = await chromium.launch();
+const p = await b.newPage({viewport:{width:1400,height:900}});
+await p.setContent(`<body style="background:#556;display:flex;flex-wrap:wrap;gap:16px;margin:8px">${imgs}<style>img{zoom:4;image-rendering:pixelated}</style></body>`);
+await p.screenshot({path: process.argv[3], fullPage:true});
+await b.close();

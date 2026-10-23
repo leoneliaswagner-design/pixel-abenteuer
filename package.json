@@ -1,0 +1,23 @@
+{
+  "name": "pixel-abenteuer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,client -c yellow,cyan \"node --watch server/index.js\" \"vite\"",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "grafik": "node werkzeuge/grafik.mjs",
+    "karte": "node werkzeuge/karte.mjs",
+    "pruefen": "node pruefstand/zwei-spieler.mjs"
+  },
+  "dependencies": {
+    "phaser": "3.90.0",
+    "ws": "8.18.3"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.1",
+    "playwright": "1.56.1",
+    "vite": "7.1.12"
+  }
+}

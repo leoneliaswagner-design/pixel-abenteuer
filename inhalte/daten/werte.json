@@ -1,0 +1,29 @@
+{
+  "spieler": {
+    "leben": 6,
+    "geschwindigkeit": 90,
+    "hiebDauer": 260,
+    "hiebPause": 120,
+    "hiebReichweite": 26,
+    "hiebBreite": 30,
+    "unverwundbar": 1000,
+    "stossGeschwindigkeit": 220,
+    "stossDauer": 160,
+    "wiederbelebung": 3000
+  },
+  "gegner": {
+    "schleim": {
+      "leben": 2,
+      "schaden": 1,
+      "geschwindigkeit": 32,
+      "jagdGeschwindigkeit": 48,
+      "sichtweite": 110,
+      "stossGeschwindigkeit": 240,
+      "stossDauer": 180,
+      "neuErscheinen": 12000,
+      "herzChance": 0.35
+    }
+  },
+  "busch": { "nachwachsen": 30000, "herzChance": 0.15 },
+  "herz": { "heilung": 2, "verschwinden": 15000 }
+}
