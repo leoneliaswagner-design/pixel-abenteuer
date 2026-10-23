@@ -15,11 +15,14 @@
   "dependencies": {
     "cloudflared": "0.7.3",
     "phaser": "3.90.0",
-    "ws": "8.18.3"
+    "ws": "8.22.0"
   },
   "devDependencies": {
-    "concurrently": "9.2.1",
+    "concurrently": "10.0.6",
     "playwright": "1.56.1",
-    "vite": "7.1.12"
+    "vite": "7.3.7"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

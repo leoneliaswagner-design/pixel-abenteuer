@@ -5,7 +5,7 @@ mit 32er- statt 16er-Kacheln.
 
 ## Starten
 
-Voraussetzung: [Node.js](https://nodejs.org) ab Version 20.
+Voraussetzung: [Node.js](https://nodejs.org) ab Version 22.
 
 ```sh
 npm install

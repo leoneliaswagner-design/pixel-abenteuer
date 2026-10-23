@@ -9,8 +9,7 @@
 - Büsche lassen sich schneiden und wachsen nach; Herzen fallen und heilen.
 - Bis zu 4 Spieler online; Leben, Treffer, Tod und Wiederbelebung.
 - `npm run online`: eigener Rechner als Server, Cloudflare-Tunnel ohne Konto (23.10.2026).
-  Hinter https/wss geprüft mit einem nachgebauten Tunnel; der echte Tunnel ist
-  aus der Cloud-Sitzung gesperrt und **noch nicht von Hand getestet**.
+  Unter Windows von Hand getestet: funktioniert (23.10.2026).
 
 - Allein-Modus (`?allein`, oder `VITE_ALLEIN=1` beim Bauen): die Regeln aus
   `server/spiel.js` laufen im Browser. Daraus ist die Vorschau-Seite gebaut.
@@ -51,3 +50,9 @@
   `fileURLToPath` nehmen.
 - Feste Wartezeiten im Prüfstand brechen, sobald Chromium langsamer rendert
   (hinter https: 8 statt 60 Bilder/s). Laufen, bis die Figur steht.
+- Neuere npm-Versionen führen Installationsskripte nicht mehr ohne Freigabe aus
+  (`allowScripts`). cloudflared kam dadurch beim `npm install` nicht mit herunter;
+  `online.mjs` lädt es deshalb selbst nach, wenn es fehlt.
+- Wer in Windows „Node.js“ aus dem Startmenü öffnet, landet in der Node-Konsole
+  (`>`), nicht in `cmd` — dort scheitert schon `cd`. GitHub-ZIPs entpacken in
+  einen Unterordner `pixel-abenteuer-main`.
