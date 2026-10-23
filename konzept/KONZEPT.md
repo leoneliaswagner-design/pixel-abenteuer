@@ -21,9 +21,36 @@ alle sollen bespielbar werden, nach und nach.
 
 Die kleinen Inseln liegen grob in Ringen um die Mitte.
 
+## Der Anfang (Kurzfassung des Spielleiters)
+
+Die Gruppe startet auf einer **kleinen Insel südöstlich des großen
+Nordwest-Kontinents**. Von dort geht es zu einer **Hafenstadt**, in der
+seltsame Anomalien auftreten: **Dimensionsrisse**. Ganz normale Gassen
+führen plötzlich an völlig andere Orte, z. B. einen Dschungeltempel wie am
+Anfang von *Indiana Jones* oder eine Akropolis. Die Spieler reisen durch
+die Risse und müssen die Stadt retten.
+
+### Was das fürs Spiel heißt
+
+- **Die Hafenstadt ist der Mittelpunkt** — wie Mabe Village in Link's
+  Awakening oder Clock Town in Majora's Mask: man kommt immer wieder zurück,
+  sie verändert sich mit dem Fortschritt.
+- **Jeder Riss ist ein Übergang** in ein eigenes Gebiet mit eigenem Stil
+  (Dschungeltempel, Akropolis, …) — im Grunde ein Dungeon. Das Gerüst dafür
+  (Gebiete, Übergänge, Spielstand) steht schon.
+- **Risse öffnen und schließen sich** mit dem Fortschritt. Dafür braucht es
+  **Weltzustände** („Riss Tempel geschlossen", „Hafenmeister gerettet"), die
+  im Spielstand stehen und von denen Übergänge, Figuren-Dialoge und Türen
+  abhängen.
+- Die Orte sind *angelehnt* an bekannte Vorbilder, aber selbst gestaltet —
+  eigene Grafik, eigene Rätsel (ein rollender Felsbrocken im Tempel darf
+  natürlich nicht fehlen).
+
 ## Offene Fragen
 
-- Namen der Kontinente und der Startort der Gruppe.
+- Namen der Kontinente, der Startinsel und der Hafenstadt.
+- Liegt die Hafenstadt auf der Startinsel, oder setzt man von dort über?
+- Welche Risse/Orte gibt es zuerst, und was „rettet" die Stadt?
 - Wie reist man zwischen den Inseln? (siehe ROADMAP)
 - Homebrew-Klassen und -Spezies.
 - Gehören Schlüssel dem Finder oder der Gruppe?
