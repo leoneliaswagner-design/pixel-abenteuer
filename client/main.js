@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Netz } from './netz.js';
+import { LokalNetz } from './lokal.js';
 import { SpielSzene } from './szenen/Spiel.js';
 import { Oberflaeche } from './szenen/Oberflaeche.js';
 
@@ -7,6 +8,14 @@ import { Oberflaeche } from './szenen/Oberflaeche.js';
 // Awakening (10×8), bei doppelter Kachelauflösung.
 export const BREITE = 480;
 export const HOEHE = 270;
+
+// Allein spielen, ohne Server: mit ?allein in der Adresse, oder fest
+// eingebaut (VITE_ALLEIN=1 beim Bauen) für die Vorschau-Seite.
+const ALLEIN = import.meta.env.VITE_ALLEIN === '1' || new URLSearchParams(location.search).has('allein');
+if (ALLEIN) {
+  document.getElementById('hinweis').textContent =
+    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J.';
+}
 
 const form = document.getElementById('anmelden');
 const feld = document.getElementById('name');
@@ -29,7 +38,7 @@ form.addEventListener('submit', async (e) => {
   knopf.disabled = true;
   knopf.textContent = 'Verbinde …';
   fehler.textContent = '';
-  const netz = new Netz();
+  const netz = ALLEIN ? new LokalNetz() : new Netz();
   try {
     const willkommen = await netz.verbinden(name);
     document.getElementById('start').remove();

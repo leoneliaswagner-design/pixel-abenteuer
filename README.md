@@ -15,6 +15,9 @@ npm run dev
 Dann http://localhost:5173 öffnen, gern in zwei Fenstern nebeneinander.
 Andere im selben WLAN kommen über `http://<deine-IP>:5173` dazu.
 
+Allein, ganz ohne Server-Verbindung: `http://localhost:5173/?allein` — die
+Spielregeln laufen dann im Browser (`client/lokal.js`).
+
 **Steuerung:** Pfeiltasten oder WASD zum Laufen, Leertaste oder J für das Schwert.
 
 ## Mit Freunden übers Internet

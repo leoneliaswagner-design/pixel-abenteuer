@@ -12,6 +12,9 @@
   Hinter https/wss geprüft mit einem nachgebauten Tunnel; der echte Tunnel ist
   aus der Cloud-Sitzung gesperrt und **noch nicht von Hand getestet**.
 
+- Allein-Modus (`?allein`, oder `VITE_ALLEIN=1` beim Bauen): die Regeln aus
+  `server/spiel.js` laufen im Browser. Daraus ist die Vorschau-Seite gebaut.
+
 ## Als Nächstes (Vorschlag — Reihenfolge offen)
 
 1. **Bildschirmweise Kamera wie im Original** oder bleibt es beim Mitlaufen?
