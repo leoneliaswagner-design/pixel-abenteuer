@@ -2,6 +2,9 @@
   "startGebiet": "riftside",
   "gebiete": [
     "riftside",
+    "rathaus",
+    "hafenmeisterei",
+    "haus_pip",
     "wald",
     "hoehle",
     "tempel"
@@ -11,7 +14,9 @@
     "buergermeister",
     "hafenmeisterin",
     "wache",
-    "kind"
+    "kind",
+    "schreiber",
+    "mutter"
   ],
   "spieler": {
     "leben": 6,

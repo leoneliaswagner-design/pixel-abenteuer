@@ -38,9 +38,8 @@
 
 ## Grundgerüst — als Nächstes
 
-1. **Häuser betreten**: Haustüren als Übergänge in Innenräume (Rathaus,
-   Hafenmeisterei, Wohnhäuser). Braucht Innenraum-Kacheln (Dielen, Wände,
-   Möbel).
+1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
+   (Seekarte), Pips Haus (Elsa). Weitere Türen sind noch zu.
 2. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
    und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
 3. **Töne.**
@@ -116,3 +115,5 @@
 - Die Szene lud Bewohner-Bilder nach der Liste in werte.json, bevor
   werte.json geladen war — alle sahen aus wie der alte Mann. Die Prüfstände
   zählten nur Figuren. Jetzt prüft riftside.mjs die Textur jeder Figur.
+- Phaser zentriert eine Karte nicht, die kleiner ist als der Bildschirm —
+  Innenräume klebten links. Kamera-Grenzen selbst mittig setzen.

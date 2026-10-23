@@ -40,6 +40,17 @@ export const KACHELN = [
   { name: 'kiste', zeichen: 'k', fest: true, hindernis: true },
   { name: 'fass', zeichen: 'v', fest: true, hindernis: true },
   { name: 'laterne', zeichen: 'l', fest: true, hindernis: true },
+  // Häuser betreten: „eingang" sieht aus wie die Haustür, ist aber begehbar
+  // (ein Übergang liegt darauf). Innenräume: Dielen, Wand, Möbel.
+  { name: 'eingang', zeichen: 'N' },
+  { name: 'dielen', zeichen: 'd' },
+  { name: 'innenwand', zeichen: 'I', fest: true, hindernis: true },
+  { name: 'wandkante', zeichen: 'J', fest: true, hindernis: true },
+  { name: 'teppich', zeichen: 'c' },
+  { name: 'fussmatte', zeichen: 'u' },
+  { name: 'tisch', zeichen: 'm', fest: true, hindernis: true },
+  { name: 'bett', zeichen: 'y', fest: true, hindernis: true },
+  { name: 'regal', zeichen: 'x', fest: true, hindernis: true },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

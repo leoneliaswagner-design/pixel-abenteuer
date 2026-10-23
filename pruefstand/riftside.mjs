@@ -90,8 +90,26 @@ try {
     await warte(120);
   }
 
-  // Die Hauptstraße hinauf und durchs Tor.
-  await laufeBis('ArrowLeft', (s) => s.ich.x <= 22 * 32, 3000);
+  // In die Hafenmeisterei (Tür auf Kachel 11,17) und wieder hinaus.
+  await laufeBis('ArrowLeft', (s) => s.ich.x <= 11 * 32 + 20, 5000);
+  await laufeBis('ArrowUp', (s) => s.gebiet === 'hafenmeisterei', 4000);
+  await warte(800);
+  z = await zustand();
+  pruefe(z.gebiet === 'hafenmeisterei', `durch die Tür in die Hafenmeisterei (${z.gebiet})`);
+  const raum = await p.evaluate(() => {
+    const s = window.__spiel.szene, v = s.cameras.main.worldView;
+    return { links: -v.x, rechts: v.right - s.welt.breite * s.welt.kachel };
+  });
+  pruefe(Math.abs(raum.links - raum.rechts) <= 2, `der kleine Raum steht in der Bildmitte (Rand links ${raum.links.toFixed(0)}, rechts ${raum.rechts.toFixed(0)} px)`);
+  await p.screenshot({ path: join(bilder, 'hafenmeisterei.png') });
+  await laufeBis('ArrowDown', (s) => s.gebiet === 'riftside', 4000);
+  await warte(800);
+  z = await zustand();
+  pruefe(z.gebiet === 'riftside' && Math.abs(z.ich.x - (11 * 32 + 16)) < 1, `über die Fußmatte wieder hinaus, vor der Tür (${z.gebiet}, x ${z.ich.x.toFixed(0)})`);
+
+  // Hinunter zur Straße, nach rechts zur Hauptstraße, hinauf und durchs Tor.
+  await laufeBis('ArrowDown', (s) => s.ich.y >= 21 * 32 + 10, 2000);
+  await laufeBis('ArrowRight', (s) => s.ich.x >= 21 * 32 + 10, 5000);
   await laufeBis('ArrowUp', (s) => s.gebiet === 'wald', 15000);
   await warte(800);
   z = await zustand();

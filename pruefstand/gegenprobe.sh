@@ -77,6 +77,10 @@ probe client/szenen/Spiel.js "        } else if (this.getippt) ich.richtung = th
   "Antippen dreht die Figur nicht"
 probe client/szenen/Spiel.js "    else this.load.once('filecomplete-json-werte', (schluessel, art, werte) => leuteLaden(werte));" "" pruefstand/riftside.mjs \
   "alle Bewohner sehen aus wie der alte Mann"
+probe werkzeuge/karte.mjs "    return e[n];" "    return e[0];" pruefstand/karten.mjs \
+  "alle Haustüren führen ins selbe Haus"
+probe client/szenen/Spiel.js "kamera.setBounds(Math.min(0, (kb - sb) / 2)" "kamera.setBounds(0" pruefstand/riftside.mjs \
+  "kleine Räume kleben links am Bildrand"
 probe client/szenen/Spiel.js "    this.netz.senden({ t: 'bereit' });" "" pruefstand/risse.mjs \
   "Browser meldet sich nie bereit"
 probe werkzeuge/karte.mjs "  const grundBei = (x, y) => {" "  const grundBei = (x, y) => {

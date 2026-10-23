@@ -342,6 +342,90 @@ function laterne(b) {
   b.einfuegen(s, 0, 0);
 }
 
+// ---------- Innenräume ----------
+
+function dielen(b) {
+  b.rechteck(0, 0, K, K, '#b07a48');
+  for (let reihe = 0; reihe < 4; reihe++) {
+    const y = reihe * 8;
+    b.rechteck(0, y + 7, K, 1, '#7a5030');
+    b.rechteck(0, y, K, 1, '#c48e5a');
+    const fuge = (reihe * 13) % 24 + 4;
+    b.rechteck(fuge, y, 1, 7, '#7a5030');
+  }
+  const z = zufall(131);
+  for (let i = 0; i < 6; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#966238');
+}
+
+function innenwand(b) {
+  // Tapete oben, Holzvertäfelung unten — die Wand, auf die man von vorn schaut.
+  b.rechteck(0, 0, K, K, '#d8c8a0');
+  for (let x = 2; x < K; x += 8) b.rechteck(x, 0, 2, 18, '#c8b48a');
+  b.rechteck(0, 18, K, 2, '#7a5030');
+  b.rechteck(0, 20, K, 12, '#9a6a40');
+  for (let x = 0; x < K; x += 8) b.rechteck(x, 20, 1, 12, '#7a5030');
+  b.rechteck(0, 30, K, 2, '#5e3e22');
+}
+
+function wandkante(b) {
+  b.rechteck(0, 0, K, K, '#3a2a30');
+  b.rechteck(0, 0, K, 2, '#2a1e2e');
+  const z = zufall(141);
+  for (let i = 0; i < 6; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#4a3840');
+}
+
+function teppich(b) {
+  // Ohne Rand pro Kachel: mehrere Teppichkacheln nebeneinander sahen sonst
+  // aus wie einzelne Fliesen. Das Muster läuft über die Kachelgrenzen weiter.
+  b.rechteck(0, 0, K, K, '#a83a4a');
+  for (let y = 4; y < K; y += 8)
+    for (let x = (y % 16 === 4 ? 4 : 0); x < K; x += 8) {
+      b.rechteck(x, y, 2, 2, '#e8b84a');
+      b.setze(x + 1, y + 2, '#8a2a3a');
+    }
+}
+
+function fussmatte(b) {
+  // Der Ausgang unten in der Wand: Dielen, darauf eine Matte, nach unten dunkel.
+  dielen(b);
+  b.rechteck(0, 22, K, 10, '#3a2a30');
+  b.rechteck(4, 4, 24, 16, '#6a5a3a');
+  b.rechteck(6, 6, 20, 12, '#8a7a4a');
+  for (let x = 8; x < 26; x += 3) b.rechteck(x, 7, 1, 10, '#6a5a3a');
+}
+
+function moebel(b, art) {
+  b.ellipse(16, 28, 13, 3, [0, 0, 0, 70]);
+  const s = new Bild(K, K);
+  if (art === 'tisch') {
+    s.rechteck(3, 8, 26, 14, P.holz);
+    s.rechteck(3, 8, 26, 2, P.holzHell);
+    s.rechteck(3, 20, 26, 2, P.holzDunkel);
+    s.rechteck(5, 22, 3, 6, P.holzDunkel);
+    s.rechteck(24, 22, 3, 6, P.holzDunkel);
+    s.rechteck(12, 11, 8, 6, '#f4ecd8');
+    s.rechteck(13, 12, 6, 1, '#9a9aa8');
+  } else if (art === 'bett') {
+    s.rechteck(4, 2, 24, 27, P.holzDunkel);
+    s.rechteck(6, 4, 20, 23, '#e8e8f0');
+    s.rechteck(8, 5, 16, 6, '#ffffff');
+    s.rechteck(6, 13, 20, 14, '#3f74d6');
+    s.rechteck(6, 13, 20, 2, '#6fa0f0');
+  } else {
+    s.rechteck(3, 1, 26, 28, P.holzDunkel);
+    for (const y of [3, 12, 21]) {
+      s.rechteck(5, y, 22, 7, '#4e3420');
+      let x = 6;
+      for (const [farbe, breite] of [['#d04848', 3], ['#3f74d6', 2], ['#3fae4a', 3], ['#e8b84a', 2], ['#9a52c8', 3]]) {
+        s.rechteck(x, y + 1 + (x % 2), breite, 6 - (x % 2), farbe);
+        x += breite + 1;
+      }
+    }
+  }
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+}
+
 const maler = {
   gras: (b) => grasGrund(b, 1),
   gras2: (b) => grasGrund(b, 2, 14),
@@ -373,6 +457,15 @@ const maler = {
   kiste,
   fass,
   laterne,
+  eingang: haustuer,
+  dielen,
+  innenwand,
+  wandkante,
+  teppich,
+  fussmatte,
+  tisch: (b) => moebel(b, 'tisch'),
+  bett: (b) => moebel(b, 'bett'),
+  regal: (b) => moebel(b, 'regal'),
 };
 
 const zeilen = Math.ceil(KACHELN.length / SPALTEN);
@@ -611,6 +704,8 @@ const LEUTE = {
   hafenmeisterin: { tunika: ['#2a4a7a', '#4a6a9a', '#1a2a4a'], kopf: (r) => kopfMensch(r, { haar: '#a0402a', lang: true }) },
   wache: { tunika: ['#6a6a7a', '#8a8a9a', '#4a4a5a'], kopf: (r) => kopfMensch(r, { haar: '#3a2a1a', helm: '#a8a8b8' }) },
   kind: { tunika: ['#d0a030', '#e8c050', '#9a7020'], kopf: (r) => kopfMensch(r, { haar: '#e8c15a' }) },
+  schreiber: { tunika: ['#4a6a3a', '#6a8a5a', '#2e4a24'], kopf: (r) => kopfMensch(r, { haar: '#9a9aa8', schnurr: true }) },
+  mutter: { tunika: ['#7a4a8a', '#9a6aaa', '#4e2e5a'], kopf: (r) => kopfMensch(r, { haar: '#6a4020', lang: true }) },
 };
 for (const [name, l] of Object.entries(LEUTE)) {
   const blatt = new Bild(128, 128);

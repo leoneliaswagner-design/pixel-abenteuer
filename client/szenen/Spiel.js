@@ -82,7 +82,11 @@ export class SpielSzene extends Phaser.Scene {
     this.herzen = new Map();
 
     const kamera = this.cameras.main;
-    kamera.setBounds(0, 0, this.welt.breite * this.welt.kachel, this.welt.hoehe * this.welt.kachel);
+    // Ein Raum, der kleiner ist als der Bildschirm, steht in der Mitte —
+    // Phaser macht das nicht von selbst; die Hafenmeisterei klebte links.
+    const kb = this.welt.breite * this.welt.kachel, kh = this.welt.hoehe * this.welt.kachel;
+    const { width: sb, height: sh } = this.scale;
+    kamera.setBounds(Math.min(0, (kb - sb) / 2), Math.min(0, (kh - sh) / 2), Math.max(kb, sb), Math.max(kh, sh));
     kamera.startFollow(this.ich.koerper, true, 0.2, 0.2, 0, 16);
 
     this.tasten = this.input.keyboard.addKeys('UP,DOWN,LEFT,RIGHT,W,A,S,D');

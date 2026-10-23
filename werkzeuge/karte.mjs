@@ -28,8 +28,22 @@ const KARTEN = {
       P: { ziel: 'wald', ankunft: 'von_riftside' },
       // Die Fischergasse: ein Riss in den Dschungeltempel.
       R: { ziel: 'tempel', ankunft: 'von_riftside', art: 'riss', bedingung: '!tempel_geschlossen' },
+      // Begehbare Haustüren, zeilenweise gelesen.
+      N: [
+        { ziel: 'rathaus', ankunft: 'eingang' },
+        { ziel: 'hafenmeisterei', ankunft: 'eingang' },
+        { ziel: 'haus_pip', ankunft: 'eingang' },
+      ],
     },
-    ankuenfte: { w: { id: 'vom_wald', richtung: 'unten' }, z: { id: 'aus_tempel', richtung: 'unten' } },
+    ankuenfte: {
+      w: { id: 'vom_wald', richtung: 'unten' },
+      z: { id: 'aus_tempel', richtung: 'unten' },
+      e: [
+        { id: 'aus_rathaus', richtung: 'unten' },
+        { id: 'aus_hafenmeisterei', richtung: 'unten' },
+        { id: 'aus_haus_pip', richtung: 'unten' },
+      ],
+    },
     dinge: {
       '@': [
         { name: 'Torwache Bruno', aussehen: 'wache', richtung: 'unten',
@@ -52,8 +66,8 @@ T.......*..........@.pp..........*.........T
 T.............rrrrrrrwp....................T
 T..rrrrr.rrrrrrrrrrrrpp....T.rrrrr.rrrrr...T
 TT.qqqqq.qqqqqqqqqqqqpp......qqqqq.qqqqq..TT
-TT.hfnfh.hfnfhhfhnhfhpp......hfnfh.hfnfh...T
-T....p.....p.....p...pp........p.....p.....T
+TT.hfnfh.hfnfhhfhNhfhpp......hfnfh.hfnfh...T
+T....p.....p.....e...pp........p.....p.....T
 T....p.....p.....p..lppl.......p.....p.....T
 T.b..p..b..p....pppppppppppp...p.....p..b..T
 T....p.....p..**ppppppppppppb..p.....p.....T
@@ -64,8 +78,8 @@ T.l.............pp@ppppppppp......p......l.T
 T...............pppppppppppp......p........T
 T..rrrrr.rrrrr......lppl.....rrrrrRrrrrr...T
 T..qqqqq.qqqqq.......pp......qqqqqpqqqqq...T
-T.*hfnfh.hfnfhb......pp...*..hfnfhphfnfh.b.T
-T....p.....p...b.....pp........p..z..p.....T
+T.*hfnfh.hfNfhb......pp...*..hfNfhphfnfh.b.T
+T....p.....e...b.....pp........e..z..p.....T
 T$...p.....p.........pp........p..p..p.....T
 T....pkv...p.........SS..kkv...p..p..p.v...T
 T.pppppppppppppppppppppppppppppppppppppppp.T
@@ -77,6 +91,79 @@ TssssssssssssssssssssssssssssssssssssssssssT
 ~~~~~~~~HH~~~~~~~~~~~HH~~~~~~~~~~HH~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~HH~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+`,
+  },
+  // ---------- Innenräume von Riftside ----------
+  // Rand „J", Wand „I" oben, Dielen „d", Ausgang „u" unten in der Wand.
+  rathaus: {
+    titel: 'das Rathaus',
+    grund: 'dielen',
+    uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_rathaus', kachel: 'fussmatte' } },
+    ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
+    dinge: {
+      '@': [{
+        name: 'Ratsschreiber Theo', aussehen: 'schreiber', richtung: 'unten',
+        text: 'Ah, Besucher. Ich führe Buch über die Risse.\n\nDer in der Fischergasse ist der erste, den wir gefunden haben. Ich fürchte, nicht der letzte.',
+        text_wenn_tempel_geschlossen: 'Die Fischergasse ist wieder eine Gasse! Ich trage es gleich ein.\n\nBleiben noch die anderen …',
+      }],
+      '!': [{ text: 'Bekanntmachung des Rates:\n\nWer einen Riss betritt, tut dies auf eigene Gefahr. Kinder bleiben den Gassen fern!' }],
+    },
+    text: `
+JJJJJJJJJJJJJJJJ
+JIIIIIIIIIIIIIIJ
+JxxdddddddddddxJ
+JdddmmmmmmmddddJ
+Jddd@dddd!dddddJ
+JddddddddddddddJ
+JcccccccccccccdJ
+JddddddadddddddJ
+JddddddddddddddJ
+JJJJJJJuJJJJJJJJ
+`,
+  },
+  hafenmeisterei: {
+    titel: 'die Hafenmeisterei',
+    grund: 'dielen',
+    uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_hafenmeisterei', kachel: 'fussmatte' } },
+    ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
+    dinge: {
+      '!': [{ text: 'Eine Seekarte. Fünf große Inseln, dazwischen unzählige kleine.\n\nIm Nordwesten ein Land mit Schneegebirgen. Südöstlich davon, klein eingezeichnet: Riftside.' }],
+      '$': [{ inhalt: 'gold:5', id: 'hafenmeisterei_gold' }],
+    },
+    text: `
+JJJJJJJJJJJJ
+JIIIIIIIIIIJ
+Jxx!ddddd$xJ
+JddddddddddJ
+JdmmddcccddJ
+JdddddcccddJ
+JvddddaddddJ
+JkddddddddvJ
+JJJJJJuJJJJJ
+`,
+  },
+  haus_pip: {
+    titel: 'Pips Haus',
+    grund: 'dielen',
+    uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_haus_pip', kachel: 'fussmatte' } },
+    ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
+    dinge: {
+      '@': [{
+        name: 'Elsa', aussehen: 'mutter', richtung: 'unten',
+        text: 'Habt ihr Pip gesehen? Wenn er wieder an der Fischergasse herumlungert …\n\nSeit da dieser Riss flimmert, schlafe ich keine Nacht mehr.',
+        text_wenn_tempel_geschlossen: 'Ihr habt den Riss geschlossen? Den Göttern sei Dank.\n\nJetzt kann ich endlich wieder ruhig schlafen.',
+      }],
+    },
+    text: `
+JJJJJJJJJJJJ
+JIIIIIIIIIIJ
+JyydddddxxdJ
+JddddddddddJ
+Jddd@dddmmdJ
+JdccccddddvJ
+JdccccadddkJ
+JddddddddddJ
+JJJJJJuJJJJJ
 `,
   },
   wald: {
@@ -199,6 +286,17 @@ function karteBauen(name, def) {
 
   const boden = [], hindernisse = [], orte = [];
   const gezaehlt = {};
+  // Übergänge und Ankünfte dürfen Listen sein: das n-te Vorkommen des
+  // Zeichens (zeilenweise gelesen) nimmt den n-ten Eintrag — so führt jede
+  // Haustür „N" in ein anderes Haus.
+  const nimm = (tabelle, z, x, y) => {
+    const e = tabelle?.[z];
+    if (!Array.isArray(e)) return e;
+    const schluessel = `${tabelle === def.uebergaenge ? 'u' : 'a'}${z}`;
+    const n = (gezaehlt[schluessel] = (gezaehlt[schluessel] ?? 0) + 1) - 1;
+    if (!e[n]) throw new Error(`${name}: '${z}' Nr. ${n + 1} bei ${x},${y} hat keinen Eintrag`);
+    return e[n];
+  };
   let id = 1;
   const ort = (o) => orte.push({ id: id++, type: '', visible: true, rotation: 0, width: 0, height: 0, properties: [], ...o });
   const mitte = (x, y) => ({ x: x * GROESSE + GROESSE / 2, y: y * GROESSE + GROESSE / 2 });
@@ -229,10 +327,10 @@ function karteBauen(name, def) {
         ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, v)) });
       } else if (z === 'g') ort({ name: 'gegner', point: true, ...mitte(x, y), properties: [eigenschaft('art', 'schleim')] });
       else if (def.ankuenfte?.[z]) {
-        const a = def.ankuenfte[z];
+        const a = nimm(def.ankuenfte, z, x, y);
         ort({ name: 'ankunft', point: true, ...mitte(x, y), properties: [eigenschaft('id', a.id), ...(a.richtung ? [eigenschaft('richtung', a.richtung)] : [])] });
       } else {
-        const u = def.uebergaenge?.[z];
+        const u = nimm(def.uebergaenge, z, x, y);
         const n = nachZeichen[z];
         // Ein Übergang ohne eigene Kachel (ein Riss) steht auf dem Grund.
         if (n === undefined && !u) throw new Error(`${name}: unbekanntes Zeichen '${z}' bei ${x},${y}`);

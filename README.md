@@ -117,6 +117,10 @@ Zum Ausprobieren in einem anderen Gebiet beginnen: `STARTGEBIET=wald`
     Textbox selbst um. Was es an Gegenständen gibt (mit Name und Grammatik),
     steht in `werte.json` unter `gegenstaende`; `"gemeinsam": true` heißt,
     er gehört der Gruppe (Schlüssel, Risssteine), sonst dem Finder (Gold).
+  - Haustüren: Kachel `eingang` (sieht aus wie eine Tür, ist begehbar) mit
+    einem Übergang darauf; im Haus führt die `fussmatte` unten in der Wand
+    wieder hinaus. Im Kartengenerator dürfen Übergänge und Ankünfte Listen
+    sein — das n-te „N" auf der Karte nimmt den n-ten Eintrag.
   - Die Karte selbst hat die Eigenschaft `titel` („die Höhle") für Meldungen.
   - Ein Übergang, dessen Ziel es nicht gibt, fällt schon beim Serverstart auf.
   - Nach Handarbeit an einer Karte **nicht mehr** `npm run karte` ausführen —

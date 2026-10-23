@@ -30,6 +30,11 @@ pruefe(['gras', 'gras2'].includes(boden(r, 1, 19)), `unter der Truhe liegt Gras 
 pruefe(boden(r, 21, 20) === 'pflaster', `der Startpunkt liegt auf der Straße (${boden(r, 21, 20)})`);
 pruefe(boden(r, 34, 15) === 'pflaster', `der Riss liegt in der gepflasterten Gasse (${boden(r, 34, 15)})`);
 
+// Die begehbaren Haustüren führen in verschiedene Häuser — nicht alle ins erste.
+const tueren = r.layers[2].objects.filter((o) => o.name === 'uebergang' && o.properties.some((p) => p.name === 'ziel' && !['wald', 'tempel'].includes(p.value)));
+const hausZiele = new Set(tueren.map((o) => o.properties.find((p) => p.name === 'ziel').value));
+pruefe(tueren.length === 3 && hausZiele.size === 3, `${tueren.length} Haustüren, ${hausZiele.size} verschiedene Häuser (${[...hausZiele].join(', ')})`);
+
 // Jeder Übergang führt zu einer Ankunft, die es gibt.
 let uebergaenge = 0;
 for (const [name, k] of Object.entries(karten))

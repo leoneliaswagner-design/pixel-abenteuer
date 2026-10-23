@@ -185,6 +185,19 @@ uhr += 500;
 echt.nachricht(neuling.id, { t: 'pos', x: neuling.x, y: 29 * 32 + 10, r: 'unten', k: neuling.korrektur });
 pruefe(neuling.gebiet === 'riftside' && neuling.y < 4 * 32, `vom Wald nach Süden: zurück in Riftside, unter dem Tor (${neuling.gebiet}, y ${neuling.y})`);
 
+// --- Ins Rathaus und wieder hinaus ---
+// Tür auf Kachel (17,5) = y 160…192, davor (17,6); im Rathaus der Ausgang (7,9).
+Object.assign(neuling, { x: 17 * 32 + 16, y: 6 * 32 + 24 });
+uhr += 500;
+echt.nachricht(neuling.id, { t: 'pos', x: neuling.x, y: 5 * 32 + 28, r: 'oben', k: neuling.korrektur });
+pruefe(neuling.gebiet === 'rathaus', `durch die Tür ins Rathaus (${neuling.gebiet})`);
+Object.assign(neuling, { x: 7 * 32 + 16, y: 8 * 32 + 24 });
+uhr += 500;
+echt.nachricht(neuling.id, { t: 'pos', x: neuling.x, y: 9 * 32 + 4, r: 'unten', k: neuling.korrektur });
+pruefe(neuling.gebiet === 'riftside' && neuling.x === 17 * 32 + 16 && neuling.y === 6 * 32 + 24,
+  `über die Fußmatte hinaus: vor der Rathaustür (${neuling.gebiet}, ${neuling.x}, ${neuling.y})`);
+pruefe(!echt.gebiete.get('riftside').welt.frei(5 * 32 + 16, 5 * 32 + 24), 'die anderen Haustüren sind zu (man läuft nicht hinein)');
+
 // --- Regelmäßig speichern, nicht nur beim Verlassen ---
 const vorSpeichern = readFileSync(datei, 'utf8');
 mia2.x += 8;
