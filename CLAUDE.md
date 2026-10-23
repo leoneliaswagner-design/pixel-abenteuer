@@ -21,6 +21,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 ## Regeln
 
 - Deutsch in Oberfläche und Bezeichnern.
+- Gespielt wird vermutlich unter Windows: Pfade mit `fileURLToPath`, keine
+  Shell-Skripte für Spieler (nur für Prüfstände).
 - Kommentare erklären, **warum** — gern mit dem Fehler, der dazu geführt hat.
 - Zahlen zum Feinschleifen gehören nach `inhalte/daten/werte.json`.
 - `npm run grafik` / `npm run karte` überschreiben die Inhalte. Sobald
@@ -33,6 +35,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/zwei-spieler.mjs` — baut, startet einen Server und zwei
   Chromium-Fenster und misst, was im **anderen** Browser ankommt (und
   Bildpunkte, nicht nur Zustände).
+- `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter
+  davor (wie der Cloudflare-Tunnel von `npm run online`). Der echte Tunnel ist
+  aus der Cloud-Sitzung nicht erreichbar.
 - Jede neue Regel bekommt eine Zeile in `pruefstand/gegenprobe.sh`: absichtlich
   kaputt machen, Prüfung muss anschlagen.
 - Ein Prüfstand sagt, wie viel er angesehen hat (Zähler am Ende).

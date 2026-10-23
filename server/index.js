@@ -6,8 +6,11 @@ import { readFileSync, existsSync, createReadStream, statSync } from 'node:fs';
 import { join, extname, normalize } from 'node:path';
 import { WebSocketServer } from 'ws';
 import { Spiel } from './spiel.js';
+import { fileURLToPath } from 'node:url';
 
-const wurzel = new URL('..', import.meta.url).pathname;
+// fileURLToPath statt .pathname: unter Windows ergibt .pathname „/C:/…“,
+// und der Server fand seine eigenen Dateien nicht.
+const wurzel = fileURLToPath(new URL('..', import.meta.url));
 const lies = (p) => JSON.parse(readFileSync(join(wurzel, p), 'utf8'));
 const PORT = Number(process.env.PORT) || 3001;
 const TAKT = 50;
@@ -30,7 +33,9 @@ const http = createServer((req, res) => {
   createReadStream(datei).pipe(res);
 });
 
-const wss = new WebSocketServer({ server: http, path: '/ws' });
+// Unsere Nachrichten sind kleiner als 200 Bytes. Der Standard von ws erlaubt
+// 100 MB — über den Tunnel ist der Server offen im Internet erreichbar.
+const wss = new WebSocketServer({ server: http, path: '/ws', maxPayload: 4096 });
 
 wss.on('connection', (ws) => {
   let ich = null;

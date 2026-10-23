@@ -2,6 +2,7 @@
 //
 //   node pruefstand/zwei-spieler.mjs        (baut vorher mit vite)
 //   OHNE_BAU=1 node pruefstand/zwei-spieler.mjs
+//   UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   (wie hinter dem Cloudflare-Tunnel)
 //
 // Gemessen wird, was im jeweils ANDEREN Browser ankommt — nicht, was der
 // eigene glaubt. Am Ende steht, wie viel angesehen wurde; eine Prüfung, die
@@ -9,8 +10,9 @@
 import { chromium } from 'playwright';
 import { spawn, execSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const wurzel = new URL('..', import.meta.url).pathname;
+const wurzel = fileURLToPath(new URL('..', import.meta.url));
 const PORT = 3457;
 const bilder = `${wurzel}pruefstand/bilder/`;
 mkdirSync(bilder, { recursive: true });
@@ -26,6 +28,13 @@ await new Promise((gut, schlecht) => {
   server.stdout.on('data', () => serverLog.includes(`:${PORT}`) && (clearTimeout(t), gut()));
 });
 
+// Hinter einem https-Weiterleiter, so wie `npm run online` es mit Cloudflare macht.
+const weiterleiter = process.env.UEBER_HTTPS
+  ? await (await import('./https-weiterleiter.mjs')).starteWeiterleiter(PORT, PORT + 1)
+  : null;
+const adresse = weiterleiter?.url ?? `http://localhost:${PORT}/`;
+console.log(`Spiel unter ${adresse}`);
+
 const fehler = [];
 const zaehler = { pruefungen: 0, spielerGesehen: 0, gegnerVerglichen: 0 };
 const pruefe = (bed, text) => {
@@ -39,9 +48,9 @@ const browser = await chromium.launch();
 try {
   const seiten = [];
   for (const name of ['Anna', 'Ben']) {
-    const p = await browser.newPage({ viewport: { width: 960, height: 540 } });
+    const p = await browser.newPage({ viewport: { width: 960, height: 540 }, ignoreHTTPSErrors: true });
     p.on('pageerror', (e) => fehler.push(`${name}: Seitenfehler ${e.message}`));
-    await p.goto(`http://localhost:${PORT}/`);
+    await p.goto(adresse);
     await p.fill('#name', name);
     await p.click('button[type=submit]');
     await p.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
@@ -58,10 +67,22 @@ try {
   pruefe(za.andere[0]?.farbe !== undefined && za.andere[0]?.farbe !== zb.andere[0]?.farbe, `verschiedene Farben (${zb.andere[0]?.farbe} / ${za.andere[0]?.farbe})`);
 
   // --- Anna läuft nach unten bis an den Busch; Ben sieht sie dort ---
+  // Laufen, bis die Figur steht — nicht eine feste Zeit. Chromium ohne
+  // Grafikkarte schafft mal 60, mal 8 Bilder pro Sekunde; mit fester Zeit
+  // kam Anna hinter dem https-Weiterleiter nicht ganz bis zum Busch.
+  const laufeBisAnschlag = async (p, taste, hoechstens = 5000) => {
+    await p.keyboard.down(taste);
+    let letztes = null;
+    for (let t = 0; t < hoechstens; t += 250) {
+      await warte(250);
+      const { x, y } = (await zustand(p)).ich;
+      if (letztes && Math.hypot(x - letztes.x, y - letztes.y) < 0.01) break;
+      letztes = { x, y };
+    }
+    await p.keyboard.up(taste);
+  };
   const vorher = za.ich;
-  await a.keyboard.down('ArrowDown');
-  await warte(1300);
-  await a.keyboard.up('ArrowDown');
+  await laufeBisAnschlag(a, 'ArrowDown');
   await warte(400);
   za = await zustand(a);
   zb = await zustand(b);
@@ -96,7 +117,7 @@ try {
 
   // --- Anna kann jetzt durch, wo der Busch war ---
   await a.keyboard.down('ArrowDown');
-  await warte(500);
+  for (let t = 0; t < 3000 && (await zustand(a)).ich.y <= 530; t += 100) await warte(100);
   await a.keyboard.up('ArrowDown');
   za = await zustand(a);
   pruefe(za.ich.y > 530, `Anna läuft durch die Lücke (y = ${za.ich.y.toFixed(0)})`);
@@ -130,10 +151,16 @@ try {
   pruefe(Math.hypot(nachSprung.x - vorSprung.x, nachSprung.y - vorSprung.y) < 2,
     `Sprung über 600 px wird vom Server zurückgesetzt (zurück bei ${nachSprung.x.toFixed(0)},${nachSprung.y.toFixed(0)})`);
 
+  if (weiterleiter) {
+    const z = weiterleiter.zaehler;
+    pruefe(z.websockets === 2, `beide Verbindungen liefen als wss:// durch den Weiterleiter (${z.websockets} WebSockets, ${z.anfragen} Dateien)`);
+  }
+
   await a.screenshot({ path: bilder + 'anna.png' });
   await b.screenshot({ path: bilder + 'ben.png' });
 } finally {
   await browser.close();
+  weiterleiter?.schliessen();
   server.kill();
 }
 

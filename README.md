@@ -5,6 +5,8 @@ mit 32er- statt 16er-Kacheln.
 
 ## Starten
 
+Voraussetzung: [Node.js](https://nodejs.org) ab Version 20.
+
 ```sh
 npm install
 npm run dev
@@ -18,13 +20,31 @@ Andere im selben WLAN kommen über `http://<deine-IP>:5173` dazu.
 ## Mit Freunden übers Internet
 
 ```sh
-npm run build
-npm start          # ein einziger Port (3001, oder PORT=…)
+npm run online
 ```
 
-`npm start` liefert das gebaute Spiel und den Spielserver über denselben
-Port aus. Den Rechner/Server, auf dem das läuft, müssen die anderen
-erreichen — z. B. ein kleiner Server bei Fly.io, Render oder Hetzner.
+Baut das Spiel, startet den Server auf deinem Rechner und öffnet einen
+kostenlosen Cloudflare-Tunnel (ohne Konto). Nach ein paar Sekunden steht ein
+Link wie `https://irgendwas-mit-woertern.trycloudflare.com` im Fenster — den
+schickst du deinen Freunden und öffnest ihn selbst.
+
+- Das Fenster muss offen bleiben, solange gespielt wird. Strg+C beendet alles.
+- Der Link ist bei jedem Start neu.
+- Kein Router-Umbau nötig. Ein Firmen- oder Schulnetz kann Cloudflare aber sperren;
+  dann sagt das Skript das.
+
+### Ganz ohne Tunnel (nur mit eigener öffentlicher IP)
+
+Wenn dein Internetanschluss eine eigene öffentliche IPv4-Adresse hat (bei
+vielen Kabel-/Glasfaser-Anschlüssen nicht — Stichwort „DS-Lite"):
+
+1. `npm run build` und dann `npm start` (Port 3001).
+2. Im Router Port 3001 (TCP) an deinen Rechner weiterleiten
+   (FritzBox: Internet → Freigaben → Portfreigaben).
+3. Deine öffentliche IP z. B. auf https://ifconfig.me nachsehen; Freunde öffnen
+   `http://<diese-IP>:3001`.
+
+Die IP ändert sich meist einmal am Tag.
 
 ## Aufbau
 
@@ -55,5 +75,6 @@ erreichen — z. B. ein kleiner Server bei Fly.io, Render oder Hetzner.
 ```sh
 node pruefstand/server-regeln.mjs   # Regeln des Servers, ohne Browser
 node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
+UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
 ```

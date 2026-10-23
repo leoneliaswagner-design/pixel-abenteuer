@@ -7,11 +7,13 @@
     "dev": "concurrently -n server,client -c yellow,cyan \"node --watch server/index.js\" \"vite\"",
     "build": "vite build",
     "start": "node server/index.js",
+    "online": "node werkzeuge/online.mjs",
     "grafik": "node werkzeuge/grafik.mjs",
     "karte": "node werkzeuge/karte.mjs",
     "pruefen": "node pruefstand/zwei-spieler.mjs"
   },
   "dependencies": {
+    "cloudflared": "0.7.3",
     "phaser": "3.90.0",
     "ws": "8.18.3"
   },

@@ -4,8 +4,9 @@
 // aber dieselben Proportionen (großer Kopf, kleiner Körper, dunkler Umriss).
 import { Bild, zufall } from './pixel.mjs';
 import { KACHELN, GROESSE as K, SPALTEN } from './kacheln.mjs';
+import { fileURLToPath } from 'node:url';
 
-const ziel = new URL('../inhalte/grafik/', import.meta.url).pathname;
+const ziel = fileURLToPath(new URL('../inhalte/grafik/', import.meta.url));
 const UMRISS = '#2a1e2e';
 
 const P = {

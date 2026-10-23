@@ -8,6 +8,9 @@
 - Schleime: wandern, jagen in Sichtweite, Rückstoß, Tod mit Rauch, erscheinen neu.
 - Büsche lassen sich schneiden und wachsen nach; Herzen fallen und heilen.
 - Bis zu 4 Spieler online; Leben, Treffer, Tod und Wiederbelebung.
+- `npm run online`: eigener Rechner als Server, Cloudflare-Tunnel ohne Konto (23.10.2026).
+  Hinter https/wss geprüft mit einem nachgebauten Tunnel; der echte Tunnel ist
+  aus der Cloud-Sitzung gesperrt und **noch nicht von Hand getestet**.
 
 ## Als Nächstes (Vorschlag — Reihenfolge offen)
 
@@ -21,7 +24,12 @@
 6. **Gegenstände**: Schild, Bomben, Fackeln — und Rätsel, die man nur zu zweit löst.
 7. **Räume/Lobbys**: Mehrere Gruppen gleichzeitig auf einem Server.
 8. **Echte Grafik**: Die Platzhalter durch handgemalte Pixel ersetzen.
-9. **Hochladen**: Server bei einem Anbieter, damit Freunde per Link mitspielen.
+9. **Ohne laufenden Rechner spielen** — zwei Wege:
+   - Peer-to-Peer: Seite auf GitHub Pages, ein Browser ist Gastgeber
+     (`server/spiel.js` ist reines JS und läuft auch im Browser).
+     Braucht einen Vermittlungsdienst zum Kennenlernen; in manchen Netzen
+     kommt keine direkte Verbindung zustande.
+   - Server bei einem Anbieter (Fly.io, Render, Hetzner).
 
 ## Gelernt
 
@@ -33,3 +41,10 @@
 - Weg-Guthaben statt fester Grenze pro Nachricht: Pakete kommen gebündelt an.
 - Ein Teleport-Test ins Wasser prüfte nur die Tempo-Grenze, nie die Wand — erst
   die Gegenprobe hat das gezeigt. Jede Regel einzeln prüfen.
+- Das npm-Paket `cloudflared` meldet als Link den ersten trycloudflare-Treffer
+  in der Ausgabe — ohne Netz war das `https://api.trycloudflare.com` aus der
+  Fehlermeldung. `online.mjs` liest den Link deshalb selbst aus.
+- `new URL(…, import.meta.url).pathname` ergibt unter Windows `/C:/…`. Immer
+  `fileURLToPath` nehmen.
+- Feste Wartezeiten im Prüfstand brechen, sobald Chromium langsamer rendert
+  (hinter https: 8 statt 60 Bilder/s). Laufen, bis die Figur steht.
