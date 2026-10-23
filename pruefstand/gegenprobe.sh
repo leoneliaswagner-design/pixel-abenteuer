@@ -75,6 +75,8 @@ probe server/spiel.js "    else if (m.t === 'bereit') s.unverwundbarBis" "    el
   "„bereit\" beendet die lange Schonfrist nicht"
 probe client/szenen/Spiel.js "        } else if (this.getippt) ich.richtung = this.getippt;" "        }" pruefstand/riftside.mjs \
   "Antippen dreht die Figur nicht"
+probe client/szenen/Spiel.js "    else this.load.once('filecomplete-json-werte', (schluessel, art, werte) => leuteLaden(werte));" "" pruefstand/riftside.mjs \
+  "alle Bewohner sehen aus wie der alte Mann"
 probe client/szenen/Spiel.js "    this.netz.senden({ t: 'bereit' });" "" pruefstand/risse.mjs \
   "Browser meldet sich nie bereit"
 probe werkzeuge/karte.mjs "  const grundBei = (x, y) => {" "  const grundBei = (x, y) => {

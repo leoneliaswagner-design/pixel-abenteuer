@@ -66,6 +66,9 @@ try {
   let z = await zustand();
   pruefe(z.gebiet === 'riftside', `neu: Start in Riftside (${z.gebiet})`);
   pruefe(z.figuren.length === 4, `${z.figuren.length} Leute in der Stadt`);
+  // Jeder sieht aus wie er soll — nicht nur „irgendeine Figur ist da".
+  const falsch = z.figuren.filter((f) => f.textur !== `figur-${f.aussehen}`);
+  pruefe(!falsch.length, `alle tragen ihr eigenes Aussehen (${z.figuren.map((f) => `${f.name}: ${f.textur}`).join(', ')})`);
   pruefe(z.gegner.length === 0, 'keine Gegner in der Stadt');
   pruefe(z.risse.length === 1 && z.risse[0].sichtbar, 'der Riss in der Fischergasse flimmert');
   await p.screenshot({ path: join(bilder, 'riftside-hafen.png') });

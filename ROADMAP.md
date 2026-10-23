@@ -113,3 +113,6 @@
   im selben Bild losgelassen, `isDown` sieht sie nie. Auf `keydown` hören.
 - Spielstände von vor dem 24.10.2026 nennen das Gebiet „start" — das heißt
   jetzt „wald"; solche Spieler beginnen neu in Riftside.
+- Die Szene lud Bewohner-Bilder nach der Liste in werte.json, bevor
+  werte.json geladen war — alle sahen aus wie der alte Mann. Die Prüfstände
+  zählten nur Figuren. Jetzt prüft riftside.mjs die Textur jeder Figur.

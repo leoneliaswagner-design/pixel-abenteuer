@@ -28,10 +28,16 @@ export class SpielSzene extends Phaser.Scene {
     this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
-    // Aussehen der Leute in der Welt — welche es gibt, steht in werte.json,
-    // weil die Szene es wissen muss, bevor die Karte geladen ist.
-    for (const a of this.cache.json.get('werte')?.aussehen ?? ['alter_mann'])
-      this.load.spritesheet(`figur-${a}`, `grafik/figur-${a}.png`, { frameWidth: 32, frameHeight: 32 });
+    // Aussehen der Leute in der Welt — welche es gibt, steht in werte.json.
+    // Die lädt beim ersten Mal im selben Durchgang; also erst nachladen,
+    // wenn sie da ist. (Vorher wurde nur der alte Mann geladen, und alle
+    // Bewohner von Riftside sahen aus wie er.)
+    const leuteLaden = (werte) => {
+      for (const a of werte.aussehen ?? [])
+        if (!this.textures.exists(`figur-${a}`)) this.load.spritesheet(`figur-${a}`, `grafik/figur-${a}.png`, { frameWidth: 32, frameHeight: 32 });
+    };
+    if (this.cache.json.exists('werte')) leuteLaden(this.cache.json.get('werte'));
+    else this.load.once('filecomplete-json-werte', (schluessel, art, werte) => leuteLaden(werte));
     for (const f of FARBEN) this.load.spritesheet(`held-${f}`, `grafik/held-${f}.png`, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('schleim', 'grafik/schleim.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('herz', 'grafik/herz.png', { frameWidth: 16, frameHeight: 16 });
@@ -131,7 +137,10 @@ export class SpielSzene extends Phaser.Scene {
         risse: this.risse.map((r) => ({ ziel: r.ort.eig.ziel, sichtbar: r.bild.visible })),
         anzeige: this.oberflaeche().anzeigeText?.(),
         truhen: [...this.dinge.values()].filter((d) => d.ding.name === 'truhe').map((d) => ({ schluessel: d.ding.schluessel, offen: d.bild.frame.name === 1 })),
-        figuren: [...this.dinge.values()].filter((d) => d.ding.name === 'figur').map((d) => ({ schluessel: d.ding.schluessel, bild: d.bild.frame.name })),
+        figuren: [...this.dinge.values()].filter((d) => d.ding.name === 'figur').map((d) => ({
+          schluessel: d.ding.schluessel, bild: d.bild.frame.name, name: d.ding.eig.name,
+          aussehen: d.ding.eig.aussehen ?? 'alter_mann', textur: d.bild.texture.key,
+        })),
       }),
     };
   }
