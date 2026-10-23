@@ -142,6 +142,6 @@
   Bild ist sie fast durchsichtig. Mehrmals messen. Schnelle Geschosse
   fliegen während des Bildschirmfotos aus einem kleinen Ausschnitt — den
   ganzen Schirm gegen ein Bild vor dem Wurf vergleichen.
-- Tempo im Browser messen: Weg und Zeit aus denselben Bildern
-  (`postupdate`), nicht mit `setTimeout` — das lag zwischen zwei Bildern
-  und maß 4 % zu viel, genau den Unterschied, um den es ging.
+- Tempo im Browser messen: Weg durch die Summe der `delta` aus
+  `postupdate` — nicht durch Uhrzeit (`setTimeout` oder `time`): Phaser
+  glättet delta, gegen die Uhr schwankte es um ±5 %, mehr als der Bonus.

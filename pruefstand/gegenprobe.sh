@@ -116,7 +116,7 @@ probe client/main.js "if (!willkommen.charakter) {" "if (false) {" pruefstand/kl
   "Browser lässt die Charakterwahl aus"
 probe client/figur.js "this.textur = klasse && szene" "this.textur = false && szene" pruefstand/klassen.mjs \
   "alle Klassen sehen gleich aus"
-probe client/szenen/Spiel.js "          dx = (ix / l) * this.tempo * dt;" "          dx = (ix / l) * ws.geschwindigkeit * dt;" pruefstand/klassen.mjs \
+probe client/szenen/Spiel.js "this.tempo = wk.charakter?.werte.tempo ?? this.w.spieler.geschwindigkeit;" "this.tempo = this.w.spieler.geschwindigkeit;" pruefstand/klassen.mjs \
   "Browser läuft ohne Geschick-Bonus"
 probe client/szenen/Spiel.js "    this.geschosseUebernehmen(m.geschosse ?? []);" "" pruefstand/klassen.mjs \
   "Geschosse werden nicht gezeichnet"

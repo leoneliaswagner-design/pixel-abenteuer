@@ -206,21 +206,23 @@ try {
   });
   await mia.keyboard.down(frei);
   await warte(150);
-  // Weg und Zeit aus denselben Bildern: nach jedem update der Szene
-  // (setTimeout lag zwischen den Bildern und maß 4 % zu viel).
+  // Weg geteilt durch die Summe der delta, mit denen die Figur bewegt wurde:
+  // Phaser glättet delta, die Uhrzeit nicht — gegen die Uhr gemessen
+  // schwankte das Ergebnis um ±5 %, mehr als der Bonus selbst.
   const lauf = await mia.evaluate(() => new Promise((gut) => {
     const s = window.__spiel.szene;
-    let a = null;
-    const nachher = (t) => {
-      a ??= { x: s.ich.x, y: s.ich.y, t };
-      if (t - a.t < 500) return;
+    let a = null, zeit = 0;
+    const nachher = (t, delta) => {
+      if (!a) return (a = { x: s.ich.x, y: s.ich.y });
+      zeit += Math.min(delta, 100);
+      if (zeit < 500) return;
       s.events.off('postupdate', nachher);
-      gut(Math.hypot(s.ich.x - a.x, s.ich.y - a.y) / ((t - a.t) / 1000));
+      gut(Math.hypot(s.ich.x - a.x, s.ich.y - a.y) / (zeit / 1000));
     };
     s.events.on('postupdate', nachher);
   }));
   await mia.keyboard.up(frei);
-  pruefe(Math.abs(lauf - soll.tempo) < 3, `Mia läuft ${lauf.toFixed(1)} px/s (soll ${soll.tempo}, ein Mensch ohne Bonus ${werte.spieler.geschwindigkeit})`);
+  pruefe(Math.abs(lauf - soll.tempo) < 1, `Mia läuft ${lauf.toFixed(1)} px/s (soll ${soll.tempo}, ein Mensch ohne Bonus ${werte.spieler.geschwindigkeit})`);
 } finally {
   await browser.close();
   server.kill();
