@@ -1,10 +1,12 @@
+import { SCHRIFT } from './schrift.js';
+
 // Eine Spielfigur auf dem Schirm: Schatten, Körper, Schwert, Name.
 // Ob sie dem eigenen Spieler gehört oder einem anderen, ist ihr egal —
 // das Spiel setzt nur x, y, richtung, laeuft und ruft hieb().
 
 export const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
 export const FARBWERTE = { gruen: '#6fd16a', rot: '#ef7a6a', blau: '#6fa0f0', lila: '#c07fe6' };
-const ZEILE = { unten: 0, oben: 1, links: 2, rechts: 3 };
+export const ZEILE = { unten: 0, oben: 1, links: 2, rechts: 3 };
 
 // Wo die Hand sitzt (vom Fußpunkt aus) und wohin das Schwert in der Mitte
 // des Hiebs zeigt (Grad, 0 = nach oben, im Uhrzeigersinn).
@@ -46,7 +48,7 @@ export class Figur {
     this.koerper = szene.add.sprite(0, 0, `held-${farbe}`, 0).setOrigin(0.5, 1);
     this.schwert = szene.add.image(0, 0, 'schwert').setOrigin(0.5, 0.9).setVisible(false);
     this.schild = name
-      ? szene.add.text(0, 0, name, { fontFamily: 'monospace', fontSize: '8px', color: FARBWERTE[farbe], stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(5000)
+      ? szene.add.text(0, 0, name, { fontFamily: SCHRIFT, fontSize: '8px', color: FARBWERTE[farbe], stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(5000)
       : null;
   }
 

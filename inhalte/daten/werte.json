@@ -4,6 +4,9 @@
     "start",
     "hoehle"
   ],
+  "aussehen": [
+    "alter_mann"
+  ],
   "spieler": {
     "leben": 6,
     "geschwindigkeit": 90,
@@ -36,5 +39,17 @@
   "herz": {
     "heilung": 2,
     "verschwinden": 15000
+  },
+  "gegenstaende": {
+    "gold": {
+      "name": "Goldmünze",
+      "einzeln": "eine Goldmünze",
+      "mehrzahl": "Goldmünzen"
+    },
+    "schluessel": {
+      "name": "kleiner Schlüssel",
+      "einzeln": "einen kleinen Schlüssel",
+      "mehrzahl": "kleine Schlüssel"
+    }
   }
 }

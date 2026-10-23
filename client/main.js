@@ -14,7 +14,7 @@ export const HOEHE = 270;
 const ALLEIN = import.meta.env.VITE_ALLEIN === '1' || new URLSearchParams(location.search).has('allein');
 if (ALLEIN) {
   document.getElementById('hinweis').textContent =
-    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J.';
+    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E.';
 }
 
 const form = document.getElementById('anmelden');
@@ -40,6 +40,10 @@ form.addEventListener('submit', async (e) => {
   fehler.textContent = '';
   const netz = ALLEIN ? new LokalNetz() : new Netz();
   try {
+    // Phaser malt Text einmal und merkt ihn sich — ist die Pixelschrift dann
+    // noch nicht da, bleibt der Text in der Ersatzschrift. Also vorher laden,
+    // aber nicht ewig warten (offline gibt es sie nicht).
+    await Promise.race([document.fonts.load('8px "Press Start 2P"'), new Promise((r) => setTimeout(r, 2500))]).catch(() => {});
     const willkommen = await netz.verbinden(name);
     document.getElementById('start').remove();
     starten(netz, willkommen);

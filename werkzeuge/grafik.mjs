@@ -346,6 +346,101 @@ for (const [name, t] of Object.entries(TUNIKEN)) {
   blatt.speichern(ziel + `held-${name}.png`);
 }
 
+// ---------- Figuren (Leute in der Welt) ----------
+// Körper vom Helden, Kopf eigen: der Held hat die Kapuze, die anderen nicht —
+// so verwechselt man einen Dorfbewohner nicht mit einem Mitspieler.
+function kopfAlterMann(richtung) {
+  const k = new Bild(32, 32);
+  const grau = '#c8c8d4', grauDunkel = '#9a9aa8', bart = '#ececf2';
+  if (richtung === 'oben') {
+    k.ellipse(16, 11.5, 8.5, 7.5, grau);
+    k.ellipse(16, 14, 7, 4, grauDunkel, (x, y) => y > 14);
+    k.ellipse(13, 7, 3, 2, '#e0e0e8');
+  } else if (richtung === 'links') {
+    k.ellipse(15, 11.5, 8, 7.5, P.haut);
+    k.ellipse(17, 10, 7, 6.5, grau, (x, y) => y <= 6 || x >= 18);
+    k.rechteck(9, 9, 4, 1, grau);
+    k.rechteck(10, 11, 2, 2, P.auge);
+    k.setze(6, 13, P.haut);
+    k.ellipse(11, 17, 5, 4.5, bart);
+    k.rechteck(10, 20, 3, 3, bart);
+  } else {
+    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
+    k.ellipse(16, 8, 9, 5, grau, (x, y) => y <= 6 || x <= 9 || x >= 23);
+    k.ellipse(16, 4.5, 4, 2, P.haut);
+    k.rechteck(11, 9, 4, 1, grau);
+    k.rechteck(17, 9, 4, 1, grau);
+    k.rechteck(12, 11, 2, 2, P.auge);
+    k.rechteck(18, 11, 2, 2, P.auge);
+    k.ellipse(16, 17, 6.5, 4.5, bart);
+    k.rechteck(13, 20, 6, 3, bart);
+    k.rechteck(15, 23, 2, 1, bart);
+    k.rechteck(14, 15, 4, 1, '#c8a090');
+  }
+  k.umriss(UMRISS);
+  return k;
+}
+
+const LEUTE = {
+  alter_mann: { tunika: ['#6a6a9a', '#8c8cc0', '#4a4a72'], kopf: kopfAlterMann },
+};
+for (const [name, l] of Object.entries(LEUTE)) {
+  const blatt = new Bild(128, 128);
+  const zeichnen = (r, bild) => {
+    const b = held(l.tunika, r, bild);
+    b.loeschen(0, 0, 32, 17);
+    b.einfuegen(l.kopf(r), 0, 0);
+    return b;
+  };
+  ['unten', 'oben', 'links'].forEach((r, zeile) => {
+    for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen(r, bild), bild * 32, zeile * 32);
+  });
+  for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen('links', bild), bild * 32, 96, true);
+  blatt.speichern(ziel + `figur-${name}.png`);
+}
+
+// ---------- Schild und Truhe ----------
+{
+  const b = new Bild(32, 32);
+  b.ellipse(16, 29, 8, 2.5, [0, 0, 0, 70]);
+  const s = new Bild(32, 32);
+  s.rechteck(14, 17, 4, 12, P.holzDunkel);
+  s.rechteck(4, 5, 24, 13, P.holz);
+  s.rechteck(4, 5, 24, 1, P.holzHell);
+  s.rechteck(4, 17, 24, 1, P.holzDunkel);
+  for (const y of [9, 13]) s.linie(7, y, 24, y, P.holzDunkel);
+  s.setze(6, 7, P.holzDunkel);
+  s.setze(25, 7, P.holzDunkel);
+  s.umriss(UMRISS);
+  b.einfuegen(s, 0, 0);
+  b.speichern(ziel + 'schild.png');
+
+  const truhen = new Bild(64, 32);
+  [false, true].forEach((offen, i) => {
+    const t = new Bild(32, 32);
+    t.ellipse(16, 29, 12, 3, [0, 0, 0, 70]);
+    const k = new Bild(32, 32);
+    k.rechteck(4, 14, 24, 14, P.holz);
+    k.rechteck(4, 26, 24, 2, P.holzDunkel);
+    if (offen) {
+      k.rechteck(4, 4, 24, 8, P.holzDunkel);
+      k.rechteck(6, 6, 20, 5, '#5a3820');
+      k.rechteck(6, 14, 20, 4, UMRISS);
+    } else {
+      k.rechteck(4, 8, 24, 7, P.holzDunkel);
+      k.rechteck(4, 8, 24, 1, P.holzHell);
+      k.rechteck(14, 13, 4, 6, P.gold);
+      k.setze(15, 15, UMRISS);
+      k.setze(16, 15, UMRISS);
+    }
+    for (const x of [7, 23]) k.rechteck(x, offen ? 14 : 8, 2, offen ? 14 : 20, P.gold);
+    k.umriss(UMRISS);
+    t.einfuegen(k, 0, 0);
+    truhen.einfuegen(t, i * 32, 0);
+  });
+  truhen.speichern(ziel + 'truhe.png');
+}
+
 // ---------- Schwert (12×32, Griff unten; gedreht wird um den Griff) ----------
 {
   const b = new Bild(12, 32);

@@ -23,6 +23,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   was beim Wechsel gesetzt wird, in `create` zurücksetzen).
 - **Spielstand**: Spieler am Namen erkannt, `spielstaende/spielstand.json`
   (oder `SPIELSTAND=…`). Prüfstände nehmen **immer** eine Wegwerf-Datei.
+- **Dinge** (Schild, Figur, Truhe): Punkte in `orte`, belegen ihre Kachel
+  (`welt.belegt`), gefunden mit `welt.dingVor()` — dieselbe Funktion für das
+  „E" im Browser und die Antwort des Servers. Was sie sagen, schickt der
+  Server (`dialog`); offene Truhen und Inventar stehen im Spielstand.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -47,6 +51,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   oben, Server-Neustart mit Spielstand; misst die Helligkeit des Bildes.
 - Chromium in Prüfständen ohne Hintergrund-Drosselung starten (s. dort):
   sonst schläft der Tab des ersten Spielers, sobald der zweite aufgeht.
+- `node pruefstand/interaktion.mjs` — Textbox (Helligkeit unten im Bild),
+  blättern, Figur dreht sich beim anderen Spieler, Truhe öffnet für alle.
 - `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter
   davor (wie der Cloudflare-Tunnel von `npm run online`). Der echte Tunnel ist
   aus der Cloud-Sitzung nicht erreichbar.

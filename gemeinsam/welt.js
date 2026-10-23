@@ -9,6 +9,10 @@ export const RICHTUNGEN = { unten: [0, 1], oben: [0, -1], links: [-1, 0], rechts
 // unter den Füßen — so sortiert sich die Zeichenreihenfolge einfach nach y.
 export const KOERPER = { halbeBreite: 6, hoehe: 8 };
 
+// Dinge, die man ansprechen kann. Sie stehen als Punkte in der Ebene „orte"
+// und belegen die Kachel, auf der sie stehen — man läuft nicht durch eine Truhe.
+export const DINGE = new Set(['schild', 'figur', 'truhe']);
+
 export class Welt {
   constructor(karte) {
     this.kachel = karte.tilewidth;
@@ -34,9 +38,16 @@ export class Welt {
     // eig enthält die selbst vergebenen Eigenschaften, z. B. ziel/ankunft.
     this.orte = ebene('orte').objects.map((o) => {
       const eig = eigenschaften(o.properties);
-      return { name: o.name, x: o.x, y: o.y, b: o.width ?? 0, h: o.height ?? 0, eig, art: eig.art };
+      return { id: o.id, name: o.name, x: o.x, y: o.y, b: o.width ?? 0, h: o.height ?? 0, eig, art: eig.art };
     });
     this.geschnitten = new Set();
+    // Schlüssel eines Dings: die eigene „id" aus Tiled, sonst die Objektnummer.
+    // Unter diesem Schlüssel merkt sich der Spielstand z. B. offene Truhen —
+    // wer Truhen später umsortiert, sollte ihnen deshalb eine id geben.
+    this.dinge = this.orte
+      .filter((o) => DINGE.has(o.name))
+      .map((o) => ({ ...o, schluessel: String(o.eig.id ?? `${o.name}-${o.id}`), kachel: this.index(Math.floor(o.x / this.kachel), Math.floor(o.y / this.kachel)) }));
+    this.belegt = new Set(this.dinge.map((d) => d.kachel));
   }
 
   eig(gid) {
@@ -54,7 +65,7 @@ export class Welt {
   istFest(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= this.breite || ty >= this.hoehe) return true;
     const i = this.index(tx, ty);
-    if (this.eig(this.boden[i]).fest) return true;
+    if (this.eig(this.boden[i]).fest || this.belegt.has(i)) return true;
     const h = this.hindernisse[i];
     if (!h || this.geschnitten.has(i)) return false;
     return !!this.eig(h).fest;
@@ -72,6 +83,17 @@ export class Welt {
     const y0 = Math.floor((y - k.hoehe) / t), y1 = Math.floor((y - 0.001) / t);
     for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (this.istFest(tx, ty)) return false;
     return true;
+  }
+
+  // Das Ding direkt vor einer Figur — dort, wohin sie schaut. Gemessen ab
+  // der Mitte der Fußfläche, eine gute halbe Kachel weit.
+  dingVor(x, y, richtung) {
+    const [dx, dy] = RICHTUNGEN[richtung] ?? [0, 1];
+    const px = x + dx * 18, py = y - 4 + dy * 18;
+    const k = this.kachel;
+    if (px < 0 || py < 0) return null;
+    const i = this.index(Math.floor(px / k), Math.floor(py / k));
+    return this.dinge.find((d) => d.kachel === i) ?? null;
   }
 
   // Kacheln, die ein Rechteck berührt — für den Schwerthieb gegen Büsche.

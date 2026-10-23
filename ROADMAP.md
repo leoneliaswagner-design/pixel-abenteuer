@@ -20,12 +20,17 @@
   Verlassen/Beenden gespeichert, mit Sicherung (.bak). Wiederbelebung an der
   letzten Ankunft.
 
+- Interaktion mit E: Schilder, Figuren (drehen sich zum Sprecher, für alle
+  sichtbar), Truhen (offen für alle, im Spielstand). Textbox mit Namen,
+  Buchstabe für Buchstabe, blättern mit E/Leertaste. Pixelschrift Press Start 2P.
+  Inventar pro Spieler im Spielstand (noch ohne Anzeige).
+
 ## Grundgerüst — als Nächstes
 
-1. **Interaktion**: Taste zum Ansprechen/Lesen — Schilder, Figuren mit Dialog
-   (Textbox wie im Original), Truhen. Truhen-Zustand gehört in `spielstand.welt`.
-2. **Gegenstände und Inventar**: pro Spieler im Spielstand; Schlüssel und
-   verschlossene Türen als erstes Rätselelement.
+1. ~~Interaktion~~ (steht).
+2. **Gegenstände und Inventar**: Anzeige (Gold, Schlüssel), verschlossene
+   Türen, die einen Schlüssel verbrauchen — erstes Rätselelement.
+   Offen: gehört ein Schlüssel dem Finder oder der Gruppe?
 3. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
    und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
 4. **Töne.**
@@ -81,3 +86,7 @@
   bis zu 3 px. Jetzt rückt sie in halben Schritten heran.
 - Chromium drosselt Hintergrund-Tabs; im Prüfstand mit zwei Seiten in einem
   Fenster schlief so der erste Spieler. Startargumente gegen die Drosselung.
+- Phaser malt Text einmal und merkt ihn sich. Eine Webschrift muss vor dem
+  Start geladen sein (`document.fonts.load`), sonst bleibt die Ersatzschrift.
+- Text in Seiten teilen: `getWrappedText()` auf einem unsichtbaren Messfeld
+  mit demselben Stil wie die Box — dann enden Seiten an Zeilengrenzen.

@@ -175,6 +175,55 @@ writeFileSync(datei, '{ kaputt');
 const gerettet = new Spielstand(datei);
 pruefe(!!gerettet.daten.spieler.mia, 'kaputter Spielstand → Sicherung (.bak) wird geladen');
 
+// --- Ansprechen: Schild, Figur, Truhe ---
+const datei4 = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+const spiel4 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
+const postA = [], postB = [];
+const ana = spiel4.beitreten('Ana', (m) => postA.push(m));
+const bo = spiel4.beitreten('Bo', (m) => postB.push(m));
+const sprich = (wer, x, y, r) => {
+  Object.assign(wer, { x, y });
+  uhr += 300;
+  postA.length = postB.length = 0;
+  spiel4.nachricht(wer.id, { t: 'ansprechen', r });
+};
+const dialogVon = (post) => post.find((m) => m.t === 'dialog');
+
+sprich(ana, 6 * 32 + 16, 13 * 32 + 16, 'oben');
+pruefe(dialogVon(postA)?.seiten.length === 2 && dialogVon(postA).seiten[0].startsWith('Willkommen'),
+  `Schild: zwei Seiten, „${dialogVon(postA)?.seiten[0]}"`);
+pruefe(!dialogVon(postB), 'den Text des Schilds bekommt nur, wer liest');
+
+sprich(ana, 6 * 32 + 16, 13 * 32 + 16, 'unten');
+pruefe(!postA.length, 'wer vom Schild wegschaut, liest nichts');
+
+sprich(ana, 12 * 32 + 16, 13 * 32 + 16, 'oben');
+pruefe(dialogVon(postA)?.name === 'Alter Mann' && dialogVon(postA).seiten.length === 3, `Figur: „${dialogVon(postA)?.name}", ${dialogVon(postA)?.seiten.length} Seiten`);
+pruefe(postB.some((m) => m.t === 'blick' && m.r === 'unten'), 'die Figur dreht sich zu Ana — auch Bo sieht das');
+
+const truheOben = oberwelt.welt.dinge.find((d) => d.schluessel === 'oberwelt_gold');
+pruefe(!oberwelt.welt.frei(truheOben.x, truheOben.y + 10), 'durch eine Truhe läuft man nicht');
+sprich(ana, 37 * 32 + 16, 2 * 32 + 16, 'oben');
+pruefe(dialogVon(postA)?.seiten[0] === 'Du findest 20 Goldmünzen!' && ana.inventar.gold === 20, `Truhe: „${dialogVon(postA)?.seiten[0]}", Gold ${ana.inventar.gold}`);
+pruefe(postB.some((m) => m.t === 'truhe' && m.ding === 'oberwelt_gold' && m.offen), 'Bo sieht die Truhe aufgehen');
+sprich(bo, 37 * 32 + 16, 2 * 32 + 16, 'oben');
+pruefe(dialogVon(postB)?.seiten[0] === 'Die Truhe ist leer.' && !bo.inventar.gold, 'zweimal öffnen geht nicht: leer, und Bo bekommt nichts');
+
+spiel4.wechseln(ana, 'hoehle', 'von_oben');
+sprich(ana, 2 * 32 + 16, 2 * 32 + 16, 'oben');
+pruefe(dialogVon(postA)?.seiten[0] === 'Du findest einen kleinen Schlüssel!' && ana.inventar.schluessel === 1,
+  `Höhlentruhe: „${dialogVon(postA)?.seiten[0]}"`);
+
+spiel4.verlassen(ana.id);
+spiel4.verlassen(bo.id);
+const spiel5 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
+const postC = [];
+const ana2 = spiel5.beitreten('Ana', (m) => postC.push(m));
+pruefe(ana2.inventar.gold === 20 && ana2.inventar.schluessel === 1, `nach dem Neustart hat Ana noch 20 Gold und den Schlüssel (${JSON.stringify(ana2.inventar)})`);
+spiel5.wechseln(ana2, 'start', 'von_hoehle');
+const wechsel5 = postC.find((m) => m.t === 'gebiet');
+pruefe(wechsel5?.offen.includes('oberwelt_gold'), 'nach dem Neustart steht die Truhe oben noch offen');
+
 // --- An die Wand heran, egal bei welcher Bildrate ---
 // Der Busch auf Kachel (8,16) beginnt bei y = 512.
 const anWand = [60, 20, 8].map((bps) => {

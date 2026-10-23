@@ -18,6 +18,30 @@ export class Gebiet {
     this.gegner = this.welt.orte.filter((o) => o.name === 'gegner').map((o, i) => this.neuerGegner(`${name}-g${i}`, o));
     this.herzen = new Map();
     this.nachwachsen = new Map();
+    // Wohin Figuren gerade schauen (nachdem jemand sie angesprochen hat).
+    // Nicht im Spielstand — nach einem Neustart schauen sie wieder geradeaus.
+    this.blicke = new Map();
+  }
+
+  // Offene Truhen stehen im Spielstand unter „gebiet:schlüssel", damit zwei
+  // Karten dieselbe Objektnummer haben dürfen.
+  truhenSchluessel(ding) {
+    return `${this.name}:${ding.schluessel}`;
+  }
+
+  istOffen(ding) {
+    return !!this.spiel.spielstand.daten.welt.truhen?.[this.truhenSchluessel(ding)];
+  }
+
+  oeffnen(ding) {
+    const welt = this.spiel.spielstand.daten.welt;
+    welt.truhen ??= {};
+    welt.truhen[this.truhenSchluessel(ding)] = true;
+    this.spiel.geaendert = true;
+  }
+
+  offeneTruhen() {
+    return this.welt.dinge.filter((d) => d.name === 'truhe' && this.istOffen(d)).map((d) => d.schluessel);
   }
 
   neuerGegner(id, ort) {

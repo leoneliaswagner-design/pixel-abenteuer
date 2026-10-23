@@ -1,7 +1,8 @@
 import { chromium } from 'playwright';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 const dir = process.argv[2];
-const namen = ['kacheln','baum','held-gruen','held-rot','schleim','schwert','herz','rauch','blaetter','schatten'];
+// Alle PNGs im Ordner — eine feste Liste hätte neue Grafiken verschwiegen.
+const namen = readdirSync(dir).filter((n) => n.endsWith('.png')).map((n) => n.slice(0, -4)).filter((n) => !/^held-(blau|lila)$/.test(n));
 const imgs = namen.map(n => `<div><img src="data:image/png;base64,${readFileSync(dir+n+'.png').toString('base64')}"></div>`).join('');
 const b = await chromium.launch();
 const p = await b.newPage({viewport:{width:1400,height:900}});

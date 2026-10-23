@@ -18,7 +18,8 @@ Andere im selben WLAN kommen über `http://<deine-IP>:5173` dazu.
 Allein, ganz ohne Server-Verbindung: `http://localhost:5173/?allein` — die
 Spielregeln laufen dann im Browser (`client/lokal.js`).
 
-**Steuerung:** Pfeiltasten oder WASD zum Laufen, Leertaste oder J für das Schwert.
+**Steuerung:** Pfeiltasten oder WASD zum Laufen, Leertaste oder J für das Schwert,
+E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern).
 
 ## Mit Freunden übers Internet
 
@@ -52,7 +53,7 @@ Die IP ändert sich meist einmal am Tag.
 ## Spielstände
 
 Der Server merkt sich jeden Spieler an seinem **Namen** (Groß-/Kleinschreibung
-egal): Gebiet, Stelle, Leben. Wer mit demselben Namen wiederkommt, steht da,
+egal): Gebiet, Stelle, Leben, Gegenstände; dazu, welche Truhen offen sind. Wer mit demselben Namen wiederkommt, steht da,
 wo er aufgehört hat. Gespeichert wird alle 5 Sekunden, beim Verlassen und
 beim Beenden mit Strg+C.
 
@@ -89,6 +90,15 @@ zuletzt betreten hat.
     (Eigenschaft `art`), `ankunft` (Eigenschaft `id`, optional `richtung`)
     und Rechtecke `uebergang` (Eigenschaften `ziel` = Gebiet, `ankunft` = id
     der Ankunft dort). Wer mit den Füßen in einen Übergang tritt, wechselt.
+  - Dinge zum Ansprechen, ebenfalls Punkte in `orte` (sie belegen ihre Kachel):
+    - `schild` — Eigenschaft `text`
+    - `figur` — `name`, `text`, `aussehen` (z. B. `alter_mann`; die Liste steht
+      in `werte.json` unter `aussehen`), `richtung`
+    - `truhe` — `inhalt` (z. B. `gold:20` oder `schluessel`) und am besten eine
+      eigene `id`, unter der sich der Spielstand merkt, dass sie offen ist.
+    Texte: eine Leerzeile beginnt eine neue Seite; lange Seiten bricht die
+    Textbox selbst um. Was es an Gegenständen gibt (mit Name und Grammatik),
+    steht in `werte.json` unter `gegenstaende`.
   - Die Karte selbst hat die Eigenschaft `titel` („die Höhle") für Meldungen.
   - Ein Übergang, dessen Ziel es nicht gibt, fällt schon beim Serverstart auf.
   - Nach Handarbeit an einer Karte **nicht mehr** `npm run karte` ausführen —
@@ -104,6 +114,7 @@ zuletzt betreten hat.
 node pruefstand/server-regeln.mjs   # Regeln des Servers, ohne Browser
 node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
 node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
+node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
 ```

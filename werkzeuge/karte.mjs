@@ -24,9 +24,18 @@ const KARTEN = {
     // E: Treppe in der Ruine hinunter in die Höhle; a: dort kommt man zurück an.
     uebergaenge: { E: { ziel: 'hoehle', ankunft: 'von_oben' } },
     ankuenfte: { a: { id: 'von_hoehle', richtung: 'unten' } },
+    // Dinge in der Reihenfolge, in der sie in der Textkarte stehen (zeilenweise).
+    dinge: {
+      '!': [{ text: 'Willkommen, Abenteurer!\n\nIm Südosten liegt eine alte Ruine. Man sagt, unter ihr beginne eine Höhle.' }],
+      '@': [{
+        name: 'Alter Mann', aussehen: 'alter_mann', richtung: 'unten',
+        text: 'Ah, Besuch! Mit der Leertaste schwingst du dein Schwert.\n\nBüsche kann man schneiden. Manchmal steckt ein Herz darin.\n\nUnten in der Höhle soll eine Truhe stehen. Sei vorsichtig!',
+      }],
+      '$': [{ inhalt: 'gold:20', id: 'oberwelt_gold' }],
+    },
     text: `
 TTTTTTTTTTTTTTTTTT~~~~TTTTTTTTTTTTTTTTTT
-T........,....b...~~~~....,....b.......T
+T........,....b...~~~~....,....b.....$.T
 T..*....T.........~~~~.........T....*..T
 T...,.......b....~~~~~...g....,........T
 T.T.....g....,...~~~~...........bb..T..T
@@ -37,7 +46,7 @@ T..*..............~~~~........"""""....T
 T.........,...b..~~~~~...,.....g...o...T
 T.T....*.........~~~~......*...........T
 T....b......o....~~~~..........b....T..T
-T........,.......~~~~...o..............T
+T.....!..,..@....~~~~...o..............T
 T..T....S........~~~~....,........*....T
 T...=============HHHH=============.....T
 T...=......S.....~~~~..........=.......T
@@ -62,9 +71,10 @@ TTTTTTTT=TTTTTTTTTTTTTTT~~~~TTTTTTTTTTTT
     grund: 'hoehlenboden',
     uebergaenge: { A: { ziel: 'start', ankunft: 'von_hoehle' } },
     ankuenfte: { a: { id: 'von_oben', richtung: 'oben' } },
+    dinge: { '$': [{ inhalt: 'schluessel', id: 'hoehle_schluessel' }] },
     text: `
 XXXXXXXXXXXXXXXXXXXXXX
-X::::::::XXXX::::::::X
+X:$::::::XXXX::::::::X
 X::g:::::XXXX::::g:::X
 X::::::::::::::::::::X
 X:::XX::::::::::XX:::X
@@ -79,6 +89,7 @@ XXXXXXXXXXXAXXXXXXXXXX
   },
 };
 
+const DING_ZEICHEN = { '!': 'schild', '@': 'figur', '$': 'truhe' };
 const nachZeichen = Object.fromEntries(KACHELN.map((k, i) => [k.zeichen, i]).filter(([z]) => z));
 const eigenschaft = (name, wert) => ({ name, type: typeof wert === 'boolean' ? 'bool' : 'string', value: wert });
 
@@ -90,6 +101,7 @@ function karteBauen(name, def) {
   });
 
   const boden = [], hindernisse = [], orte = [];
+  const gezaehlt = {};
   let id = 1;
   const ort = (o) => orte.push({ id: id++, type: '', visible: true, rotation: 0, width: 0, height: 0, properties: [], ...o });
   const mitte = (x, y) => ({ x: x * GROESSE + GROESSE / 2, y: y * GROESSE + GROESSE / 2 });
@@ -99,7 +111,12 @@ function karteBauen(name, def) {
       let grund = nummer(def.grund);
       let oben = -1;
       if (z === 'S') ort({ name: 'spieler_start', point: true, ...mitte(x, y) });
-      else if (z === 'g') ort({ name: 'gegner', point: true, ...mitte(x, y), properties: [eigenschaft('art', 'schleim')] });
+      else if (DING_ZEICHEN[z]) {
+        const n = (gezaehlt[z] = (gezaehlt[z] ?? 0) + 1) - 1;
+        const eig = def.dinge?.[z]?.[n];
+        if (!eig) throw new Error(`${name}: Ding '${z}' Nr. ${n + 1} bei ${x},${y} hat keine Angaben in „dinge"`);
+        ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, v)) });
+      } else if (z === 'g') ort({ name: 'gegner', point: true, ...mitte(x, y), properties: [eigenschaft('art', 'schleim')] });
       else if (def.ankuenfte?.[z]) {
         const a = def.ankuenfte[z];
         ort({ name: 'ankunft', point: true, ...mitte(x, y), properties: [eigenschaft('id', a.id), ...(a.richtung ? [eigenschaft('richtung', a.richtung)] : [])] });

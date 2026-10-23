@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Welt, bewege } from '../../gemeinsam/welt.js';
-import { Figur, FARBEN, animationenAnlegen } from '../figur.js';
+import { Figur, FARBEN, ZEILE, animationenAnlegen } from '../figur.js';
+import { SCHRIFT } from '../schrift.js';
 
 const SENDE_ABSTAND = 50;
 
@@ -22,7 +23,12 @@ export class SpielSzene extends Phaser.Scene {
       this.load.tilemapTiledJSON(this.kartenSchluessel, `karten/${this.willkommen.gebiet}.json`);
     this.load.json('werte', 'daten/werte.json');
     this.load.image('kacheln', 'grafik/kacheln.png');
-    for (const n of ['baum', 'schatten', 'schwert']) this.load.image(n, `grafik/${n}.png`);
+    for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
+    this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
+    // Aussehen der Leute in der Welt — welche es gibt, steht in werte.json,
+    // weil die Szene es wissen muss, bevor die Karte geladen ist.
+    for (const a of this.cache.json.get('werte')?.aussehen ?? ['alter_mann'])
+      this.load.spritesheet(`figur-${a}`, `grafik/figur-${a}.png`, { frameWidth: 32, frameHeight: 32 });
     for (const f of FARBEN) this.load.spritesheet(`held-${f}`, `grafik/held-${f}.png`, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('schleim', 'grafik/schleim.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('herz', 'grafik/herz.png', { frameWidth: 16, frameHeight: 16 });
@@ -53,6 +59,10 @@ export class SpielSzene extends Phaser.Scene {
     this.stoss = null;
     this.gesendet = { zeit: 0, x: 0, y: 0, r: '', l: false };
     for (const i of wk.geschnitten) this.buschSetzen(i, true, false);
+    this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
+    this.inventar = wk.inventar ?? {};
+    this.dialogOffen = false;
+    this.oberflaeche()?.dialogSchliessen?.();
 
     this.andere = new Map();
     this.gegner = new Map();
@@ -69,6 +79,13 @@ export class SpielSzene extends Phaser.Scene {
     // wird — bei 30 Bildern pro Sekunde verschluckte das schnelles Tippen.
     this.hiebGewuenscht = false;
     for (const taste of ['SPACE', 'J']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.hiebGewuenscht = true));
+    this.ansprechGewuenscht = false;
+    for (const taste of ['E', 'ENTER']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.ansprechGewuenscht = true));
+    // Kleines „E" über dem Ding, vor dem man steht — damit man weiß, dass es
+    // etwas zu lesen oder zu öffnen gibt.
+    this.hinweis = this.add.text(0, 0, 'E', {
+      fontFamily: SCHRIFT, fontSize: '8px', color: '#1b1424', backgroundColor: '#f4ecd8', padding: { x: 2, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(6000).setVisible(false);
 
     this.netzAnschliessen();
     // Die Oberfläche läuft über Gebietswechsel hinweg weiter; ein zweites
@@ -86,6 +103,11 @@ export class SpielSzene extends Phaser.Scene {
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe })),
         gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
         geschnitten: [...this.welt.geschnitten],
+        dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
+        hinweis: this.hinweis.visible,
+        inventar: this.inventar,
+        truhen: [...this.dinge.values()].filter((d) => d.ding.name === 'truhe').map((d) => ({ schluessel: d.ding.schluessel, offen: d.bild.frame.name === 1 })),
+        figuren: [...this.dinge.values()].filter((d) => d.ding.name === 'figur').map((d) => ({ schluessel: d.ding.schluessel, bild: d.bild.frame.name })),
       }),
     };
   }
@@ -114,6 +136,31 @@ export class SpielSzene extends Phaser.Scene {
     this.time.addEvent({ delay: 550, loop: true, callback: () => this.bodenEbene.swapByIndex(a, b) });
     this.gidBusch = this.welt.gidVon('busch');
     this.gidBuschRest = this.welt.gidVon('busch_rest');
+  }
+
+  oberflaeche() {
+    return this.scene.get('oberflaeche');
+  }
+
+  // Schilder, Figuren, Truhen: Bilder auf der Karte, nach y sortiert wie
+  // alles, was steht. Was sie sagen oder enthalten, weiß nur der Server.
+  dingeAufbauen(offen, blicke) {
+    this.dinge = new Map();
+    const k = this.welt.kachel;
+    for (const d of this.welt.dinge) {
+      const fuss = Math.floor(d.y / k) * k + k;
+      let bild;
+      if (d.name === 'schild') bild = this.add.image(d.x, fuss, 'schild');
+      else if (d.name === 'truhe') bild = this.add.image(d.x, fuss, 'truhe', offen.includes(d.schluessel) ? 1 : 0);
+      else {
+        const art = `figur-${d.eig.aussehen ?? 'alter_mann'}`;
+        const schluessel = this.textures.exists(art) ? art : 'figur-alter_mann';
+        this.add.image(d.x, fuss - 2, 'schatten').setDepth(9);
+        bild = this.add.image(d.x, fuss, schluessel, ZEILE[blicke[d.schluessel] ?? d.eig.richtung ?? 'unten'] * 4);
+      }
+      bild.setOrigin(0.5, 1).setDepth(10 + fuss - 4);
+      this.dinge.set(d.schluessel, { ding: d, bild });
+    }
   }
 
   buschSetzen(i, weg, mitBlaettern = true) {
@@ -163,6 +210,19 @@ export class SpielSzene extends Phaser.Scene {
     });
     n.bei('gebiet', (m) => this.gebietWechseln(m));
     n.bei('busch', (m) => this.buschSetzen(m.i, m.weg));
+    n.bei('truhe', (m) => {
+      const d = this.dinge.get(m.ding);
+      if (!d) return;
+      d.bild.setFrame(m.offen ? 1 : 0);
+      if (m.offen) this.tweens.add({ targets: d.bild, y: d.bild.y - 3, duration: 90, yoyo: true });
+    });
+    n.bei('blick', (m) => this.dinge.get(m.ding)?.bild.setFrame(ZEILE[m.r] * 4));
+    n.bei('dialog', (m) => {
+      if (m.inventar) this.inventar = m.inventar;
+      this.dialogOffen = true;
+      this.ich.laeuft = false;
+      this.oberflaeche().dialogZeigen(m.name ?? '', m.seiten);
+    });
     n.bei('gegner_treffer', (m) => this.aufblitzen(this.gegner.get(m.id)?.sprite));
     n.bei('gegner_tot', (m) => {
       const g = this.gegner.get(m.id);
@@ -296,6 +356,17 @@ export class SpielSzene extends Phaser.Scene {
     const ich = this.ich, t = this.tasten, ws = this.w.spieler;
     let dx = 0, dy = 0, laeuft = false;
 
+    // Im Gespräch steht die Figur; Leertaste und E blättern weiter. Das
+    // Spiel läuft für die anderen weiter — anhalten ginge online nicht.
+    if (this.dialogOffen) {
+      if (this.ansprechGewuenscht || this.hiebGewuenscht) this.dialogOffen = this.oberflaeche().weiter();
+      this.ansprechGewuenscht = this.hiebGewuenscht = false;
+      this.hinweis.setVisible(false);
+      ich.laeuft = false;
+      ich.aktualisieren(jetzt);
+      return;
+    }
+
     if (!ich.tot) {
       if (this.stoss && jetzt < this.stoss.bis) {
         dx = this.stoss.vx * dt;
@@ -316,6 +387,15 @@ export class SpielSzene extends Phaser.Scene {
           dx = (ix / l) * ws.geschwindigkeit * dt;
           dy = (iy / l) * ws.geschwindigkeit * dt;
         }
+        const ding = this.welt.dingVor(ich.x, ich.y, ich.richtung);
+        if (this.ansprechGewuenscht && ding) {
+          // Erst die eigene Position, dann die Frage: der Server soll vom
+          // selben Fleck aus suchen wie der Browser, nicht von dem vor 50 ms.
+          this.positionSenden(jetzt, false);
+          this.netz.senden({ t: 'ansprechen', r: ich.richtung });
+          laeuft = false;
+          dx = dy = 0;
+        }
         if (this.hiebGewuenscht && jetzt >= this.naechsterHieb) {
           ich.hieb(ich.richtung, ws.hiebDauer);
           this.naechsterHieb = jetzt + ws.hiebDauer + ws.hiebPause;
@@ -333,16 +413,24 @@ export class SpielSzene extends Phaser.Scene {
     // Ein Druck während des Hiebs zählt nicht für den nächsten — sonst
     // schlägt die Figur nach, ohne dass man es will.
     this.hiebGewuenscht = false;
+    this.ansprechGewuenscht = false;
     ich.laeuft = laeuft;
     ich.aktualisieren(jetzt);
 
-    const g = this.gesendet;
-    const anders = g.x !== ich.x || g.y !== ich.y || g.r !== ich.richtung || g.l !== laeuft;
-    if (jetzt - g.zeit >= SENDE_ABSTAND && anders) {
-      // Ungerundet: auf 0,1 gerundet konnte eine Figur, die an einer Wand
-      // lehnt, beim Server 0,05 px in der Wand stehen — und er korrigierte.
-      this.netz.senden({ t: 'pos', x: ich.x, y: ich.y, r: ich.richtung, l: laeuft, k: this.korrektur });
-      Object.assign(g, { zeit: jetzt, x: ich.x, y: ich.y, r: ich.richtung, l: laeuft });
-    }
+    const vor = !ich.tot && this.welt.dingVor(ich.x, ich.y, ich.richtung);
+    this.hinweis.setVisible(!!vor);
+    if (vor) this.hinweis.setPosition(vor.x, Math.floor(vor.y / this.welt.kachel) * this.welt.kachel - 2);
+
+    this.positionSenden(jetzt, true);
+  }
+
+  positionSenden(jetzt, nurNachAbstand) {
+    const ich = this.ich, g = this.gesendet;
+    const anders = g.x !== ich.x || g.y !== ich.y || g.r !== ich.richtung || g.l !== ich.laeuft;
+    if (!anders || (nurNachAbstand && jetzt - g.zeit < SENDE_ABSTAND)) return;
+    // Ungerundet: auf 0,1 gerundet konnte eine Figur, die an einer Wand
+    // lehnt, beim Server 0,05 px in der Wand stehen — und er korrigierte.
+    this.netz.senden({ t: 'pos', x: ich.x, y: ich.y, r: ich.richtung, l: ich.laeuft, k: this.korrektur });
+    Object.assign(g, { zeit: jetzt, x: ich.x, y: ich.y, r: ich.richtung, l: ich.laeuft });
   }
 }

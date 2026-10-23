@@ -55,6 +55,11 @@ export class Bild {
     this.d[i + 3] = Math.max(this.d[i + 3], a);
   }
 
+  loeschen(x, y, b, h) {
+    for (let yy = Math.max(0, y); yy < Math.min(this.h, y + h); yy++)
+      for (let xx = Math.max(0, x); xx < Math.min(this.b, x + b); xx++) this.d.fill(0, (yy * this.b + xx) * 4, (yy * this.b + xx) * 4 + 4);
+  }
+
   rechteck(x, y, b, h, f) {
     for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + b; xx++) this.setze(xx, yy, f);
   }

@@ -54,6 +54,7 @@ export class Spiel {
       gebiet: ort.gebiet, x: ort.x, y: ort.y, richtung: alt?.richtung ?? 'unten', laeuft: false,
       leben: Math.max(1, alt?.leben ?? this.w.spieler.leben), tot: false, wiederBei: 0,
       ankunft: alt?.ankunft && this.gebiete.has(alt.ankunft.gebiet) ? alt.ankunft : ort,
+      inventar: { ...(alt?.inventar ?? {}) }, zuletztAngesprochen: 0,
       unverwundbarBis: jetzt + 1500, naechsterHieb: 0,
       korrektur: 0, budget: 0, zuletzt: jetzt,
     };
@@ -75,7 +76,11 @@ export class Spiel {
 
   // Was ein Browser braucht, um ein Gebiet aufzubauen.
   ortsangabe(s) {
-    return { gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, geschnitten: [...this.gebiete.get(s.gebiet).welt.geschnitten] };
+    const g = this.gebiete.get(s.gebiet);
+    return {
+      gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar,
+      geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), blicke: Object.fromEntries(g.blicke),
+    };
   }
 
   // Mehrere Spieler starten nicht auf demselben Punkt — sonst stehen sie
@@ -94,6 +99,7 @@ export class Spiel {
     if (!s || !m || typeof m.t !== 'string') return;
     if (m.t === 'pos') this.position(s, m);
     else if (m.t === 'hieb') this.hieb(s, m);
+    else if (m.t === 'ansprechen') this.ansprechen(s, m);
   }
 
   position(s, m) {
@@ -157,6 +163,48 @@ export class Spiel {
     gebiet.hieb(s, jetzt);
   }
 
+  // Schild lesen, mit einer Figur reden, eine Truhe öffnen. Der Server
+  // entscheidet, was gesagt wird — später hängt das von Aufgaben und
+  // Fortschritt ab, und den kennt nur er.
+  ansprechen(s, m) {
+    const jetzt = this.jetzt();
+    if (s.tot || jetzt - s.zuletztAngesprochen < 200) return;
+    s.zuletztAngesprochen = jetzt;
+    if (RICHTUNGEN[m.r]) s.richtung = m.r;
+    const gebiet = this.gebiete.get(s.gebiet);
+    const ding = gebiet.welt.dingVor(s.x, s.y, s.richtung);
+    if (!ding) return;
+    const e = ding.eig;
+
+    if (ding.name === 'schild') {
+      s.senden({ t: 'dialog', seiten: seiten(e.text ?? '…') });
+    } else if (ding.name === 'figur') {
+      // Die Figur dreht sich zum Sprecher — für alle im Gebiet sichtbar.
+      const blick = { oben: 'unten', unten: 'oben', links: 'rechts', rechts: 'links' }[s.richtung];
+      gebiet.blicke.set(ding.schluessel, blick);
+      gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });
+      s.senden({ t: 'dialog', name: e.name ?? '', seiten: seiten(e.text ?? '…') });
+    } else if (ding.name === 'truhe') {
+      if (gebiet.istOffen(ding)) {
+        s.senden({ t: 'dialog', seiten: ['Die Truhe ist leer.'] });
+        return;
+      }
+      gebiet.oeffnen(ding);
+      const [art, anzahl] = inhaltLesen(e.inhalt);
+      const g = this.w.gegenstaende?.[art];
+      if (art) s.inventar[art] = (s.inventar[art] ?? 0) + anzahl;
+      gebiet.anAlle({ t: 'truhe', ding: ding.schluessel, offen: true });
+      // Grammatik steht in den Daten („einzeln" im Akkusativ): „einen kleinen
+      // Schlüssel", „eine Goldmünze" — aus Name und Artikel ließe sich das
+      // nicht zuverlässig bauen.
+      const was = !art ? 'nichts' : anzahl === 1 ? (g?.einzeln ?? art) : `${anzahl} ${g?.mehrzahl ?? art}`;
+      s.senden({ t: 'dialog', seiten: [`Du findest ${was}!`], inventar: s.inventar });
+      gebiet.anAlle({ t: 'nachricht', text: `${s.name} öffnet eine Truhe.` }, s.id);
+      this.merken(s);
+      this.speichern();
+    }
+  }
+
   spielerTreffen(s, g, jetzt) {
     const ws = this.w.spieler;
     s.leben = Math.max(0, s.leben - g.w.schaden);
@@ -214,7 +262,7 @@ export class Spiel {
     this.spielstand.daten.spieler[s.schluessel] = {
       name: s.name, farbe: s.farbe, richtung: s.richtung,
       gebiet: tot ? s.ankunft.gebiet : s.gebiet, x: tot ? s.ankunft.x : s.x, y: tot ? s.ankunft.y : s.y,
-      leben: tot ? this.w.spieler.leben : s.leben, ankunft: s.ankunft,
+      leben: tot ? this.w.spieler.leben : s.leben, ankunft: s.ankunft, inventar: s.inventar,
     };
     this.geaendert = true;
   }
@@ -229,4 +277,17 @@ export class Spiel {
   anAlle(m, ausser) {
     for (const s of this.spieler.values()) if (s.id !== ausser) s.senden(m);
   }
+}
+
+// Seiten eines Textes: Leerzeilen trennen Seiten (in Tiled: zweimal Enter).
+// Zu lange Seiten bricht der Browser selbst weiter um.
+function seiten(text) {
+  return String(text).split(/\n\s*\n/).map((t) => t.trim()).filter(Boolean);
+}
+
+// „gold:20" → ['gold', 20]; „schluessel" → ['schluessel', 1]
+function inhaltLesen(inhalt) {
+  if (!inhalt) return [null, 0];
+  const [art, zahl] = String(inhalt).split(':');
+  return [art.trim(), Math.max(1, parseInt(zahl, 10) || 1)];
 }

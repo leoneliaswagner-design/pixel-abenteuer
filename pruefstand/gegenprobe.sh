@@ -43,6 +43,17 @@ probe server/spiel.js "if (!staende.has(s.gebiet)) staende.set(s.gebiet, this.ge
   "alle bekommen den Stand der Oberwelt"
 probe gemeinsam/welt.js "        y = heranruecken(welt, x, y, 0, sy, k);" "" pruefstand/server-regeln.mjs \
   "Figur bleibt je nach Bildrate vor der Wand stehen"
+probe server/spiel.js "      if (gebiet.istOffen(ding)) {" "      if (false) {" pruefstand/server-regeln.mjs \
+  "Truhe lässt sich zweimal plündern"
+probe server/spiel.js "      gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });" "      s.senden({ t: 'blick', ding: ding.schluessel, r: blick });" pruefstand/server-regeln.mjs \
+  "Figur dreht sich nur für den, der spricht"
+probe gemeinsam/welt.js "|| this.belegt.has(i)" "" pruefstand/server-regeln.mjs \
+  "man läuft durch Truhen und Figuren"
+probe client/szenen/Spiel.js "      ich.aktualisieren(jetzt);
+      return;
+    }" "      ich.aktualisieren(jetzt);
+    }" pruefstand/interaktion.mjs \
+  "Figur läuft während der Textbox weiter"
 probe client/szenen/Spiel.js "    this.wechselt = false;" "" pruefstand/gebiete.mjs \
   "Figur bleibt nach dem Gebietswechsel stehen"
 probe server/gebiet.js "if (s.tot || jetzt < s.unverwundbarBis) continue;" "if (s.tot) continue;" pruefstand/server-regeln.mjs \
