@@ -29,6 +29,13 @@ export class Oberflaeche extends Phaser.Scene {
     this.anzeigen({ inventar: spiel.inventar ?? {}, gruppe: spiel.gruppe ?? {} });
     spiel.events.on('inventar', (i) => this.anzeigen(i));
 
+    // Die Klassen-Fähigkeit unten links: Taste und Name, darunter ein Balken,
+    // der sich füllt, bis sie wieder geht.
+    this.faehigkeitText = this.add.text(6, h - 10, '', schrift).setOrigin(0, 1);
+    this.faehigkeitBalken = this.add.rectangle(6, h - 6, 0, 2, 0xe8c15a).setOrigin(0, 0.5);
+    this.faehigkeit = spiel.faehigkeitAngabe?.() ?? null;
+    spiel.events.on('faehigkeit', (f) => (this.faehigkeit = f));
+
     spiel.events.on('stand', (s) => this.zeigen(s));
     spiel.events.on('nachricht', (text) => this.melden(text));
     spiel.events.on('getrennt', () => {
@@ -51,6 +58,16 @@ export class Oberflaeche extends Phaser.Scene {
       this.listePunkte([]);
     }
     if (!this.mitte.text.startsWith('Verbindung')) this.mitte.setText(tot ? 'Besiegt — gleich geht es weiter …' : '');
+  }
+
+  update() {
+    const f = this.faehigkeit;
+    this.faehigkeitText.setVisible(!!f);
+    this.faehigkeitBalken.setVisible(!!f);
+    if (!f) return;
+    const rest = Math.max(0, f.bereitBis - this.scene.get('spiel').time.now);
+    this.faehigkeitText.setText(`Q ${f.name}`).setAlpha(rest ? 0.5 : 1);
+    this.faehigkeitBalken.width = this.faehigkeitText.width * (1 - rest / f.dauer);
   }
 
   listePunkte(spieler) {

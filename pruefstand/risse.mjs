@@ -14,6 +14,7 @@ import { spawn, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { anmelden } from './anmelden.mjs';
 import { fileURLToPath } from 'node:url';
 
 const wurzel = fileURLToPath(new URL('..', import.meta.url));
@@ -25,7 +26,7 @@ if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wu
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
 const stelle = (name, farbe, gebiet, x, y, richtung) => {
   const ort = { gebiet, x, y };
-  return { name, farbe, richtung, ...ort, leben: 6, ankunft: ort };
+  return { name, farbe, klasse: 'kaempfer', spezies: 'mensch', richtung, ...ort, leben: 6, ankunft: ort };
 };
 writeFileSync(spielstand, JSON.stringify({
   version: 1,
@@ -68,9 +69,7 @@ try {
     const p = await browser.newPage({ viewport: { width: 960, height: 540 } });
     p.on('pageerror', (e) => fehler.push(`${name}: Seitenfehler ${e.message}`));
     await p.goto(`http://localhost:${PORT}/`);
-    await p.fill('#name', name);
-    await p.click('button[type=submit]');
-    await p.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
+    await anmelden(p, name);
     await warte(nachher);
     return p;
   };

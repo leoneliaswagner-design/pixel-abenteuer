@@ -5,6 +5,9 @@ import { SCHRIFT } from '../schrift.js';
 import { kantenBerechnen } from '../kanten.js';
 
 const SENDE_ABSTAND = 50;
+// Geschosse zeigen im Bild nach rechts; so weit werden sie gedreht.
+const WINKEL = { rechts: 0, unten: 90, links: 180, oben: 270 };
+const GESCHOSS_BILD = { dolch: 0, pfeil: 1, feuerball: 2 };
 
 export class SpielSzene extends Phaser.Scene {
   constructor() {
@@ -41,6 +44,13 @@ export class SpielSzene extends Phaser.Scene {
     if (this.cache.json.exists('werte')) leuteLaden(this.cache.json.get('werte'));
     else this.load.once('filecomplete-json-werte', (schluessel, art, werte) => leuteLaden(werte));
     for (const f of FARBEN) this.load.spritesheet(`held-${f}`, `grafik/held-${f}.png`, { frameWidth: 32, frameHeight: 32 });
+    // Ein Blatt je Klasse und Farbe. Eine Homebrew-Klasse ohne Bild lädt
+    // ins Leere und läuft dann im Umhang der Farbe (s. Figur).
+    for (const k of Object.keys(this.willkommen.auswahl?.klassen ?? {}))
+      for (const f of FARBEN)
+        if (!this.textures.exists(`held-${k}-${f}`)) this.load.spritesheet(`held-${k}-${f}`, `grafik/held-${k}-${f}.png`, { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('geschosse', 'grafik/geschosse.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.image('funke', 'grafik/funke.png');
     this.load.spritesheet('schleim', 'grafik/schleim.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('herz', 'grafik/herz.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('rauch', 'grafik/rauch.png', { frameWidth: 24, frameHeight: 24 });
@@ -59,7 +69,22 @@ export class SpielSzene extends Phaser.Scene {
 
     const wk = this.willkommen;
     this.meineId = wk.id;
-    this.ich = new Figur(this, wk.farbe, null);
+    this.charakter = wk.charakter;
+    this.ich = new Figur(this, wk.farbe, null, wk.charakter?.klasse);
+    // Tempo und Herzen aus Klasse und Spezies; ohne (alter Spielstand im
+    // Prüfstand) die Grundwerte.
+    this.tempo = wk.charakter?.werte.tempo ?? this.w.spieler.geschwindigkeit;
+    this.maxLeben = wk.charakter?.werte.maxLeben ?? this.w.spieler.leben;
+    // Nicht in create zurücksetzen: sonst wäre die Abklingzeit nach jedem
+    // Gebietswechsel vorbei.
+    this.faehigkeitBereit ??= 0;
+    this.geschosse = new Map();
+    this.funken = 0;
+    // Wie schnell welches Geschoss fliegt: der Stand kommt nur alle 50 ms,
+    // dazwischen rechnet der Browser weiter (ein Pfeil springt sonst 16 px).
+    this.geschossTempo = {};
+    for (const k of Object.values(wk.auswahl?.klassen ?? {}))
+      if (k.faehigkeit?.art === 'geschoss') this.geschossTempo[k.faehigkeit.geschoss] = k.faehigkeit.tempo;
     this.ich.x = wk.x;
     this.ich.y = wk.y;
     this.ich.richtung = wk.r ?? 'unten';
@@ -104,6 +129,8 @@ export class SpielSzene extends Phaser.Scene {
     this.getippt = null;
     const RICHTUNG_DER_TASTE = { UP: 'oben', W: 'oben', DOWN: 'unten', S: 'unten', LEFT: 'links', A: 'links', RIGHT: 'rechts', D: 'rechts' };
     for (const [taste, r] of Object.entries(RICHTUNG_DER_TASTE)) this.input.keyboard.on(`keydown-${taste}`, () => (this.getippt = r));
+    this.faehigkeitGewuenscht = false;
+    for (const taste of ['Q', 'K']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.faehigkeitGewuenscht = true));
     this.ansprechGewuenscht = false;
     for (const taste of ['E', 'ENTER']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.ansprechGewuenscht = true));
     // Kleines „E" über dem Ding, vor dem man steht — damit man weiß, dass es
@@ -120,6 +147,7 @@ export class SpielSzene extends Phaser.Scene {
     // Nach einem Gebietswechsel läuft die Oberfläche schon — sie muss den
     // Stand neu bekommen; beim ersten Start holt sie ihn sich selbst.
     this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
+    this.events.emit('faehigkeit', this.faehigkeitAngabe());
     this.netz.bereit();
     // Dem Server sagen, dass man jetzt steuern kann: ab hier läuft die
     // Schonfrist (nach dem Beitreten und nach jedem Gebietswechsel).
@@ -131,8 +159,14 @@ export class SpielSzene extends Phaser.Scene {
       zustand: () => ({
         gebiet: this.gebiet,
         kanten: this.kantenZahl,
-        ich: { id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, tot: this.ich.tot, richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar },
-        andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe })),
+        ich: {
+          id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, max: this.maxLeben, tot: this.ich.tot,
+          richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar, klasse: this.charakter?.klasse, textur: this.ich.koerper.texture.key,
+          tempo: this.tempo, faehigkeitBereit: Math.max(0, this.faehigkeitBereit - this.time.now),
+        },
+        andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key })),
+        geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
+        funken: this.funken,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -260,6 +294,39 @@ export class SpielSzene extends Phaser.Scene {
     }
   }
 
+  funkeln(x, y) {
+    for (let i = 0; i < 6; i++) {
+      const w = (i / 6) * Math.PI * 2;
+      const f = this.add.image(x + Math.cos(w) * 10, y - 12 + Math.sin(w) * 6, 'funke').setDepth(10 + y + 2);
+      this.funken++;
+      this.tweens.add({ targets: f, y: f.y - 18, alpha: 0, duration: 700, delay: i * 40, onComplete: () => f.destroy() });
+    }
+  }
+
+  faehigkeitAngabe() {
+    const f = this.charakter?.werte.faehigkeit;
+    return f ? { name: f.name, bereitBis: this.faehigkeitBereit, dauer: f.abklingzeit } : null;
+  }
+
+  geschosseUebernehmen(liste) {
+    const da = new Set();
+    for (const p of liste) {
+      da.add(p.id);
+      let g = this.geschosse.get(p.id);
+      if (!g) {
+        const bild = this.add.image(p.x, p.y, 'geschosse', GESCHOSS_BILD[p.art] ?? 0).setAngle(WINKEL[p.r] ?? 0);
+        g = { art: p.art, r: p.r, bild };
+        this.geschosse.set(p.id, g);
+      }
+      g.bild.setPosition(p.x, p.y);
+    }
+    for (const [id, g] of this.geschosse)
+      if (!da.has(id)) {
+        g.bild.destroy();
+        this.geschosse.delete(id);
+      }
+  }
+
   rauch(x, y) {
     const r = this.add.sprite(x, y - 8, 'rauch').setDepth(10 + y + 1);
     r.play('rauch');
@@ -273,6 +340,24 @@ export class SpielSzene extends Phaser.Scene {
     n.bei('getroffen', (m) => {
       this.stoss = { vx: m.vx, vy: m.vy, bis: this.time.now + m.dauer };
       this.cameras.main.shake(120, 0.006);
+    });
+    // Schildstoß: der Server schickt den Schub nach vorn wie einen Rückstoß.
+    n.bei('stoss', (m) => (this.stoss = { vx: m.vx, vy: m.vy, bis: this.time.now + m.dauer }));
+    n.bei('faehigkeit', (m) => {
+      const f = this.andere.get(m.id);
+      if (f && m.art !== 'ansturm') f.ausholen(m.r, 200);
+    });
+    n.bei('heilung', (m) => {
+      for (const id of m.ziele) {
+        const f = id === this.meineId ? this.ich : this.andere.get(id);
+        if (f) this.funkeln(f.x, f.y);
+      }
+    });
+    n.bei('geschoss_weg', (m) => {
+      const g = this.geschosse.get(m.id);
+      g?.bild.destroy();
+      this.geschosse.delete(m.id);
+      if (m.art === 'feuerball') this.rauch(m.x, m.y + 10);
     });
     const zurueckSetzen = (m) => {
       this.ich.x = m.x;
@@ -361,7 +446,7 @@ export class SpielSzene extends Phaser.Scene {
       gesehen.add(s.id);
       let f = this.andere.get(s.id);
       if (!f) {
-        f = new Figur(this, s.farbe, s.name);
+        f = new Figur(this, s.farbe, s.name, s.klasse);
         f.x = s.x;
         f.y = s.y;
         this.andere.set(s.id, f);
@@ -407,7 +492,8 @@ export class SpielSzene extends Phaser.Scene {
         this.herzen.set(h.id, bild);
       }
 
-    this.events.emit('stand', { leben: this.leben, max: this.w.spieler.leben, tot: this.ich.tot, spieler: m.spieler, meineId: this.meineId });
+    this.geschosseUebernehmen(m.geschosse ?? []);
+    this.events.emit('stand', { leben: this.leben, max: this.maxLeben, tot: this.ich.tot, spieler: m.spieler, meineId: this.meineId });
   }
 
   update(jetzt, delta) {
@@ -438,6 +524,14 @@ export class SpielSzene extends Phaser.Scene {
       const dahinter = figuren.some((f) => Math.abs(f.x - b.x) < 30 && f.y < b.fuss - 6 && f.y > b.fuss - 76);
       b.bild.setAlpha(dahinter ? 0.55 : 1);
     }
+    for (const g of this.geschosse.values()) {
+      const [vx, vy] = { rechts: [1, 0], links: [-1, 0], unten: [0, 1], oben: [0, -1] }[g.r] ?? [0, 0];
+      const v = (this.geschossTempo[g.art] ?? 0) * dt;
+      g.bild.x += vx * v;
+      g.bild.y += vy * v;
+      g.bild.setDepth(20 + g.bild.y);
+      if (g.art === 'feuerball') g.bild.setFrame(2 + (Math.floor(jetzt / 90) % 2));
+    }
     for (const g of this.gegner.values()) {
       gleiten(g);
       g.sprite.setPosition(g.x, g.y + 2).setDepth(10 + g.y);
@@ -453,7 +547,7 @@ export class SpielSzene extends Phaser.Scene {
     // Spiel läuft für die anderen weiter — anhalten ginge online nicht.
     if (this.dialogOffen) {
       if (this.ansprechGewuenscht || this.hiebGewuenscht) this.dialogOffen = this.oberflaeche().weiter();
-      this.ansprechGewuenscht = this.hiebGewuenscht = false;
+      this.ansprechGewuenscht = this.hiebGewuenscht = this.faehigkeitGewuenscht = false;
       this.getippt = null;
       this.hinweis.setVisible(false);
       ich.laeuft = false;
@@ -478,8 +572,8 @@ export class SpielSzene extends Phaser.Scene {
             (ich.richtung === 'oben' && iy < 0) || (ich.richtung === 'unten' && iy > 0);
           if (!passt) ich.richtung = iy ? (iy < 0 ? 'oben' : 'unten') : ix < 0 ? 'links' : 'rechts';
           const l = Math.hypot(ix, iy);
-          dx = (ix / l) * ws.geschwindigkeit * dt;
-          dy = (iy / l) * ws.geschwindigkeit * dt;
+          dx = (ix / l) * this.tempo * dt;
+          dy = (iy / l) * this.tempo * dt;
         } else if (this.getippt) ich.richtung = this.getippt;
         const ding = this.welt.dingVor(ich.x, ich.y, ich.richtung);
         if (this.ansprechGewuenscht && ding) {
@@ -497,6 +591,19 @@ export class SpielSzene extends Phaser.Scene {
           laeuft = false;
           dx = dy = 0;
         }
+        const f = this.charakter?.werte.faehigkeit;
+        if (this.faehigkeitGewuenscht && f && jetzt >= this.faehigkeitBereit) {
+          // Wie beim Ansprechen: der Server soll vom selben Fleck aus werfen.
+          this.positionSenden(jetzt, false);
+          this.netz.senden({ t: 'faehigkeit', r: ich.richtung });
+          this.faehigkeitBereit = jetzt + f.abklingzeit;
+          this.events.emit('faehigkeit', this.faehigkeitAngabe());
+          if (f.art !== 'ansturm') {
+            ich.ausholen(ich.richtung, 200);
+            laeuft = false;
+            dx = dy = 0;
+          }
+        }
       }
       if (dx || dy) {
         const neu = bewege(this.welt, ich.x, ich.y, dx, dy);
@@ -508,6 +615,7 @@ export class SpielSzene extends Phaser.Scene {
     // schlägt die Figur nach, ohne dass man es will.
     this.hiebGewuenscht = false;
     this.ansprechGewuenscht = false;
+    this.faehigkeitGewuenscht = false;
     this.getippt = null;
     ich.laeuft = laeuft;
     ich.aktualisieren(jetzt);

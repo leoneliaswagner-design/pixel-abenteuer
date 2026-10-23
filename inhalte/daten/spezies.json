@@ -1,0 +1,6 @@
+{
+  "mensch": { "name": "Mensch", "beschreibung": "Vielseitig: +1 auf alle Attribute.", "boni": { "staerke": 1, "geschick": 1, "konstitution": 1, "intelligenz": 1, "weisheit": 1, "charisma": 1 } },
+  "elf": { "name": "Elf", "beschreibung": "Anmutig und klug: Geschicklichkeit +2, Intelligenz +1.", "boni": { "geschick": 2, "intelligenz": 1 } },
+  "zwerg": { "name": "Zwerg", "beschreibung": "Zäh und standhaft: Konstitution +2, Weisheit +1.", "boni": { "konstitution": 2, "weisheit": 1 } },
+  "halbling": { "name": "Halbling", "beschreibung": "Klein und gewitzt: Geschicklichkeit +2, Charisma +1.", "boni": { "geschick": 2, "charisma": 1 } }
+}

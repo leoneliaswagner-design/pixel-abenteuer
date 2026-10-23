@@ -29,7 +29,8 @@
     "stossGeschwindigkeit": 220,
     "stossDauer": 160,
     "wiederbelebung": 3000,
-    "schonfrist": 1500
+    "schonfrist": 1500,
+    "ansturmTempo": 260
   },
   "gegner": {
     "schleim": {

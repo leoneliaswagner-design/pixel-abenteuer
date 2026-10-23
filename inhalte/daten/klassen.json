@@ -1,0 +1,37 @@
+{
+  "kaempfer": {
+    "name": "Kämpfer",
+    "beschreibung": "Schwer gerüstet und stark. Stürmt mit dem Schild voran und stößt Gegner zurück.",
+    "attribute": { "staerke": 15, "geschick": 13, "konstitution": 14, "intelligenz": 8, "weisheit": 12, "charisma": 10 },
+    "faehigkeit": { "art": "ansturm", "name": "Schildstoß", "abklingzeit": 2500, "weite": 46, "schaden": 1, "attribut": "staerke" },
+    "vorteile": []
+  },
+  "schurke": {
+    "name": "Schurke",
+    "beschreibung": "Flink und gerissen. Wirft Dolche und knackt Schlösser ohne Schlüssel.",
+    "attribute": { "staerke": 8, "geschick": 15, "konstitution": 13, "intelligenz": 12, "weisheit": 10, "charisma": 14 },
+    "faehigkeit": { "art": "geschoss", "name": "Dolchwurf", "abklingzeit": 900, "geschoss": "dolch", "tempo": 260, "reichweite": 170, "schaden": 1, "attribut": "geschick" },
+    "vorteile": ["schloesser"]
+  },
+  "magier": {
+    "name": "Magier",
+    "beschreibung": "Gelehrt und mächtig. Schleudert Feuerbälle und liest magische Schriften.",
+    "attribute": { "staerke": 8, "geschick": 13, "konstitution": 14, "intelligenz": 15, "weisheit": 12, "charisma": 10 },
+    "faehigkeit": { "art": "geschoss", "name": "Feuerball", "abklingzeit": 2200, "geschoss": "feuerball", "tempo": 170, "reichweite": 200, "schaden": 2, "attribut": "intelligenz" },
+    "vorteile": ["magie"]
+  },
+  "kleriker": {
+    "name": "Kleriker",
+    "beschreibung": "Diener der Götter. Heilt sich und alle Gefährten in der Nähe.",
+    "attribute": { "staerke": 13, "geschick": 8, "konstitution": 14, "intelligenz": 10, "weisheit": 15, "charisma": 12 },
+    "faehigkeit": { "art": "heilung", "name": "Heilendes Wort", "abklingzeit": 8000, "umkreis": 80, "heilung": 2, "attribut": "weisheit" },
+    "vorteile": []
+  },
+  "waldlaeufer": {
+    "name": "Waldläufer",
+    "beschreibung": "Jäger der Wildnis. Schießt Pfeile über weite Strecken.",
+    "attribute": { "staerke": 12, "geschick": 15, "konstitution": 13, "intelligenz": 8, "weisheit": 14, "charisma": 10 },
+    "faehigkeit": { "art": "geschoss", "name": "Pfeil", "abklingzeit": 700, "geschoss": "pfeil", "tempo": 330, "reichweite": 260, "schaden": 1, "attribut": "geschick" },
+    "vorteile": []
+  }
+}

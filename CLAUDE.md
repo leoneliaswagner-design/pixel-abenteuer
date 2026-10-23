@@ -36,6 +36,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   `bereit` meldet (max. 15 s), dann noch `spieler.schonfrist` (1,5 s).
 - **Startgebiet** ist Riftside (keine Gegner). Prüfstände, die Schleime und
   Büsche brauchen, starten den Server mit `STARTGEBIET=wald`.
+- **Klassen/Spezies**: `werteBerechnen()` in `gemeinsam/regeln.js` — der
+  Server rechnet damit alles, der Browser Tempo und die Vorschau der Wahl.
+  Wer noch wählt (`s.waehlt`), ist für die anderen nicht da. Fähigkeiten
+  entscheidet der Server; der Schildstoß kommt als `stoss` wie ein Rückstoß.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -67,6 +71,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas
   prüft, tut es in der Schonfrist nach dem Beitreten (1,5 s).
 - `node pruefstand/riftside.mjs` — Start in der Stadt, Ansprechen, Stadttor.
+- `node pruefstand/klassen.mjs` — Charakterwahl bei 360 Punkten, Klassenbild
+  beim anderen Spieler (Bildpunkte), Feuerball, Heilung, gemessenes Tempo.
+- Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
+  an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner
   (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge.
 - Nach `gegenprobe.sh` ist `dist/` mit absichtlich kaputtem Code gebaut —

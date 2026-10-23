@@ -581,8 +581,11 @@ function beine(b, links, rechts) {
   }
 }
 
-function held(t, richtung, bild) {
+// kapuze: eigene Farben für die Kapuze (Schurke dunkel, Kleriker weiß);
+// sonst hat sie die Farbe der Tunika.
+function held(t, richtung, bild, kapuze = t, umriss = true) {
   const [tu, hell, dunkel] = t;
+  const [ku, khell, kdunkel] = kapuze;
   const b = new Bild(32, 32);
   const schritt = bild === 1 ? -1 : bild === 2 ? 1 : 0;
 
@@ -604,11 +607,11 @@ function held(t, richtung, bild) {
       b.rechteck(14 + a, 24, 3, 2, P.haut);
     }
     b.ellipse(15, 11.5, 8, 7.5, P.haut);
-    b.ellipse(16, 10.5, 9, 8, tu, (x, y) => y <= 8 || x >= 18);
-    b.ellipse(13, 6, 3, 2, hell);
-    b.rechteck(24, 6, 3, 3, tu);
-    b.rechteck(26, 8, 3, 3, tu);
-    b.rechteck(28, 10, 2, 2, dunkel);
+    b.ellipse(16, 10.5, 9, 8, ku, (x, y) => y <= 8 || x >= 18);
+    b.ellipse(13, 6, 3, 2, khell);
+    b.rechteck(24, 6, 3, 3, ku);
+    b.rechteck(26, 8, 3, 3, ku);
+    b.rechteck(28, 10, 2, 2, kdunkel);
     for (let x = 8; x <= 17; x++) {
       b.setze(x, 9, P.haare);
       if (x % 2 === 0) b.setze(x, 10, P.haare);
@@ -643,16 +646,16 @@ function held(t, richtung, bild) {
     if (hinten) {
       // Von hinten deckt die Kapuze den ganzen Kopf; nur unten an den
       // Seiten schaut Haar heraus. Mehr Haar sah aus wie eine Maske.
-      b.ellipse(16, 11.5, 8.5, 7.5, tu);
+      b.ellipse(16, 11.5, 8.5, 7.5, ku);
       for (const x of [9, 10, 11, 20, 21, 22]) b.rechteck(x, 14 + (x % 2), 1, 3 - (x % 2), P.haare);
-      b.rechteck(14, 13, 4, 5, dunkel);
-      b.rechteck(15, 13, 2, 4, tu);
-      b.rechteck(15, 18, 2, 1, dunkel);
-      b.ellipse(12, 6, 3, 2, hell);
+      b.rechteck(14, 13, 4, 5, kdunkel);
+      b.rechteck(15, 13, 2, 4, ku);
+      b.rechteck(15, 18, 2, 1, kdunkel);
+      b.ellipse(12, 6, 3, 2, khell);
     } else {
       b.ellipse(16, 11.5, 8.5, 7.5, P.haut);
-      b.ellipse(16, 9, 9.5, 6.5, tu, (x, y) => y <= 8);
-      b.ellipse(12, 5, 3, 2, hell);
+      b.ellipse(16, 9, 9.5, 6.5, ku, (x, y) => y <= 8);
+      b.ellipse(12, 5, 3, 2, khell);
       for (let x = 9; x <= 23; x++) {
         b.setze(x, 9, P.haare);
         if (x % 2) b.setze(x, 10, P.haare);
@@ -664,11 +667,11 @@ function held(t, richtung, bild) {
       b.setze(11, 16, '#f0a08a');
       b.setze(20, 16, '#f0a08a');
     }
-    b.rechteck(24, 6, 3, 3, tu);
-    b.rechteck(26, 8, 2, 3, tu);
-    b.rechteck(27, 10, 2, 2, dunkel);
+    b.rechteck(24, 6, 3, 3, ku);
+    b.rechteck(26, 8, 2, 3, ku);
+    b.rechteck(27, 10, 2, 2, kdunkel);
   }
-  b.umriss(UMRISS);
+  if (umriss) b.umriss(UMRISS);
   return b;
 }
 
@@ -778,6 +781,159 @@ for (const [name, l] of Object.entries(LEUTE)) {
   });
   for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen('links', bild), bild * 32, 96, true);
   blatt.speichern(ziel + `figur-${name}.png`);
+}
+
+// ---------- Klassen ----------
+// Jede Klasse trägt etwas Eigenes am Kopf (und am Körper), die Tunika
+// behält die Spielerfarbe: zwei Kämpfer sind so noch zu unterscheiden.
+// Klassen ohne eigenes Bild (Homebrew) bekommen im Spiel held-<farbe>.
+function kopfHut(richtung, [tu, hell, dunkel]) {
+  const k = new Bild(32, 32);
+  if (richtung === 'oben') {
+    k.ellipse(16, 11.5, 8.5, 7.5, P.haare);
+  } else if (richtung === 'links') {
+    k.ellipse(15, 11.5, 8, 7.5, P.haut);
+    k.rechteck(16, 9, 7, 9, P.haare);
+    k.rechteck(10, 12, 2, 2, P.auge);
+    k.setze(6, 14, P.haut);
+  } else {
+    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
+    k.rechteck(8, 9, 2, 8, P.haare);
+    k.rechteck(22, 9, 2, 8, P.haare);
+    k.rechteck(12, 12, 2, 2, P.auge);
+    k.rechteck(18, 12, 2, 2, P.auge);
+    // Bart, wie es sich für einen Magier gehört
+    k.ellipse(16, 17, 4.5, 2.5, '#d8d8e0');
+  }
+  // Breite Krempe, darüber der spitze Hut mit geknickter Spitze.
+  k.ellipse(16, 9, 12, 2.5, dunkel);
+  for (let y = 0; y < 8; y++) {
+    const halb = 6 - y * 0.7;
+    k.rechteck(Math.round(15 - halb + y * 0.4), 8 - y, Math.round(halb * 2), 1, y < 2 ? tu : y < 5 ? tu : hell);
+  }
+  k.rechteck(19, 0, 4, 2, hell);
+  k.rechteck(12, 7, 8, 1, P.gold);
+  k.umriss(UMRISS);
+  return k;
+}
+
+const KLASSEN = {
+  kaempfer: {
+    kopf: (r, t) => {
+      // Helmbusch in der Spielerfarbe, hinter dem Helm
+      const k = new Bild(32, 32);
+      if (r === 'links') k.rechteck(15, 1, 7, 3, t[0]);
+      else k.rechteck(14, 0, 4, 4, t[0]);
+      k.umriss(UMRISS);
+      k.einfuegen(kopfMensch(r, { haar: '#5a3a22', helm: '#b8b8c8' }), 0, 0);
+      return k;
+    },
+    koerper: (b, r) => {
+      // Schulterstücke aus Stahl
+      if (r === 'links') b.rechteck(13, 18, 6, 2, '#b8b8c8');
+      else {
+        b.rechteck(8, 18, 4, 2, '#b8b8c8');
+        b.rechteck(20, 18, 4, 2, '#b8b8c8');
+      }
+    },
+  },
+  schurke: {
+    kapuze: ['#3a3446', '#55506a', '#24202e'],
+    koerper: (b, r) => {
+      // Tuch vor dem Mund
+      if (r === 'unten') b.rechteck(10, 15, 12, 3, '#24202e');
+      if (r === 'links') b.rechteck(6, 14, 7, 3, '#24202e');
+    },
+  },
+  magier: {
+    kopf: (r, t) => kopfHut(r, t),
+    koerper: (b, r, t) => {
+      // Langes Gewand bis über die Stiefel
+      b.rechteck(9, 26, 14, 2, t[0]);
+      b.rechteck(9, 28, 14, 1, t[2]);
+    },
+  },
+  kleriker: {
+    kapuze: ['#ece6d6', '#ffffff', '#b8ae98'],
+    koerper: (b, r) => {
+      if (r === 'unten') {
+        b.rechteck(15, 18, 2, 4, P.gold);
+        b.rechteck(13, 19, 6, 1, P.gold);
+      }
+    },
+  },
+  waldlaeufer: {
+    kapuze: ['#4a6a2a', '#6a8a3a', '#2e4618'],
+    koerper: (b, r) => {
+      const leder = '#7a4a2a';
+      if (r === 'oben') {
+        // Köcher auf dem Rücken, Federn schauen oben heraus
+        b.rechteck(18, 13, 3, 11, leder);
+        b.rechteck(18, 11, 1, 2, '#f4ecd8');
+        b.rechteck(20, 11, 1, 2, '#f4ecd8');
+      } else if (r === 'links') {
+        b.rechteck(20, 14, 3, 10, leder);
+        b.rechteck(21, 12, 1, 2, '#f4ecd8');
+      } else for (let i = 0; i < 6; i++) b.rechteck(11 + i * 2, 18 + i, 2, 1, leder);
+    },
+  },
+};
+
+for (const [klasse, k] of Object.entries(KLASSEN))
+  for (const [farbe, t] of Object.entries(TUNIKEN)) {
+    const zeichnen = (r, bild) => {
+      // Umriss erst nach der Ausrüstung, sonst läge er unter dem Köcher.
+      const b = held(t, r, bild, k.kapuze, false);
+      k.koerper?.(b, r, t);
+      if (k.kopf) b.loeschen(0, 0, 32, 17);
+      b.umriss(UMRISS);
+      if (k.kopf) b.einfuegen(k.kopf(r, t), 0, 0);
+      return b;
+    };
+    const blatt = new Bild(128, 128);
+    ['unten', 'oben', 'links'].forEach((r, zeile) => {
+      for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen(r, bild), bild * 32, zeile * 32);
+    });
+    for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen('links', bild), bild * 32, 96, true);
+    blatt.speichern(ziel + `held-${klasse}-${farbe}.png`);
+  }
+
+// ---------- Geschosse und Funken ----------
+// Alle zeigen nach rechts; der Browser dreht sie in die Flugrichtung.
+// Bild 0 Dolch, 1 Pfeil, 2–3 Feuerball (flackert).
+{
+  const blatt = new Bild(64, 16);
+  const dolch = new Bild(16, 16);
+  dolch.rechteck(2, 7, 3, 2, P.holzDunkel);
+  dolch.rechteck(5, 6, 1, 4, P.gold);
+  dolch.rechteck(6, 7, 7, 2, '#d8d8e4');
+  dolch.rechteck(6, 7, 7, 1, '#ffffff');
+  dolch.setze(13, 7, '#d8d8e4');
+  dolch.umriss(UMRISS);
+  blatt.einfuegen(dolch, 0, 0);
+  const pfeil = new Bild(16, 16);
+  pfeil.rechteck(1, 7, 11, 1, P.holz);
+  pfeil.rechteck(1, 6, 3, 1, '#f4ecd8');
+  pfeil.rechteck(1, 8, 3, 1, '#f4ecd8');
+  pfeil.rechteck(12, 6, 2, 3, '#b8b8c8');
+  pfeil.setze(14, 7, '#b8b8c8');
+  pfeil.umriss(UMRISS);
+  blatt.einfuegen(pfeil, 16, 0);
+  for (const [n, flamme] of [[2, 0], [3, 1]]) {
+    const f = new Bild(16, 16);
+    f.ellipse(5 - flamme, 8, 5, 3 + flamme, '#d04818');
+    f.ellipse(9, 8, 5, 5, '#f07828');
+    f.ellipse(10, 8, 3, 3, '#f8c848');
+    f.ellipse(10.5, 7.5, 1.5, 1.5, '#fff4c0');
+    blatt.einfuegen(f, n * 16, 0);
+  }
+  blatt.speichern(ziel + 'geschosse.png');
+
+  const funke = new Bild(8, 8);
+  funke.rechteck(3, 0, 2, 8, '#fff4b0');
+  funke.rechteck(0, 3, 8, 2, '#fff4b0');
+  funke.rechteck(3, 3, 2, 2, '#ffffff');
+  funke.speichern(ziel + 'funke.png');
 }
 
 // ---------- Schild und Truhe ----------

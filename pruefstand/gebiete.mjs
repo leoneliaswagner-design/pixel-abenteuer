@@ -14,6 +14,7 @@ import { spawn, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { anmelden } from './anmelden.mjs';
 import { fileURLToPath } from 'node:url';
 
 const wurzel = fileURLToPath(new URL('..', import.meta.url));
@@ -27,10 +28,10 @@ const ruine = { gebiet: 'wald', x: 34 * 32 + 16, y: 26 * 32 + 24 };
 writeFileSync(spielstand, JSON.stringify({
   version: 1, welt: {},
   spieler: {
-    anna: { name: 'Anna', farbe: 'gruen', richtung: 'unten', ...ruine, leben: 5, ankunft: ruine },
+    anna: { name: 'Anna', farbe: 'gruen', klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', ...ruine, leben: 5, ankunft: ruine },
     // Ben steht im Wald (neue Spieler beginnen in Riftside — hier soll er
     // aber im selben Gebiet wie Anna anfangen und dort bleiben).
-    ben: { name: 'Ben', farbe: 'rot', richtung: 'unten', gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24, leben: 6, ankunft: { gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24 } },
+    ben: { name: 'Ben', farbe: 'rot', klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24, leben: 6, ankunft: { gebiet: 'wald', x: 8 * 32 + 16, y: 13 * 32 + 24 } },
   },
 }));
 
@@ -73,9 +74,7 @@ try {
     const p = await browser.newPage({ viewport: { width: 960, height: 540 } });
     p.on('pageerror', (e) => fehler.push(`${name}: Seitenfehler ${e.message}`));
     await p.goto(`http://localhost:${PORT}/`);
-    await p.fill('#name', name);
-    await p.click('button[type=submit]');
-    await p.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
+    await anmelden(p, name);
     await warte(400);
     return p;
   };
@@ -126,9 +125,12 @@ try {
   // Die Oberfläche lief über den Wechsel weiter: Herzen nicht doppelt, Zuhörer nicht doppelt.
   const ober = await anna.evaluate(() => {
     const s = window.__spiel.szene;
-    return { herzen: s.scene.get('oberflaeche').herzen.length, zuhoerer: s.events.listenerCount('stand') };
+    return {
+      herzen: s.scene.get('oberflaeche').herzen.length, soll: Math.ceil(s.maxLeben / 2),
+      zuhoerer: s.events.listenerCount('stand') + s.events.listenerCount('faehigkeit'),
+    };
   });
-  pruefe(ober.herzen === 3 && ober.zuhoerer === 1, `Oberfläche nach dem Wechsel: ${ober.herzen} Herzen, ${ober.zuhoerer} Zuhörer`);
+  pruefe(ober.herzen === ober.soll && ober.zuhoerer === 2, `Oberfläche nach dem Wechsel: ${ober.herzen} von ${ober.soll} Herzen, ${ober.zuhoerer} Zuhörer (Stand, Fähigkeit)`);
 
   // Laufen in der Höhle: der Server darf nicht mehr nach Oberwelt-Wänden korrigieren.
   const vorLauf = za.ich;

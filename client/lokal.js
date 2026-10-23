@@ -14,6 +14,8 @@ export class LokalNetz extends Netz {
       return r.json();
     });
     const werte = await lade('daten/werte.json');
+    werte.klassen = await lade('daten/klassen.json');
+    werte.spezies = await lade('daten/spezies.json');
     const karten = Object.fromEntries(await Promise.all(werte.gebiete.map(async (g) => [g, await lade(`karten/${g}.json`)])));
     this.spiel = new Spiel(karten, werte);
     let willkommen = null;

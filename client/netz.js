@@ -6,6 +6,13 @@ export class Netz {
     this.hoerer = new Map();
     this.wartend = [];
     this.offen = false;
+    this.erwartet = new Map();
+  }
+
+  // Auf eine bestimmte Antwort warten, bevor eine Szene zuhört — etwa auf
+  // „charakter" nach der Wahl auf der Startseite.
+  warteAuf(art) {
+    return new Promise((gut) => this.erwartet.set(art, gut));
   }
 
   verbinden(name) {
@@ -50,6 +57,11 @@ export class Netz {
   }
 
   verteilen(m) {
+    const gut = this.erwartet.get(m.t);
+    if (gut) {
+      this.erwartet.delete(m.t);
+      return gut(m);
+    }
     if (!this.offen) {
       // Alte Stände braucht niemand, nur Ereignisse.
       if (m.t !== 'stand') this.wartend.push(m);

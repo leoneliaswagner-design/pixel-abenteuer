@@ -94,8 +94,38 @@ probe werkzeuge/karte.mjs "  const grundBei = (x, y) => {" "  const grundBei = (
   "Kisten und Truhen stehen auf Pflasterflecken"
 probe server/gebiet.js "if (s.tot || jetzt < s.unverwundbarBis) continue;" "if (s.tot) continue;" pruefstand/server-regeln.mjs \
   "keine Unverwundbarkeit nach einem Treffer"
-probe server/gebiet.js "if (s.leben >= this.w.spieler.leben) continue;" "" pruefstand/server-regeln.mjs \
+probe server/gebiet.js "if (s.leben >= this.spiel.maxLeben(s)) continue;" "" pruefstand/server-regeln.mjs \
   "Herz wird auch mit vollem Leben verbraucht"
+
+# Klassen und Spezies
+probe server/spiel.js "if (!s.waehlt || !this.charakterGueltig(m.klasse, m.spezies)) return;" "if (!s.waehlt) return;" pruefstand/server-regeln.mjs \
+  "Server nimmt jede Klasse an, auch erfundene"
+probe server/gebiet.js "s.gebiet === this.name && !s.waehlt" "s.gebiet === this.name" pruefstand/server-regeln.mjs \
+  "wer noch wählt, steht schon im Spiel"
+probe gemeinsam/regeln.js "grund.leben + mod.konstitution" "grund.leben" pruefstand/server-regeln.mjs \
+  "Konstitution bringt keine Herzen"
+probe server/spiel.js "if (!f || s.tot || jetzt < s.faehigkeitBereit) return;" "if (!f || s.tot) return;" pruefstand/server-regeln.mjs \
+  "Fähigkeit ohne Abklingzeit"
+probe server/spiel.js "Math.hypot(p.x - s.x, p.y - s.y) <= f.umkreis" "true" pruefstand/server-regeln.mjs \
+  "Heilung reicht über die ganze Karte"
+probe server/spiel.js "const knackt = s.werte?.vorteile.includes('schloesser') && !e.zauber;" "const knackt = !e.zauber;" pruefstand/server-regeln.mjs \
+  "jeder knackt Schlösser"
+probe server/spiel.js "if (e.magisch && !s.werte?.vorteile.includes('magie')) {" "if (false) {" pruefstand/server-regeln.mjs \
+  "jeder liest magische Schrift"
+probe client/main.js "if (!willkommen.charakter) {" "if (false) {" pruefstand/klassen.mjs \
+  "Browser lässt die Charakterwahl aus"
+probe client/figur.js "this.textur = klasse && szene" "this.textur = false && szene" pruefstand/klassen.mjs \
+  "alle Klassen sehen gleich aus"
+probe client/szenen/Spiel.js "          dx = (ix / l) * this.tempo * dt;" "          dx = (ix / l) * ws.geschwindigkeit * dt;" pruefstand/klassen.mjs \
+  "Browser läuft ohne Geschick-Bonus"
+probe client/szenen/Spiel.js "    this.geschosseUebernehmen(m.geschosse ?? []);" "" pruefstand/klassen.mjs \
+  "Geschosse werden nicht gezeichnet"
+probe client/szenen/Spiel.js "        if (f) this.funkeln(f.x, f.y);" "" pruefstand/klassen.mjs \
+  "Heilung ohne Funken"
+probe client/szenen/Spiel.js "for (const taste of ['Q', 'K'])" "for (const taste of [])" pruefstand/klassen.mjs \
+  "Q tut nichts"
+probe client/index.html "#start { position: fixed; inset: 0; display: flex;" "#start { position: fixed; inset: 0; display: flex; min-width: 720px;" pruefstand/klassen.mjs \
+  "Charakterwahl am Handy rechts abgeschnitten"
 
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi

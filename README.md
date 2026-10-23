@@ -21,7 +21,29 @@ Allein, ganz ohne Server-Verbindung: `http://localhost:5173/?allein` — die
 Spielregeln laufen dann im Browser (`client/lokal.js`).
 
 **Steuerung:** Pfeiltasten oder WASD zum Laufen, Leertaste oder J für das Schwert,
-E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern).
+E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern),
+Q oder K für die Fähigkeit der Klasse.
+
+## Klassen und Spezies
+
+Beim ersten Beitreten wählt jeder Klasse und Spezies; danach gilt sie für
+diesen Namen. Wie in D&D bestimmen sechs Attribute die Werte: Konstitution
+gibt Herzen, Geschick Tempo, Stärke Schwertschaden, das Attribut der Klasse
+die Stärke ihrer Fähigkeit.
+
+| Klasse | Fähigkeit (Q) | Vorteil |
+|---|---|---|
+| Kämpfer | Schildstoß: Sprung nach vorn, trifft, wer im Weg steht | viel Stärke und Leben |
+| Schurke | Dolchwurf | öffnet verschlossene Türen ohne Schlüssel |
+| Magier | Feuerball (langsam, Schaden 3) | liest magische Schrift |
+| Kleriker | Heilendes Wort: heilt sich und alle in der Nähe | — |
+| Waldläufer | Pfeil (schnell, weit) | — |
+
+Spezies: Mensch (+1 auf alles), Elf, Zwerg, Halbling. Alles steht in
+`inhalte/daten/klassen.json` und `spezies.json` — eine Homebrew-Klasse ist
+ein neuer Eintrag dort (Fähigkeit: `geschoss`, `ansturm` oder `heilung`).
+Ohne eigenes Bild läuft sie im Umhang der Spielerfarbe; ein Bild bekommt sie
+in `werkzeuge/grafik.mjs` (`KLASSEN`).
 
 ## Mit Freunden übers Internet
 
@@ -55,7 +77,7 @@ Die IP ändert sich meist einmal am Tag.
 ## Spielstände
 
 Der Server merkt sich jeden Spieler an seinem **Namen** (Groß-/Kleinschreibung
-egal): Gebiet, Stelle, Leben, Gegenstände; dazu, welche Truhen offen sind. Wer mit demselben Namen wiederkommt, steht da,
+egal): Gebiet, Stelle, Leben, Klasse und Spezies, Gegenstände; dazu, welche Truhen offen sind. Wer mit demselben Namen wiederkommt, steht da,
 wo er aufgehört hat. Gespeichert wird alle 5 Sekunden, beim Verlassen und
 beim Beenden mit Strg+C.
 
@@ -77,7 +99,7 @@ Zum Ausprobieren in einem anderen Gebiet beginnen: `STARTGEBIET=wald`
 |---|---|
 | `client/` | Das Spiel im Browser (Phaser 3). `szenen/Spiel.js` ist die Welt, `szenen/Oberflaeche.js` Herzen und Meldungen, `figur.js` eine Spielfigur. |
 | `server/` | Node-Server mit WebSockets. `spiel.js`: Spieler, Übergänge, Spielstand. `gebiet.js`: eine Karte mit ihren Gegnern, Büschen, Herzen. `spielstand.js`: die Datei. |
-| `gemeinsam/` | Was Browser und Server beide brauchen: Kollision, Schwert-Trefferfläche. |
+| `gemeinsam/` | Was Browser und Server beide brauchen: Kollision, Schwert-Trefferfläche, Werte aus Klasse und Spezies (`regeln.js`). |
 | `inhalte/grafik/` | Alle Bilder (PNG). |
 | `inhalte/karten/` | Karten im Format von [Tiled](https://www.mapeditor.org). |
 | `inhalte/daten/werte.json` | Zahlen zum Feinschleifen: Tempo, Leben, Schaden, Wartezeiten. |
@@ -139,6 +161,7 @@ node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über ein
 node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
 node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
+node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen

@@ -3,6 +3,7 @@ import { Netz } from './netz.js';
 import { LokalNetz } from './lokal.js';
 import { SpielSzene } from './szenen/Spiel.js';
 import { Oberflaeche } from './szenen/Oberflaeche.js';
+import { charakterWaehlen } from './charakterwahl.js';
 
 // 480×270 ist 16:9 und zeigt 15×8,5 Kacheln — etwas mehr Welt als Link's
 // Awakening (10×8), bei doppelter Kachelauflösung.
@@ -14,7 +15,7 @@ export const HOEHE = 270;
 const ALLEIN = import.meta.env.VITE_ALLEIN === '1' || new URLSearchParams(location.search).has('allein');
 if (ALLEIN) {
   document.getElementById('hinweis').textContent =
-    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E.';
+    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q.';
 }
 
 const form = document.getElementById('anmelden');
@@ -45,6 +46,16 @@ form.addEventListener('submit', async (e) => {
     // aber nicht ewig warten (offline gibt es sie nicht).
     await Promise.race([document.fonts.load('8px "Press Start 2P"'), new Promise((r) => setTimeout(r, 2500))]).catch(() => {});
     const willkommen = await netz.verbinden(name);
+    if (!willkommen.charakter) {
+      const wahl = await charakterWaehlen(willkommen.auswahl, willkommen.farbe);
+      // Erst zuhören, dann senden: allein (LokalNetz) kommt die Antwort
+      // noch während senden() zurück.
+      const antwort = netz.warteAuf('charakter');
+      netz.senden({ t: 'charakter', ...wahl });
+      const c = await antwort;
+      willkommen.charakter = { klasse: c.klasse, spezies: c.spezies, werte: c.werte };
+      willkommen.leben = c.leben;
+    }
     document.getElementById('start').remove();
     starten(netz, willkommen);
   } catch (err) {

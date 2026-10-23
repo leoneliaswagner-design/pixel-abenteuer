@@ -17,6 +17,7 @@ export class Gebiet {
       if (!u.eig.ziel || !u.eig.ankunft) throw new Error(`Übergang in „${name}" ohne „ziel" oder „ankunft"`);
     this.gegner = this.welt.orte.filter((o) => o.name === 'gegner').map((o, i) => this.neuerGegner(`${name}-g${i}`, o));
     this.herzen = new Map();
+    this.geschosse = new Map();
     this.nachwachsen = new Map();
     // Wohin Figuren gerade schauen (nachdem jemand sie angesprochen hat).
     // Nicht im Spielstand — nach einem Neustart schauen sie wieder geradeaus.
@@ -61,8 +62,9 @@ export class Gebiet {
     return { id, art, w, start: ort, x: ort.x, y: ort.y + 8, leben: w.leben, tot: false, vx: 0, vy: 0, wechselBei: 0, stossBis: 0, getroffenBis: 0 };
   }
 
+  // Wer noch Klasse und Spezies wählt, ist für das Gebiet nicht da.
   spieler() {
-    return [...this.spiel.spieler.values()].filter((s) => s.gebiet === this.name);
+    return [...this.spiel.spieler.values()].filter((s) => s.gebiet === this.name && !s.waehlt);
   }
 
   anAlle(m, ausser) {
@@ -79,7 +81,7 @@ export class Gebiet {
     for (const g of this.gegner) {
       if (g.tot || jetzt < g.getroffenBis) continue;
       if (!imRechteck(f, g.x, g.y - 6, 8)) continue;
-      this.gegnerTreffen(g, s, jetzt);
+      this.gegnerTreffen(g, s, jetzt, s.werte?.schaden ?? 1);
     }
     for (const i of this.welt.kachelnIn(f)) {
       if (!this.welt.istSchneidbar(i)) continue;
@@ -91,8 +93,10 @@ export class Gebiet {
     }
   }
 
-  gegnerTreffen(g, s, jetzt) {
-    g.leben -= 1;
+  // s ist, wer trifft — oder ein Geschoss: gebraucht werden nur x, y und
+  // richtung, für die Richtung des Rückstoßes.
+  gegnerTreffen(g, s, jetzt, schaden = 1) {
+    g.leben -= schaden;
     g.getroffenBis = jetzt + 250;
     const [rx, ry] = richtungZu(s.x, s.y - 8, g.x, g.y - 6, RICHTUNGEN[s.richtung]);
     g.vx = rx * g.w.stossGeschwindigkeit;
@@ -122,6 +126,7 @@ export class Gebiet {
     if (!hier.length) return;
     for (const g of this.gegner) this.gegnerSchritt(g, dt, jetzt, hier);
     for (const s of hier) this.herzenAufheben(s);
+    this.geschosseBewegen(dt, jetzt);
 
     for (const [i, bei] of this.nachwachsen) {
       if (jetzt < bei) continue;
@@ -136,12 +141,47 @@ export class Gebiet {
     for (const h of this.herzen.values()) if (jetzt >= h.bis) this.herzen.delete(h.id);
   }
 
+  // ---------- Geschosse (Dolch, Feuerball, Pfeil) ----------
+
+  geschossAbfeuern(g) {
+    const id = `p${this.spiel.naechsteId++}`;
+    this.geschosse.set(id, { id, ...g });
+  }
+
+  geschosseBewegen(dt, jetzt) {
+    const t = this.welt.kachel;
+    for (const p of this.geschosse.values()) {
+      // In kleinen Schritten, sonst flöge ein schneller Pfeil durch einen
+      // Schleim hindurch (330 px/s sind 16 px pro Takt).
+      const schritte = Math.max(1, Math.ceil((Math.hypot(p.vx, p.vy) * dt) / 6));
+      let weg = null;
+      for (let i = 0; i < schritte && !weg; i++) {
+        p.x += (p.vx * dt) / schritte;
+        p.y += (p.vy * dt) / schritte;
+        p.rest -= (Math.hypot(p.vx, p.vy) * dt) / schritte;
+        if (this.welt.istFest(Math.floor(p.x / t), Math.floor(p.y / t))) weg = 'wand';
+        else if (p.rest <= 0) weg = 'weit';
+        else {
+          const g = this.gegner.find((g) => !g.tot && Math.hypot(g.x - p.x, g.y - 6 - p.y) < 14);
+          if (g) {
+            this.gegnerTreffen(g, { x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden);
+            weg = 'treffer';
+          }
+        }
+      }
+      if (weg) {
+        this.geschosse.delete(p.id);
+        this.anAlle({ t: 'geschoss_weg', id: p.id, x: p.x, y: p.y, art: p.art, grund: weg });
+      }
+    }
+  }
+
   herzenAufheben(s) {
     if (s.tot) return;
     for (const h of this.herzen.values()) {
       if (Math.hypot(h.x - s.x, h.y - (s.y - 8)) > 16) continue;
-      if (s.leben >= this.w.spieler.leben) continue;
-      s.leben = Math.min(this.w.spieler.leben, s.leben + this.w.herz.heilung);
+      if (s.leben >= this.spiel.maxLeben(s)) continue;
+      s.leben = Math.min(this.spiel.maxLeben(s), s.leben + this.w.herz.heilung);
       this.herzen.delete(h.id);
       this.anAlle({ t: 'herz_genommen', id: h.id, von: s.id });
     }
@@ -195,8 +235,9 @@ export class Gebiet {
       t: 'stand',
       spieler: this.spieler().map((s) => ({
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
-        leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis,
+        leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
       })),
+      geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung })),
       gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
     };

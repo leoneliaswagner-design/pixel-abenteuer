@@ -21,23 +21,31 @@ const SCHWERT = {
 // Gebietswechsel sind sie schon da.
 export function animationenAnlegen(szene) {
   if (szene.anims.exists('schleim')) return;
-  for (const f of FARBEN)
-    for (const [r, z] of Object.entries(ZEILE))
-      szene.anims.create({
-        key: `${f}-${r}`,
-        frames: szene.anims.generateFrameNumbers(`held-${f}`, { frames: [z * 4 + 1, z * 4, z * 4 + 2, z * 4] }),
-        frameRate: 9,
-        repeat: -1,
-      });
   szene.anims.create({ key: 'schleim', frames: szene.anims.generateFrameNumbers('schleim', { frames: [0, 1] }), frameRate: 4, repeat: -1 });
   szene.anims.create({ key: 'rauch', frames: szene.anims.generateFrameNumbers('rauch', { frames: [0, 1, 2] }), frameRate: 14 });
   szene.anims.create({ key: 'riss', frames: szene.anims.generateFrameNumbers('riss', { frames: [0, 1, 2, 3] }), frameRate: 7, repeat: -1 });
 }
 
+// Laufbilder für ein Blatt anlegen, sobald es zum ersten Mal gebraucht wird
+// — welche Klassen es gibt, steht erst zur Laufzeit fest.
+function laufenAnlegen(szene, textur) {
+  if (szene.anims.exists(`${textur}-unten`)) return;
+  for (const [r, z] of Object.entries(ZEILE))
+    szene.anims.create({
+      key: `${textur}-${r}`,
+      frames: szene.anims.generateFrameNumbers(textur, { frames: [z * 4 + 1, z * 4, z * 4 + 2, z * 4] }),
+      frameRate: 9,
+      repeat: -1,
+    });
+}
+
 export class Figur {
-  constructor(szene, farbe, name) {
+  constructor(szene, farbe, name, klasse = null) {
     this.szene = szene;
     this.farbe = farbe;
+    // Klassen ohne eigenes Bild (Homebrew) laufen im Kapuzenumhang der Farbe.
+    this.textur = klasse && szene.textures.exists(`held-${klasse}-${farbe}`) ? `held-${klasse}-${farbe}` : `held-${farbe}`;
+    laufenAnlegen(szene, this.textur);
     this.x = 0;
     this.y = 0;
     this.richtung = 'unten';
@@ -46,7 +54,7 @@ export class Figur {
     this.unverwundbar = false;
     this.tot = false;
     this.schatten = szene.add.image(0, 0, 'schatten');
-    this.koerper = szene.add.sprite(0, 0, `held-${farbe}`, 0).setOrigin(0.5, 1);
+    this.koerper = szene.add.sprite(0, 0, this.textur, 0).setOrigin(0.5, 1);
     this.schwert = szene.add.image(0, 0, 'schwert').setOrigin(0.5, 0.9).setVisible(false);
     this.schild = name
       ? szene.add.text(0, 0, name, { fontFamily: SCHRIFT, fontSize: '8px', color: FARBWERTE[farbe], stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(5000)
@@ -60,6 +68,13 @@ export class Figur {
     this.schwert.setVisible(true);
     this.szene.tweens.killTweensOf(this.schwert);
     this.szene.tweens.add({ targets: this.schwert, angle: { from: s.winkel - 100, to: s.winkel + 35 }, duration: dauer * 0.55, ease: 'Quad.Out' });
+  }
+
+  // Arm ausgestreckt, ohne Schwert — beim Werfen, Zaubern, Heilen.
+  ausholen(richtung, dauer) {
+    this.richtung = richtung;
+    this.hiebBis = this.szene.time.now + dauer;
+    this.schwert.setVisible(false);
   }
 
   aktualisieren(jetzt) {
@@ -80,7 +95,7 @@ export class Figur {
     } else {
       this.schwert.setVisible(false);
       this.koerper.setAngle(0);
-      if (this.laeuft) this.koerper.anims.play(`${this.farbe}-${this.richtung}`, true);
+      if (this.laeuft) this.koerper.anims.play(`${this.textur}-${this.richtung}`, true);
       else {
         this.koerper.anims.stop();
         this.koerper.setFrame(z * 4);

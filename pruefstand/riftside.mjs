@@ -9,6 +9,7 @@ import { spawn, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { anmelden } from './anmelden.mjs';
 import { fileURLToPath } from 'node:url';
 
 const wurzel = fileURLToPath(new URL('..', import.meta.url));
@@ -47,9 +48,7 @@ try {
   const p = await browser.newPage({ viewport: { width: 960, height: 540 } });
   p.on('pageerror', (e) => fehler.push(`Seitenfehler ${e.message}`));
   await p.goto(`http://localhost:${PORT}/`);
-  await p.fill('#name', 'Neu');
-  await p.click('button[type=submit]');
-  await p.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
+  await anmelden(p, 'Neu');
   await warte(500);
   const zustand = () => p.evaluate(() => window.__spiel.zustand());
   const laufeBis = async (taste, bedingung, ms = 12000) => {

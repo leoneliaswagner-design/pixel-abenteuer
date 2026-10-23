@@ -12,6 +12,7 @@ import { spawn, execSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { anmelden } from './anmelden.mjs';
 import { fileURLToPath } from 'node:url';
 
 const wurzel = fileURLToPath(new URL('..', import.meta.url));
@@ -61,9 +62,7 @@ try {
     const p = await browser.newPage({ viewport: { width: 960, height: 540 }, ignoreHTTPSErrors: true });
     p.on('pageerror', (e) => fehler.push(`${name}: Seitenfehler ${e.message}`));
     await p.goto(adresse);
-    await p.fill('#name', name);
-    await p.click('button[type=submit]');
-    await p.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
+    await anmelden(p, name);
     seiten.push(p);
   }
   const [a, b] = seiten;

@@ -254,7 +254,8 @@ XXXXXXXXXXXAXXXXXXXXXXXXXXXX
         inhalt: 'rissstein', id: 'tempel_rissstein', setzt: 'tempel_geschlossen',
         meldung: 'Ein Beben geht durch Riftside — der Riss in der Fischergasse schließt sich!',
       }],
-      '!': [{ text: 'Eine Inschrift, halb von Moos bedeckt:\n\n„Wer den Stein nimmt, schließt das Tor."' }],
+      // Magische Schrift: nur ein Magier kann sie lesen (Vorteil „magie").
+      '!': [{ magisch: true, text: 'Eine Inschrift in leuchtenden Runen:\n\n„Wer den Stein nimmt, schließt das Tor."' }],
     },
     text: `
 WWWWWWWWWWWWWWWWWW

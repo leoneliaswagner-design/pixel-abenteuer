@@ -5,7 +5,8 @@
 // Nur die eigene Position meldet jeder Browser selbst — sonst fühlt sich das
 // Laufen bei 80 ms Ping zäh an. Der Server prüft sie aber (Tempo und Wände)
 // und schickt eine Korrektur, wenn sie nicht stimmen kann.
-import { RICHTUNGEN, erfuellt } from '../gemeinsam/welt.js';
+import { RICHTUNGEN, erfuellt, hiebFlaeche, imRechteck } from '../gemeinsam/welt.js';
+import { werteBerechnen } from '../gemeinsam/regeln.js';
 import { Gebiet, richtungZu } from './gebiet.js';
 
 const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
@@ -31,6 +32,25 @@ export class Spiel {
         if (!this.gebiete.get(u.eig.ziel)?.ankuenfte.has(u.eig.ankunft))
           throw new Error(`Übergang in „${g.name}" führt ins Leere: ${u.eig.ziel} / ${u.eig.ankunft}`);
     this.zuletztGespeichert = jetzt();
+    // Klassen und Spezies (inhalte/daten/klassen.json, spezies.json) — vom
+    // Aufrufer an die Werte gehängt, damit Homebrew nur eine Datei ist.
+    this.klassen = werte.klassen ?? {};
+    this.spezies = werte.spezies ?? {};
+  }
+
+  // Klasse und Spezies festlegen und die Werte daraus berechnen.
+  charakterSetzen(s, klasse, spezies) {
+    s.klasse = klasse;
+    s.spezies = spezies;
+    s.werte = werteBerechnen(this.klassen[klasse], this.spezies[spezies], this.w.spieler);
+  }
+
+  charakterGueltig(klasse, spezies) {
+    return Object.hasOwn(this.klassen, klasse ?? '') && Object.hasOwn(this.spezies, spezies ?? '');
+  }
+
+  maxLeben(s) {
+    return s.werte?.maxLeben ?? this.w.spieler.leben;
   }
 
   // ---------- Verbindungen ----------
@@ -58,14 +78,40 @@ export class Spiel {
       // Unverwundbar, bis der Browser „bereit" meldet (höchstens 15 s), dann
       // noch 1,5 s. Die Schonfrist lief früher ab dem Beitreten — und war
       // vorbei, während der Browser noch Karte und Bilder lud.
-      unverwundbarBis: jetzt + 15000, naechsterHieb: 0,
+      unverwundbarBis: jetzt + 15000, naechsterHieb: 0, faehigkeitBereit: 0, stossBis: 0,
       korrektur: 0, budget: 0, zuletzt: jetzt,
     };
+    // Wer noch keine Klasse hat, wählt erst — bis dahin ist er für die
+    // anderen nicht da (kein Stand, keine Gegner, kein Schaden).
+    if (this.charakterGueltig(alt?.klasse, alt?.spezies)) this.charakterSetzen(s, alt.klasse, alt.spezies);
+    else s.waehlt = true;
+    s.leben = Math.min(s.leben, this.maxLeben(s));
     this.spieler.set(s.id, s);
-    senden({ t: 'willkommen', id: s.id, farbe, wieder: !!alt, ...this.ortsangabe(s) });
-    this.anAlle({ t: 'nachricht', text: alt ? `${name} ist zurück.` : `${name} ist da.` });
+    senden({
+      t: 'willkommen', id: s.id, farbe, wieder: !!alt, ...this.ortsangabe(s),
+      charakter: s.waehlt ? null : this.charakterAngabe(s),
+      // grund: damit die Wahl im Browser Herzen und Tempo vorab zeigen kann.
+      auswahl: { klassen: this.klassen, spezies: this.spezies, grund: { leben: this.w.spieler.leben, geschwindigkeit: this.w.spieler.geschwindigkeit } },
+    });
+    if (!s.waehlt) this.anAlle({ t: 'nachricht', text: alt ? `${name} ist zurück.` : `${name} ist da.` });
     this.merken(s);
     return s;
+  }
+
+  charakterAngabe(s) {
+    return { klasse: s.klasse, spezies: s.spezies, werte: s.werte };
+  }
+
+  charakterWaehlen(s, m) {
+    if (!s.waehlt || !this.charakterGueltig(m.klasse, m.spezies)) return;
+    this.charakterSetzen(s, m.klasse, m.spezies);
+    s.waehlt = false;
+    s.leben = s.werte.maxLeben;
+    s.unverwundbarBis = this.jetzt() + 15000;
+    s.senden({ t: 'charakter', ...this.charakterAngabe(s), leben: s.leben });
+    this.anAlle({ t: 'nachricht', text: `${s.name} ist da — ${this.spezies[m.spezies].name}, ${this.klassen[m.klasse].name}.` }, s.id);
+    this.merken(s);
+    this.speichern();
   }
 
   verlassen(id) {
@@ -133,7 +179,10 @@ export class Spiel {
   nachricht(id, m) {
     const s = this.spieler.get(id);
     if (!s || !m || typeof m.t !== 'string') return;
+    if (m.t === 'charakter') return this.charakterWaehlen(s, m);
+    if (s.waehlt) return;
     if (m.t === 'pos') this.position(s, m);
+    else if (m.t === 'faehigkeit') this.faehigkeit(s, m);
     else if (m.t === 'hieb') this.hieb(s, m);
     else if (m.t === 'ansprechen') this.ansprechen(s, m);
     else if (m.t === 'bereit') s.unverwundbarBis = Math.min(s.unverwundbarBis, this.jetzt() + this.w.spieler.schonfrist);
@@ -149,7 +198,7 @@ export class Spiel {
     // oft gebündelt an, dann liegen zwei Schritte in 5 ms — das ist kein
     // Schummeln. Das Guthaben füllt sich mit der Zeit und ist gedeckelt.
     const jetzt = this.jetzt();
-    const tempo = Math.max(this.w.spieler.geschwindigkeit, this.w.spieler.stossGeschwindigkeit);
+    const tempo = Math.max(s.werte?.tempo ?? this.w.spieler.geschwindigkeit, this.w.spieler.stossGeschwindigkeit, this.w.spieler.ansturmTempo);
     s.budget = Math.min(48, s.budget + ((jetzt - s.zuletzt) / 1000) * tempo * 1.2);
     s.zuletzt = jetzt;
     const gebiet = this.gebiete.get(s.gebiet);
@@ -218,6 +267,11 @@ export class Spiel {
     const e = ding.eig;
 
     if (ding.name === 'schild') {
+      // Magische Schrift: nur wer Magie lesen kann, versteht sie.
+      if (e.magisch && !s.werte?.vorteile.includes('magie')) {
+        s.senden({ t: 'dialog', seiten: ['Fremde, leuchtende Zeichen. Du kannst sie nicht lesen.', 'Vielleicht kann ein Magier etwas damit anfangen.'] });
+        return;
+      }
       s.senden({ t: 'dialog', seiten: seiten(this.textFuer(e)) });
     } else if (ding.name === 'figur') {
       // Die Figur dreht sich zum Sprecher — für alle im Gebiet sichtbar.
@@ -252,17 +306,48 @@ export class Spiel {
       this.speichern();
     } else if (ding.name === 'tuer') {
       const art = e.schluessel ?? 'schluessel';
-      if (!(this.gruppe()[art] > 0)) {
+      // Ein Schurke knackt das Schloss — ohne Schlüssel, und keiner geht verloren.
+      const knackt = s.werte?.vorteile.includes('schloesser') && !e.zauber;
+      if (!knackt && !(this.gruppe()[art] > 0)) {
         const g = this.w.gegenstaende?.[art];
         s.senden({ t: 'dialog', seiten: [`Verschlossen. Ihr braucht ${g?.einzeln ?? art}.`] });
         return;
       }
-      this.gruppe()[art]--;
+      if (!knackt) this.gruppe()[art]--;
       gebiet.tuerOeffnen(ding);
       gebiet.anAlle({ t: 'tuer', ding: ding.schluessel, offen: true });
-      gebiet.anAlle({ t: 'nachricht', text: `${s.name} schließt eine Tür auf.` }, s.id);
+      gebiet.anAlle({ t: 'nachricht', text: knackt ? `${s.name} knackt das Schloss.` : `${s.name} schließt eine Tür auf.` });
       this.gruppeGeaendert();
       this.speichern();
+    }
+  }
+
+  // Die Klassenfähigkeit (Taste Q). Welche Art es ist, steht in klassen.json.
+  faehigkeit(s, m) {
+    const f = s.werte?.faehigkeit;
+    const jetzt = this.jetzt();
+    if (!f || s.tot || jetzt < s.faehigkeitBereit) return;
+    if (RICHTUNGEN[m.r]) s.richtung = m.r;
+    s.faehigkeitBereit = jetzt + f.abklingzeit;
+    const gebiet = this.gebiete.get(s.gebiet);
+    const [dx, dy] = RICHTUNGEN[s.richtung];
+    gebiet.anAlle({ t: 'faehigkeit', id: s.id, art: f.art, r: s.richtung }, s.id);
+
+    if (f.art === 'geschoss') {
+      gebiet.geschossAbfeuern({ von: s.id, art: f.geschoss, x: s.x + dx * 10, y: s.y - 10 + dy * 8, vx: dx * f.tempo, vy: dy * f.tempo, rest: f.reichweite, schaden: f.staerke, richtung: s.richtung });
+    } else if (f.art === 'heilung') {
+      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= f.umkreis);
+      for (const p of ziele) p.leben = Math.min(this.maxLeben(p), p.leben + f.staerke);
+      gebiet.anAlle({ t: 'heilung', von: s.id, ziele: ziele.map((p) => p.id) });
+    } else if (f.art === 'ansturm') {
+      // Der Browser bewegt die eigene Figur — er bekommt den Schub wie einen
+      // Rückstoß, nur nach vorn. Getroffen wird, wer auf dem Weg steht.
+      const dauer = (f.weite / this.w.spieler.ansturmTempo) * 1000;
+      s.senden({ t: 'stoss', vx: dx * this.w.spieler.ansturmTempo, vy: dy * this.w.spieler.ansturmTempo, dauer });
+      s.stossBis = jetzt + dauer + 250;
+      s.unverwundbarBis = Math.max(s.unverwundbarBis, jetzt + dauer + 100);
+      const vorn = hiebFlaeche(s.x + dx * f.weite / 2, s.y + dy * f.weite / 2, s.richtung, { hiebReichweite: f.weite / 2 + 20, hiebBreite: 32 });
+      for (const g of gebiet.gegner) if (!g.tot && imRechteck(vorn, g.x, g.y - 6, 8)) gebiet.gegnerTreffen(g, s, jetzt, f.staerke);
     }
   }
 
@@ -289,7 +374,7 @@ export class Spiel {
     const a = s.ankunft;
     const zurueck = this.gebiete.get(a.gebiet)?.welt.frei(a.x, a.y) ? a : this.startpunkt();
     const anderesGebiet = zurueck.gebiet !== s.gebiet;
-    Object.assign(s, { tot: false, leben: this.w.spieler.leben, gebiet: zurueck.gebiet, x: zurueck.x, y: zurueck.y, unverwundbarBis: jetzt + 2000, budget: 0 });
+    Object.assign(s, { tot: false, leben: this.maxLeben(s), gebiet: zurueck.gebiet, x: zurueck.x, y: zurueck.y, unverwundbarBis: jetzt + 2000, budget: 0 });
     s.korrektur++;
     s.senden(anderesGebiet ? { t: 'gebiet', ...this.ortsangabe(s) } : { t: 'wiederbelebt', x: s.x, y: s.y, k: s.korrektur });
   }
@@ -312,6 +397,7 @@ export class Spiel {
     const jetzt = this.jetzt();
     const staende = new Map();
     for (const s of this.spieler.values()) {
+      if (s.waehlt) continue;
       if (!staende.has(s.gebiet)) staende.set(s.gebiet, this.gebiete.get(s.gebiet).stand(jetzt));
       s.senden(staende.get(s.gebiet));
     }
@@ -326,7 +412,8 @@ export class Spiel {
     this.spielstand.daten.spieler[s.schluessel] = {
       name: s.name, farbe: s.farbe, richtung: s.richtung,
       gebiet: tot ? s.ankunft.gebiet : s.gebiet, x: tot ? s.ankunft.x : s.x, y: tot ? s.ankunft.y : s.y,
-      leben: tot ? this.w.spieler.leben : s.leben, ankunft: s.ankunft, inventar: s.inventar,
+      leben: tot ? this.maxLeben(s) : s.leben, ankunft: s.ankunft, inventar: s.inventar,
+      klasse: s.klasse, spezies: s.spezies,
     };
     this.geaendert = true;
   }

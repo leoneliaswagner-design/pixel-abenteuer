@@ -9,6 +9,8 @@ import { bewege } from '../gemeinsam/welt.js';
 
 const lies = (p) => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const werte = lies('inhalte/daten/werte.json');
+werte.klassen = lies('inhalte/daten/klassen.json');
+werte.spezies = lies('inhalte/daten/spezies.json');
 const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/karten/${g}.json`)]));
 let uhr = 100000;
 // Die meisten Prüfungen spielen im Inselwald (Schleime, Büsche, Ruine);
@@ -24,6 +26,14 @@ const tick = (ms) => {
   }
 };
 
+// Beitreten und gleich einen Charakter wählen — ohne Klasse wartet ein
+// Spieler auf die Auswahl und zählt im Spiel nicht mit.
+const mitCharakter = (sp, name, senden, klasse = 'kaempfer', spezies = 'mensch') => {
+  const x = sp.beitreten(name, senden);
+  if (x.waehlt) sp.nachricht(x.id, { t: 'charakter', klasse, spezies });
+  return x;
+};
+
 const fehler = [];
 let pruefungen = 0;
 const pruefe = (bed, text) => {
@@ -33,7 +43,7 @@ const pruefe = (bed, text) => {
 };
 
 const post = [];
-const s = spiel.beitreten('Test', (m) => post.push(m));
+const s = mitCharakter(spiel, 'Test', (m) => post.push(m));
 const g = oberwelt.gegner[0];
 pruefe(oberwelt.gegner.length === 6 && hoehle.gegner.length === 5,
   `Gegner aus den Karten gelesen (Oberwelt ${oberwelt.gegner.length}, Höhle ${hoehle.gegner.length})`);
@@ -44,17 +54,17 @@ const festhalten = () => Object.assign(g, { x: s.x, y: s.y + 4, stossBis: uhr + 
 // --- Schonfrist nach dem Beitreten: solange der Browser lädt, und danach 1,5 s ---
 festhalten();
 tick(4000);
-pruefe(s.leben === werte.spieler.leben, 'solange der Browser noch lädt (4 s), kein Schaden');
+pruefe(s.leben === spiel.maxLeben(s), 'solange der Browser noch lädt (4 s), kein Schaden');
 spiel.nachricht(s.id, { t: 'bereit' });
 festhalten();
 tick(50);
-pruefe(s.leben === werte.spieler.leben, 'in der Schonfrist nach „bereit" kein Schaden');
+pruefe(s.leben === spiel.maxLeben(s), 'in der Schonfrist nach „bereit" kein Schaden');
 
 // --- Treffer ---
 tick(1500);
 festhalten();
 tick(50);
-pruefe(s.leben === werte.spieler.leben - 1, `Gegner trifft: ${werte.spieler.leben} → ${s.leben} Leben`);
+pruefe(s.leben === spiel.maxLeben(s) - 1, `Gegner trifft: ${spiel.maxLeben(s)} → ${s.leben} Leben`);
 pruefe(post.some((m) => m.t === 'getroffen' && Math.hypot(m.vx, m.vy) > 100), 'Rückstoß wird an den Getroffenen geschickt');
 const nachTreffer = s.leben;
 festhalten();
@@ -72,7 +82,7 @@ g.tot = true;
 g.wiederBei = uhr + 1e9;
 const k = s.korrektur;
 tick(werte.spieler.wiederbelebung + 100);
-pruefe(!s.tot && s.leben === werte.spieler.leben, 'nach der Wartezeit wieder da, mit vollem Leben');
+pruefe(!s.tot && s.leben === spiel.maxLeben(s), 'nach der Wartezeit wieder da, mit vollem Leben');
 pruefe(post.some((m) => m.t === 'wiederbelebt') && s.korrektur === k + 1, 'Browser erfährt die neue Position (Korrekturzähler +1)');
 
 // --- Alte Positionen nach der Korrektur zählen nicht ---
@@ -98,12 +108,12 @@ oberwelt.herzen.set('hx', { id: 'hx', x: s.x, y: s.y - 8, bis: uhr + 10000 });
 tick(50);
 pruefe(s.leben === 5 && !oberwelt.herzen.has('hx'), `Herz aufgehoben: 3 → ${s.leben} Leben`);
 oberwelt.herzen.set('hy', { id: 'hy', x: s.x, y: s.y - 8, bis: uhr + 10000 });
-s.leben = werte.spieler.leben;
+s.leben = spiel.maxLeben(s);
 tick(50);
 pruefe(oberwelt.herzen.has('hy'), 'mit vollem Leben bleibt das Herz liegen (für die anderen)');
 
 // --- Fünfter Spieler passt nicht ---
-for (let i = 0; i < 3; i++) spiel.beitreten(`N${i}`, () => {});
+for (let i = 0; i < 3; i++) mitCharakter(spiel, `N${i}`, () => {});
 pruefe(!!spiel.beitreten('Fünf', () => {}).fehler, 'der fünfte Spieler wird abgewiesen');
 const farben = new Set([...spiel.spieler.values()].map((x) => x.farbe));
 pruefe(farben.size === 4, `vier Spieler, vier Farben (${[...farben].join(', ')})`);
@@ -155,7 +165,7 @@ const ordner = mkdtempSync(join(tmpdir(), 'spielstand-'));
 const datei = join(ordner, 'stand.json');
 const stand = new Spielstand(datei);
 const spiel2 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: stand });
-const mia = spiel2.beitreten('Mia', () => {});
+const mia = mitCharakter(spiel2, 'Mia', () => {});
 spiel2.wechseln(mia, 'hoehle', 'von_oben');
 mia.x += 20;
 mia.leben = 3;
@@ -163,16 +173,16 @@ spiel2.verlassen(mia.id);
 pruefe(existsSync(datei), 'beim Verlassen wird die Datei geschrieben');
 const spiel3 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
 const nachricht3 = [];
-const mia2 = spiel3.beitreten('MIA', (m) => nachricht3.push(m));
+const mia2 = mitCharakter(spiel3, 'MIA', (m) => nachricht3.push(m));
 pruefe(mia2.gebiet === 'hoehle' && mia2.x === mia.x && mia2.leben === 3,
   `nach dem Neustart: Mia wieder in der Höhle, gleiche Stelle, 3 Leben (${mia2.gebiet}, ${mia2.x}, ${mia2.leben})`);
 pruefe(nachricht3[0]?.t === 'willkommen' && nachricht3[0].gebiet === 'hoehle' && nachricht3[0].wieder, 'Willkommen nennt das gespeicherte Gebiet');
-const neu = spiel3.beitreten('Jonas', () => {});
+const neu = mitCharakter(spiel3, 'Jonas', () => {});
 pruefe(neu.gebiet === 'wald', 'ein neuer Name beginnt in der Oberwelt');
 
 // --- Ohne Sonderwerte beginnt jeder in Riftside, am Hafen ---
 const echt = new Spiel(karten, werte, { jetzt: () => uhr });
-const neuling = echt.beitreten('Neu', () => {});
+const neuling = mitCharakter(echt, 'Neu', () => {});
 pruefe(neuling.gebiet === 'riftside' && echt.gebiete.get('riftside').welt.frei(neuling.x, neuling.y), `neue Spieler beginnen in Riftside (${neuling.gebiet}, ${neuling.x}, ${neuling.y})`);
 pruefe(echt.gebiete.get('riftside').gegner.length === 0, 'in der Stadt gibt es keine Gegner');
 // Durchs Stadttor in den Wald und zurück
@@ -214,8 +224,8 @@ pruefe(!!gerettet.daten.spieler.mia, 'kaputter Spielstand → Sicherung (.bak) w
 const datei4 = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
 const spiel4 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postA = [], postB = [];
-const ana = spiel4.beitreten('Ana', (m) => postA.push(m));
-const bo = spiel4.beitreten('Bo', (m) => postB.push(m));
+const ana = mitCharakter(spiel4, 'Ana', (m) => postA.push(m));
+const bo = mitCharakter(spiel4, 'Bo', (m) => postB.push(m));
 const sprich = (wer, x, y, r) => {
   Object.assign(wer, { x, y });
   uhr += 300;
@@ -311,12 +321,116 @@ spiel4.verlassen(ana.id);
 spiel4.verlassen(bo.id);
 const spiel5 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postC = [];
-const ana2 = spiel5.beitreten('Ana', (m) => postC.push(m));
+const ana2 = mitCharakter(spiel5, 'Ana', (m) => postC.push(m));
 pruefe(ana2.inventar.gold === 20 && spiel5.gruppe().rissstein === 1, `nach dem Neustart: Ana hat noch 20 Gold, die Gruppe den Rissstein (${JSON.stringify(ana2.inventar)}, ${JSON.stringify(spiel5.gruppe())})`);
 pruefe(spiel5.gebiete.get('hoehle').welt.geoeffnet.has('hoehle_tuer') && spiel5.zustaende().tempel_geschlossen, 'nach dem Neustart: Tür offen, Riss geschlossen');
 spiel5.wechseln(ana2, 'wald', 'von_hoehle');
 const wechsel5 = postC.find((m) => m.t === 'gebiet');
 pruefe(wechsel5?.offen.includes('oberwelt_gold'), 'nach dem Neustart steht die Truhe oben noch offen');
+
+// --- Klassen und Spezies ---
+const spiel6 = new Spiel(karten, werteWald, { jetzt: () => uhr });
+const wald6 = spiel6.gebiete.get('wald');
+const post6 = [];
+const neuer = spiel6.beitreten('Wahl', (m) => post6.push(m));
+const anderer = mitCharakter(spiel6, 'Zeuge', () => {});
+spiel6.nachricht(anderer.id, { t: 'bereit' });
+pruefe(neuer.waehlt && post6[0].charakter === null && Object.keys(post6[0].auswahl.klassen).length === 5,
+  `ohne Spielstand: erst Klasse wählen (${Object.keys(post6[0].auswahl.klassen).join(', ')})`);
+spiel6.takt(0.05);
+pruefe(!wald6.stand(uhr).spieler.some((x) => x.id === neuer.id), 'wer noch wählt, ist für die anderen nicht da');
+spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'drache', spezies: 'mensch' });
+pruefe(neuer.waehlt, 'eine Klasse, die es nicht gibt, wird nicht angenommen');
+spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'magier', spezies: 'zwerg' });
+const wahl = post6.find((m) => m.t === 'charakter');
+pruefe(!neuer.waehlt && wahl?.werte.maxLeben === 9 && neuer.leben === 9 && wahl.werte.attribute.konstitution === 16,
+  `Zwergen-Magier: KON 14+2 = ${wahl?.werte.attribute.konstitution}, ${wahl?.werte.maxLeben} halbe Herzen`);
+spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'kaempfer', spezies: 'elf' });
+pruefe(neuer.klasse === 'magier', 'wer gewählt hat, kann nicht nachträglich umwählen');
+
+// Schwertschaden aus der Stärke: Kämpfer (STÄ 16) trifft mit 2, Magier mit 1.
+const schleim6 = wald6.gegner[0];
+const hauen = (wer) => {
+  Object.assign(schleim6, { tot: false, leben: 2, vx: 0, vy: 0, getroffenBis: 0, x: wer.x, y: wer.y + 20, stossBis: uhr + 1e6 });
+  wer.naechsterHieb = 0;
+  uhr += 400;
+  spiel6.nachricht(wer.id, { t: 'hieb', r: 'unten' });
+  return schleim6.leben;
+};
+pruefe(hauen(anderer) <= 0, `Kämpfer besiegt einen Schleim mit einem Hieb (Schaden ${anderer.werte.schaden})`);
+pruefe(hauen(neuer) === 1, `Magier braucht zwei Hiebe (Schaden ${neuer.werte.schaden})`);
+
+// Feuerball: fliegt, trifft den Schleim drei Kacheln weiter, mit Schaden 3.
+Object.assign(schleim6, { tot: false, leben: 3, vx: 0, vy: 0, getroffenBis: 0, x: neuer.x + 96, y: neuer.y, stossBis: uhr + 1e6 });
+spiel6.nachricht(neuer.id, { t: 'bereit' });
+// Nach rechts: unter dem Magier steht drei Kacheln weiter ein Baum.
+spiel6.nachricht(neuer.id, { t: 'faehigkeit', r: 'rechts' });
+const flug = wald6.geschosse.size;
+spiel6.nachricht(neuer.id, { t: 'faehigkeit', r: 'rechts' });
+pruefe(flug === 1 && wald6.geschosse.size === 1, 'Feuerball fliegt; ein zweiter sofort danach nicht (Abklingzeit)');
+for (let i = 0; i < 20 && wald6.geschosse.size; i++) { uhr += 50; spiel6.schritt(0.05); }
+pruefe(schleim6.tot, `der Feuerball trifft den Schleim drei Kacheln weiter (Leben ${schleim6.leben})`);
+
+// Kleriker heilt, wer in der Nähe steht — nicht den, der weit weg ist.
+const kleriker = mitCharakter(spiel6, 'Heiler', () => {}, 'kleriker', 'mensch');
+spiel6.nachricht(kleriker.id, { t: 'bereit' });
+Object.assign(kleriker, { x: anderer.x + 30, y: anderer.y });
+anderer.leben = 2;
+neuer.leben = 2;
+Object.assign(neuer, { x: anderer.x + 300, y: anderer.y });
+spiel6.nachricht(kleriker.id, { t: 'faehigkeit', r: 'links' });
+pruefe(anderer.leben === 2 + kleriker.werte.faehigkeit.staerke && neuer.leben === 2,
+  `Heilendes Wort: nah ${anderer.leben}, fern ${neuer.leben} halbe Herzen`);
+
+// Kämpfer: Schildstoß schiebt die eigene Figur nach vorn und trifft, wer dort steht.
+const post7 = [];
+const kaempfer = mitCharakter(spiel6, 'Schild', (m) => post7.push(m));
+spiel6.nachricht(kaempfer.id, { t: 'bereit' });
+Object.assign(schleim6, { tot: false, leben: 2, vx: 0, vy: 0, getroffenBis: 0, x: kaempfer.x, y: kaempfer.y + 40, stossBis: uhr + 1e6 });
+spiel6.nachricht(kaempfer.id, { t: 'faehigkeit', r: 'unten' });
+pruefe(post7.some((m) => m.t === 'stoss' && m.vy > 0) && schleim6.leben <= 0, 'Schildstoß: Schub nach vorn, der Schleim davor ist besiegt');
+
+// Schurke knackt die Tür in der Höhle ohne Schlüssel; Magier liest Runen.
+const spiel8 = new Spiel(karten, werteWald, { jetzt: () => uhr });
+const post8 = [];
+const schurke = mitCharakter(spiel8, 'Dieb', (m) => post8.push(m), 'schurke', 'halbling');
+spiel8.wechseln(schurke, 'hoehle', 'von_oben');
+Object.assign(schurke, { x: 20 * 32 + 16, y: 5 * 32 + 24 });
+uhr += 300;
+spiel8.nachricht(schurke.id, { t: 'ansprechen', r: 'rechts' });
+pruefe(spiel8.gebiete.get('hoehle').welt.geoeffnet.has('hoehle_tuer') && !spiel8.gruppe().schluessel, 'der Schurke knackt die Tür — ohne Schlüssel');
+const lesen = (klasse) => {
+  const p = [];
+  const x = mitCharakter(spiel8, `Leser${klasse}`, (m) => p.push(m), klasse, 'mensch');
+  spiel8.wechseln(x, 'tempel', 'von_riftside');
+  Object.assign(x, { x: 9 * 32 + 16, y: 8 * 32 + 24 });
+  uhr += 300;
+  spiel8.nachricht(x.id, { t: 'ansprechen', r: 'links' });
+  spiel8.verlassen(x.id);
+  return p.find((m) => m.t === 'dialog')?.seiten[0] ?? '';
+};
+const magierLiest = lesen('magier'), kaempferLiest = lesen('kaempfer');
+pruefe(magierLiest.startsWith('Eine Inschrift') && kaempferLiest.startsWith('Fremde'), `Runen: Magier liest „${magierLiest.slice(0, 20)}…", Kämpfer „${kaempferLiest.slice(0, 20)}…"`);
+
+// Klasse und Spezies stehen im Spielstand.
+const datei9 = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+const spiel9 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei9) });
+const p9 = [];
+const elfe = spiel9.beitreten('Elfe', () => {});
+spiel9.nachricht(elfe.id, { t: 'charakter', klasse: 'waldlaeufer', spezies: 'elf' });
+spiel9.verlassen(elfe.id);
+const spiel10 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei9) });
+const elfe2 = spiel10.beitreten('Elfe', (m) => p9.push(m));
+pruefe(!elfe2.waehlt && elfe2.klasse === 'waldlaeufer' && p9[0].charakter?.spezies === 'elf', 'nach dem Neustart: Elfen-Waldläuferin, ohne neu zu wählen');
+// Wer mit Klasse aus dem Spielstand kommt, wählt nicht — die Schonfrist bis
+// „bereit" muss dann schon beim Beitreten gelten (die Wahl setzt sie sonst).
+const schleim10 = spiel10.gebiete.get(elfe2.gebiet).gegner[0];
+for (let i = 0; i < 80; i++) {
+  Object.assign(schleim10, { tot: false, x: elfe2.x, y: elfe2.y + 4, vx: 0, vy: 0, stossBis: uhr + 1e6 });
+  uhr += 50;
+  spiel10.schritt(0.05);
+}
+pruefe(elfe2.leben === elfe2.werte.maxLeben, `wiederkehrend, noch nicht bereit: 4 s neben dem Schleim ohne Schaden (${elfe2.leben} Leben)`);
 
 // --- An die Wand heran, egal bei welcher Bildrate ---
 // Der Busch auf Kachel (8,16) beginnt bei y = 512.

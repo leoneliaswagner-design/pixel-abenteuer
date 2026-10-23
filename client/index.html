@@ -11,8 +11,24 @@
       html, body { margin: 0; height: 100%; background: #1b1424; color: #f4ecd8; font-family: system-ui, sans-serif; }
       #spiel { position: fixed; inset: 0; }
       #spiel canvas { image-rendering: pixelated; }
-      #start { position: fixed; inset: 0; display: grid; place-items: center; background: #1b1424; z-index: 2; }
-      #start form { display: grid; gap: 12px; padding: 24px; max-width: 320px; width: calc(100% - 32px); box-sizing: border-box; }
+      /* flex + margin:auto statt place-items:center — sonst wäre der obere
+         Teil der Charakterwahl am Handy nicht erreichbar, wenn sie höher ist
+         als der Schirm. */
+      #start { position: fixed; inset: 0; display: flex; background: #1b1424; z-index: 2; overflow-y: auto; }
+      #start form { display: grid; gap: 12px; padding: 24px 16px; margin: auto; max-width: 320px; width: 100%; box-sizing: border-box; }
+      #start form[hidden] { display: none; }
+      #start #wahl { max-width: 720px; }
+      #wahl h2 { margin: 8px 0 0; font-size: 16px; color: #e8c15a; }
+      .karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+      .karten input { position: absolute; opacity: 0; pointer-events: none; }
+      .karte { display: grid; gap: 4px; align-content: start; padding: 10px; border: 2px solid #4a3a5c; border-radius: 6px; background: #2a2036; cursor: pointer; font-size: 13px; line-height: 1.4; color: #b9aec8; overflow-wrap: anywhere; }
+      .karte b { color: #f4ecd8; font-size: 15px; }
+      .karten input:checked + .karte { border-color: #e8c15a; background: #3a2c48; }
+      .karten input:focus-visible + .karte { outline: 2px solid #f4ecd8; outline-offset: 2px; }
+      .bild { width: 64px; height: 64px; background-size: 256px 256px; background-position: 0 0; image-rendering: pixelated; }
+      #vorschau { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 12px; border-radius: 6px; background: #2a2036; font-size: 14px; line-height: 1.5; }
+      #vorschau .bild { width: 96px; height: 96px; background-size: 384px 384px; }
+      .attribute { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 2px 10px; font-variant-numeric: tabular-nums; }
       #start h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
       #start p { margin: 0; color: #b9aec8; font-size: 14px; line-height: 1.5; }
       #start input, #start button { font: inherit; font-size: 18px; padding: 10px 12px; border-radius: 6px; border: 2px solid #4a3a5c; }
@@ -25,11 +41,13 @@
     <div id="start">
       <form id="anmelden">
         <h1>Pixel-Abenteuer</h1>
-        <p id="hinweis">Bis zu vier Leute spielen zusammen. Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E.</p>
+        <p id="hinweis">Bis zu vier Leute spielen zusammen. Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q.</p>
         <input id="name" maxlength="14" placeholder="Dein Name" autocomplete="nickname" required />
         <button type="submit">Losspielen</button>
         <p class="fehler" id="fehler"></p>
       </form>
+      <!-- Erscheint nur beim ersten Mal; gebaut von charakterwahl.js -->
+      <form id="wahl" hidden></form>
     </div>
     <div id="spiel"></div>
     <script type="module" src="./main.js"></script>

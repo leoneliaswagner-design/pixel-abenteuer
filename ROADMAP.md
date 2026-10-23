@@ -41,16 +41,27 @@
   Farbflecken, Wasser mit Lichtstreifen, Wege mit Kieseln.
   Werkzeug `pruefstand/ansicht.mjs` für Vorher-/Nachher-Bilder.
 
+- **Klassen und Spezies** (D&D-artig, als Daten): Wahl beim ersten
+  Beitreten, sechs Attribute → Herzen, Tempo, Schwertschaden, Stärke der
+  Fähigkeit. Fünf Klassen mit Fähigkeit auf Q (Schildstoß, Dolchwurf +
+  Schlösser knacken, Feuerball + magische Schrift, Heilung, Pfeil), vier
+  Spezies. Jede Klasse mit eigener Kopfbedeckung, Tunika in Spielerfarbe.
+  Prüfstand `klassen.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
    (Seekarte), Pips Haus (Elsa). Weitere Türen sind noch zu.
-2. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
-   und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
-3. **Töne.**
-4. **Handy-Steuerung.**
-5. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
-6. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
+2. ~~Klassen und Spezies~~ — offen: die Homebrew-Klassen und -Spezies der
+   Kampagne eintragen; Stufen/Erfahrung; Charisma wirkt erst mit Läden.
+   Spezies sehen noch alle gleich aus (nur die Klasse hat ein eigenes Bild).
+3. **Inventar**: Fenster, Ausrüstung, Tränke, klassenabhängige Gegenstände,
+   Läden (Preise nach Charisma).
+4. **Monster aus dem D&D-SRD** als Daten.
+5. **Töne.**
+6. **Handy-Steuerung.**
+7. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
+8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 
 ## Später (Vorschlag — Reihenfolge offen)
@@ -124,3 +135,13 @@
   Innenräume klebten links. Kamera-Grenzen selbst mittig setzen.
 - Eine Phaser-RenderTexture über der Karte legte einen dunklen Schleier über
   alles (und verdeckte die Figur). Für viele kleine Bildchen: Blitter.
+- Ein Prüfstand schoss den Feuerball nach unten — drei Kacheln weiter stand
+  ein Baum, und der Schleim war vom letzten Rückstoß noch in Fahrt. Ziel
+  und Weg im Prüfstand aus der Karte wählen, Gegner vorher anhalten.
+- Bildpunkte einer Figur in der Schonfrist zählen: sie blinkt, jedes zweite
+  Bild ist sie fast durchsichtig. Mehrmals messen. Schnelle Geschosse
+  fliegen während des Bildschirmfotos aus einem kleinen Ausschnitt — den
+  ganzen Schirm gegen ein Bild vor dem Wurf vergleichen.
+- Tempo im Browser messen: Weg und Zeit aus denselben Bildern
+  (`postupdate`), nicht mit `setTimeout` — das lag zwischen zwei Bildern
+  und maß 4 % zu viel, genau den Unterschied, um den es ging.
