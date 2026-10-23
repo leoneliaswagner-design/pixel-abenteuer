@@ -2,7 +2,8 @@
   "startGebiet": "start",
   "gebiete": [
     "start",
-    "hoehle"
+    "hoehle",
+    "tempel"
   ],
   "aussehen": [
     "alter_mann"
@@ -49,7 +50,14 @@
     "schluessel": {
       "name": "kleiner Schlüssel",
       "einzeln": "einen kleinen Schlüssel",
-      "mehrzahl": "kleine Schlüssel"
+      "mehrzahl": "kleine Schlüssel",
+      "gemeinsam": true
+    },
+    "rissstein": {
+      "name": "Rissstein",
+      "einzeln": "einen Rissstein",
+      "mehrzahl": "Risssteine",
+      "gemeinsam": true
     }
   }
 }

@@ -96,9 +96,22 @@ zuletzt betreten hat.
       in `werte.json` unter `aussehen`), `richtung`
     - `truhe` — `inhalt` (z. B. `gold:20` oder `schluessel`) und am besten eine
       eigene `id`, unter der sich der Spielstand merkt, dass sie offen ist.
+    - `tuer` — verschlossen; geht mit einem Schlüssel der Gruppe auf (E davor)
+      und bleibt offen. Optional `schluessel` = welche Art (Standard
+      `schluessel`). Eine `id` geben.
+  - **Weltzustände** (z. B. `tempel_geschlossen`) merkt sich der Spielstand für
+    die ganze Runde. Gesetzt werden sie von Truhen und Figuren mit der
+    Eigenschaft `setzt` (dazu optional `meldung` = Text für alle).
+    Abhängig davon:
+    - Übergänge mit `bedingung` (z. B. `!tempel_geschlossen` = nur solange
+      der Tempel offen ist; mehrere mit Komma). Mit `art` = `riss` bekommt
+      ein Übergang das flimmernde Riss-Bild — sichtbar nur, solange er offen ist.
+    - Schilder und Figuren mit `text_wenn_<zustand>`: dieser Text gilt,
+      sobald der Zustand gesetzt ist; sonst `text`.
     Texte: eine Leerzeile beginnt eine neue Seite; lange Seiten bricht die
     Textbox selbst um. Was es an Gegenständen gibt (mit Name und Grammatik),
-    steht in `werte.json` unter `gegenstaende`.
+    steht in `werte.json` unter `gegenstaende`; `"gemeinsam": true` heißt,
+    er gehört der Gruppe (Schlüssel, Risssteine), sonst dem Finder (Gold).
   - Die Karte selbst hat die Eigenschaft `titel` („die Höhle") für Meldungen.
   - Ein Übergang, dessen Ziel es nicht gibt, fällt schon beim Serverstart auf.
   - Nach Handarbeit an einer Karte **nicht mehr** `npm run karte` ausführen —
@@ -115,6 +128,7 @@ node pruefstand/server-regeln.mjs   # Regeln des Servers, ohne Browser
 node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
 node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
 node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
+node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
 ```

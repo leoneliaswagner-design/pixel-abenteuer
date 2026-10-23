@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Welt, bewege } from '../../gemeinsam/welt.js';
+import { Welt, bewege, erfuellt } from '../../gemeinsam/welt.js';
 import { Figur, FARBEN, ZEILE, animationenAnlegen } from '../figur.js';
 import { SCHRIFT } from '../schrift.js';
 
@@ -25,6 +25,9 @@ export class SpielSzene extends Phaser.Scene {
     this.load.image('kacheln', 'grafik/kacheln.png');
     for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
     this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
     // Aussehen der Leute in der Welt — welche es gibt, steht in werte.json,
     // weil die Szene es wissen muss, bevor die Karte geladen ist.
     for (const a of this.cache.json.get('werte')?.aussehen ?? ['alter_mann'])
@@ -59,8 +62,12 @@ export class SpielSzene extends Phaser.Scene {
     this.stoss = null;
     this.gesendet = { zeit: 0, x: 0, y: 0, r: '', l: false };
     for (const i of wk.geschnitten) this.buschSetzen(i, true, false);
+    this.zustaende = wk.zustaende ?? {};
+    for (const t of wk.tueren ?? []) this.welt.geoeffnet.add(t);
     this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
+    this.risseAufbauen();
     this.inventar = wk.inventar ?? {};
+    this.gruppe = wk.gruppe ?? {};
     this.dialogOffen = false;
     this.oberflaeche()?.dialogSchliessen?.();
 
@@ -92,6 +99,9 @@ export class SpielSzene extends Phaser.Scene {
     // launch hängte ihre Zuhörer doppelt an.
     if (!this.scene.isActive('oberflaeche')) this.scene.launch('oberflaeche');
     this.cameras.main.fadeIn(180, 27, 20, 36);
+    // Nach einem Gebietswechsel läuft die Oberfläche schon — sie muss den
+    // Stand neu bekommen; beim ersten Start holt sie ihn sich selbst.
+    this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
     this.netz.bereit();
 
     // Für den Prüfstand: was der Browser glaubt, ohne Pixel raten zu müssen.
@@ -106,6 +116,11 @@ export class SpielSzene extends Phaser.Scene {
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
         hinweis: this.hinweis.visible,
         inventar: this.inventar,
+        gruppe: this.gruppe,
+        zustaende: this.zustaende,
+        tueren: [...this.welt.geoeffnet],
+        risse: this.risse.map((r) => ({ ziel: r.ort.eig.ziel, sichtbar: r.bild.visible })),
+        anzeige: this.oberflaeche().anzeigeText?.(),
         truhen: [...this.dinge.values()].filter((d) => d.ding.name === 'truhe').map((d) => ({ schluessel: d.ding.schluessel, offen: d.bild.frame.name === 1 })),
         figuren: [...this.dinge.values()].filter((d) => d.ding.name === 'figur').map((d) => ({ schluessel: d.ding.schluessel, bild: d.bild.frame.name })),
       }),
@@ -152,6 +167,7 @@ export class SpielSzene extends Phaser.Scene {
       let bild;
       if (d.name === 'schild') bild = this.add.image(d.x, fuss, 'schild');
       else if (d.name === 'truhe') bild = this.add.image(d.x, fuss, 'truhe', offen.includes(d.schluessel) ? 1 : 0);
+      else if (d.name === 'tuer') bild = this.add.image(d.x, fuss, 'tuer', this.welt.geoeffnet.has(d.schluessel) ? 1 : 0);
       else {
         const art = `figur-${d.eig.aussehen ?? 'alter_mann'}`;
         const schluessel = this.textures.exists(art) ? art : 'figur-alter_mann';
@@ -160,6 +176,33 @@ export class SpielSzene extends Phaser.Scene {
       }
       bild.setOrigin(0.5, 1).setDepth(10 + fuss - 4);
       this.dinge.set(d.schluessel, { ding: d, bild });
+    }
+  }
+
+  // Dimensionsrisse: Übergänge mit art „riss" bekommen ein flimmerndes
+  // Bild. Sichtbar nur, solange ihre Bedingung gilt — dieselbe Prüfung wie
+  // auf dem Server, sonst sähe man einen Riss, der einen nicht durchlässt.
+  risseAufbauen() {
+    this.risse = this.welt.orte
+      .filter((o) => o.name === 'uebergang' && o.eig.art === 'riss')
+      .map((ort) => {
+        const fuss = ort.y + ort.h;
+        const bild = this.add.sprite(ort.x + ort.b / 2, fuss + 4, 'riss').setOrigin(0.5, 1).setDepth(10 + fuss).play('riss');
+        this.tweens.add({ targets: bild, alpha: 0.7, duration: 600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
+        bild.setVisible(erfuellt(ort.eig.bedingung, this.zustaende));
+        return { ort, bild };
+      });
+  }
+
+  risseAktualisieren() {
+    for (const r of this.risse) {
+      const offen = erfuellt(r.ort.eig.bedingung, this.zustaende);
+      if (offen || !r.bild.visible) {
+        r.bild.setVisible(offen);
+        continue;
+      }
+      // Er schließt sich: zusammenziehen, dann weg.
+      this.tweens.add({ targets: r.bild, scaleX: 0, duration: 700, ease: 'Back.In', onComplete: () => r.bild.setVisible(false).setScale(1) });
     }
   }
 
@@ -217,8 +260,23 @@ export class SpielSzene extends Phaser.Scene {
       if (m.offen) this.tweens.add({ targets: d.bild, y: d.bild.y - 3, duration: 90, yoyo: true });
     });
     n.bei('blick', (m) => this.dinge.get(m.ding)?.bild.setFrame(ZEILE[m.r] * 4));
+    n.bei('tuer', (m) => {
+      if (m.offen) this.welt.geoeffnet.add(m.ding);
+      this.dinge.get(m.ding)?.bild.setFrame(m.offen ? 1 : 0);
+    });
+    n.bei('zustand', (m) => {
+      this.zustaende[m.name] = m.wert;
+      this.risseAktualisieren();
+    });
+    n.bei('gruppe', (m) => {
+      this.gruppe = m.inventar;
+      this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
+    });
     n.bei('dialog', (m) => {
-      if (m.inventar) this.inventar = m.inventar;
+      if (m.inventar) {
+        this.inventar = m.inventar;
+        this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
+      }
       this.dialogOffen = true;
       this.ich.laeuft = false;
       this.oberflaeche().dialogZeigen(m.name ?? '', m.seiten);

@@ -33,7 +33,7 @@ probe server/spiel.js "weg > s.budget + 2 ||" "" pruefstand/zwei-spieler.mjs \
   "Server glaubt jedes Tempo"
 probe client/netz.js "location.protocol === 'https:' ? 'wss' : 'ws'" "'ws'" pruefstand/zwei-spieler.mjs \
   "Browser verbindet fest über ws:// (hinter dem Tunnel gesperrt)" UEBER_HTTPS=1
-probe server/spiel.js "if (u) this.wechseln(s, u.eig.ziel, u.eig.ankunft);" "" pruefstand/server-regeln.mjs \
+probe server/spiel.js "this.wechseln(s, u.eig.ziel, u.eig.ankunft);" "void 0;" pruefstand/server-regeln.mjs \
   "Treppe führt nirgendwohin"
 probe server/spiel.js "gebiet: tot ? s.ankunft.gebiet : s.gebiet," "gebiet: 'start'," pruefstand/server-regeln.mjs \
   "Spielstand vergisst das Gebiet"
@@ -47,8 +47,21 @@ probe server/spiel.js "      if (gebiet.istOffen(ding)) {" "      if (false) {" 
   "Truhe lässt sich zweimal plündern"
 probe server/spiel.js "      gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });" "      s.senden({ t: 'blick', ding: ding.schluessel, r: blick });" pruefstand/server-regeln.mjs \
   "Figur dreht sich nur für den, der spricht"
-probe gemeinsam/welt.js "|| this.belegt.has(i)" "" pruefstand/server-regeln.mjs \
-  "man läuft durch Truhen und Figuren"
+probe gemeinsam/welt.js "    if (ding && !this.geoeffnet.has(ding.schluessel)) return true;" "" pruefstand/server-regeln.mjs \
+  "man läuft durch Truhen, Figuren und Türen"
+probe server/gebiet.js "    this.welt.geoeffnet.add(ding.schluessel);
+    this.spiel.geaendert = true;" "    this.spiel.geaendert = true;" pruefstand/server-regeln.mjs \
+  "aufgeschlossene Tür bleibt fest"
+probe server/spiel.js "      if (art && g?.gemeinsam) {" "      if (false) {" pruefstand/server-regeln.mjs \
+  "Schlüssel gehört nur dem Finder"
+probe server/spiel.js "if (u && erfuellt(u.eig.bedingung, this.zustaende()) && " "if (u && " pruefstand/server-regeln.mjs \
+  "geschlossener Riss lässt trotzdem durch"
+probe server/spiel.js " && jetzt >= (s.stossBis ?? 0)) this.wechseln" ") this.wechseln" pruefstand/server-regeln.mjs \
+  "Rückstoß schiebt durch den Riss"
+probe server/spiel.js "    for (const [k, v] of Object.entries(e)) if (k.startsWith('text_wenn_')" "    for (const [k, v] of []) if (k.startsWith('text_wenn_')" pruefstand/server-regeln.mjs \
+  "Figuren sagen immer dasselbe"
+probe client/szenen/Spiel.js "      const offen = erfuellt(r.ort.eig.bedingung, this.zustaende);" "      const offen = true;" pruefstand/risse.mjs \
+  "Riss bleibt im Browser sichtbar, obwohl geschlossen"
 probe client/szenen/Spiel.js "      ich.aktualisieren(jetzt);
       return;
     }" "      ich.aktualisieren(jetzt);

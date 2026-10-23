@@ -11,7 +11,17 @@ export const KOERPER = { halbeBreite: 6, hoehe: 8 };
 
 // Dinge, die man ansprechen kann. Sie stehen als Punkte in der Ebene „orte"
 // und belegen die Kachel, auf der sie stehen — man läuft nicht durch eine Truhe.
-export const DINGE = new Set(['schild', 'figur', 'truhe']);
+export const DINGE = new Set(['schild', 'figur', 'truhe', 'tuer']);
+
+// Ist eine Bedingung aus Tiled erfüllt? „tempel_geschlossen" verlangt den
+// Weltzustand, „!tempel_geschlossen" sein Fehlen; mehrere mit Komma, alle
+// müssen gelten. Leer heißt: immer. Server und Browser fragen hier — sonst
+// sähe ein Spieler einen Riss, durch den der Server ihn nicht lässt.
+export function erfuellt(bedingung, zustaende) {
+  if (!bedingung) return true;
+  return String(bedingung).split(',').map((t) => t.trim()).filter(Boolean).every((t) =>
+    t.startsWith('!') ? !zustaende[t.slice(1)] : !!zustaende[t]);
+}
 
 export class Welt {
   constructor(karte) {
@@ -47,7 +57,10 @@ export class Welt {
     this.dinge = this.orte
       .filter((o) => DINGE.has(o.name))
       .map((o) => ({ ...o, schluessel: String(o.eig.id ?? `${o.name}-${o.id}`), kachel: this.index(Math.floor(o.x / this.kachel), Math.floor(o.y / this.kachel)) }));
-    this.belegt = new Set(this.dinge.map((d) => d.kachel));
+    this.belegt = new Map(this.dinge.map((d) => [d.kachel, d]));
+    // Geöffnete Türen (Schlüssel der Dinge): sie bleiben stehen, sind aber
+    // offen und lassen durch.
+    this.geoeffnet = new Set();
   }
 
   eig(gid) {
@@ -65,7 +78,9 @@ export class Welt {
   istFest(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= this.breite || ty >= this.hoehe) return true;
     const i = this.index(tx, ty);
-    if (this.eig(this.boden[i]).fest || this.belegt.has(i)) return true;
+    if (this.eig(this.boden[i]).fest) return true;
+    const ding = this.belegt.get(i);
+    if (ding && !this.geoeffnet.has(ding.schluessel)) return true;
     const h = this.hindernisse[i];
     if (!h || this.geschnitten.has(i)) return false;
     return !!this.eig(h).fest;
@@ -93,7 +108,8 @@ export class Welt {
     const k = this.kachel;
     if (px < 0 || py < 0) return null;
     const i = this.index(Math.floor(px / k), Math.floor(py / k));
-    return this.dinge.find((d) => d.kachel === i) ?? null;
+    // Eine offene Tür ist nichts mehr, das man ansprechen könnte.
+    return this.dinge.find((d) => d.kachel === i && !this.geoeffnet.has(d.schluessel)) ?? null;
   }
 
   // Kacheln, die ein Rechteck berührt — für den Schwerthieb gegen Büsche.

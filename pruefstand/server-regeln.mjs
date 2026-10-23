@@ -211,15 +211,64 @@ pruefe(dialogVon(postB)?.seiten[0] === 'Die Truhe ist leer.' && !bo.inventar.gol
 
 spiel4.wechseln(ana, 'hoehle', 'von_oben');
 sprich(ana, 2 * 32 + 16, 2 * 32 + 16, 'oben');
-pruefe(dialogVon(postA)?.seiten[0] === 'Du findest einen kleinen Schlüssel!' && ana.inventar.schluessel === 1,
-  `Höhlentruhe: „${dialogVon(postA)?.seiten[0]}"`);
+pruefe(dialogVon(postA)?.seiten[0] === 'Du findest einen kleinen Schlüssel!' && spiel4.gruppe().schluessel === 1 && !ana.inventar.schluessel,
+  `Höhlentruhe: „${dialogVon(postA)?.seiten[0]}" — der Schlüssel gehört der Gruppe`);
+pruefe(postB.some((m) => m.t === 'gruppe' && m.inventar.schluessel === 1), 'Bo (oben) erfährt vom Schlüssel der Gruppe');
+
+// --- Die Tür in der Höhle: mit dem Gruppenschlüssel, auch wenn Bo aufschließt ---
+// Tür auf Kachel (21,5); davor steht man auf (20,5) und schaut nach rechts.
+const tuer = hoehle.welt.dinge.find((d) => d.schluessel === 'hoehle_tuer');
+const vorTuer = [20 * 32 + 16, 5 * 32 + 24];
+pruefe(!spiel4.gebiete.get('hoehle').welt.frei(21 * 32 + 16, 5 * 32 + 24), 'die Tür ist zu und lässt niemanden durch');
+spiel4.wechseln(bo, 'hoehle', 'von_oben');
+const gruppeVorher = spiel4.gruppe().schluessel;
+spiel4.gruppe().schluessel = 0;
+sprich(bo, ...vorTuer, 'rechts');
+pruefe(dialogVon(postB)?.seiten[0] === 'Verschlossen. Ihr braucht einen kleinen Schlüssel.', `ohne Schlüssel: „${dialogVon(postB)?.seiten[0]}"`);
+spiel4.gruppe().schluessel = gruppeVorher;
+sprich(bo, ...vorTuer, 'rechts');
+const welt4 = spiel4.gebiete.get('hoehle').welt;
+pruefe(welt4.frei(21 * 32 + 16, 5 * 32 + 24) && spiel4.gruppe().schluessel === 0, 'Bo schließt mit dem Gruppenschlüssel auf — Tür offen, Schlüssel weg');
+pruefe(postA.some((m) => m.t === 'tuer' && m.offen) && postA.some((m) => m.t === 'gruppe' && m.inventar.schluessel === 0), 'Ana (auch in der Höhle) sieht die Tür aufgehen und den Schlüssel fehlen');
+sprich(bo, ...vorTuer, 'rechts');
+pruefe(!postB.length, 'eine offene Tür spricht man nicht mehr an');
+void tuer;
+
+// --- Der Riss führt in den Tempel; der Rissstein schließt ihn ---
+const riss = hoehle.uebergaenge.find((u) => u.eig.art === 'riss');
+// Riss auf Kachel (24,2) = y 64…96. Erst ein Treffer: im Rückstoß geht
+// niemand hindurch.
+Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24, unverwundbarBis: 0 });
+const schleim = { x: bo.x, y: bo.y - 20, w: werte.gegner.schleim };
+spiel4.spielerTreffen(bo, schleim, uhr);
+uhr += 100;
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'hoehle', 'im Rückstoß in den Riss gedrückt: kein Gebietswechsel');
+Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24, leben: 6 });
+uhr += 500;
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'tempel', `durch den Riss: Bo ist im Tempel (${bo.gebiet}) — Riss ${riss?.eig.ziel}`);
+postA.length = 0;
+sprich(bo, 9 * 32 + 16, 3 * 32 + 16, 'oben');
+pruefe(spiel4.gruppe().rissstein === 1 && spiel4.zustaende().tempel_geschlossen, `Rissstein genommen: Zustand „tempel_geschlossen" gesetzt`);
+pruefe(postA.some((m) => m.t === 'zustand' && m.name === 'tempel_geschlossen') && postA.some((m) => m.t === 'nachricht' && m.text.includes('schließt sich')),
+  'Ana in der Höhle erfährt es — mit Meldung');
+spiel4.wechseln(bo, 'hoehle', 'von_tempel');
+Object.assign(bo, { x: 24 * 32 + 16, y: 3 * 32 + 24 });
+uhr += 500;
+spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: 2 * 32 + 30, r: 'oben', k: bo.korrektur });
+pruefe(bo.gebiet === 'hoehle', 'der geschlossene Riss lässt niemanden mehr durch');
+spiel4.wechseln(ana, 'start', 'von_hoehle');
+sprich(ana, 12 * 32 + 16, 13 * 32 + 16, 'oben');
+pruefe(dialogVon(postA)?.seiten[0].startsWith('Das Flimmern'), `der alte Mann sagt jetzt etwas anderes („${dialogVon(postA)?.seiten[0].slice(0, 30)}…")`);
 
 spiel4.verlassen(ana.id);
 spiel4.verlassen(bo.id);
 const spiel5 = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postC = [];
 const ana2 = spiel5.beitreten('Ana', (m) => postC.push(m));
-pruefe(ana2.inventar.gold === 20 && ana2.inventar.schluessel === 1, `nach dem Neustart hat Ana noch 20 Gold und den Schlüssel (${JSON.stringify(ana2.inventar)})`);
+pruefe(ana2.inventar.gold === 20 && spiel5.gruppe().rissstein === 1, `nach dem Neustart: Ana hat noch 20 Gold, die Gruppe den Rissstein (${JSON.stringify(ana2.inventar)}, ${JSON.stringify(spiel5.gruppe())})`);
+pruefe(spiel5.gebiete.get('hoehle').welt.geoeffnet.has('hoehle_tuer') && spiel5.zustaende().tempel_geschlossen, 'nach dem Neustart: Tür offen, Riss geschlossen');
 spiel5.wechseln(ana2, 'start', 'von_hoehle');
 const wechsel5 = postC.find((m) => m.t === 'gebiet');
 pruefe(wechsel5?.offen.includes('oberwelt_gold'), 'nach dem Neustart steht die Truhe oben noch offen');

@@ -25,6 +25,8 @@ export const KACHELN = [
   { name: 'fels', zeichen: 'X', fest: true, hindernis: true },
   { name: 'treppe_runter', zeichen: 'E' },
   { name: 'treppe_hoch', zeichen: 'A' },
+  { name: 'tempelboden', zeichen: ';' },
+  { name: 'tempelwand', zeichen: 'W', fest: true, hindernis: true },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

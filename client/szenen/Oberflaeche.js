@@ -23,6 +23,9 @@ export class Oberflaeche extends Phaser.Scene {
     this.meldung = this.add.text(b / 2, 8, '', schrift).setOrigin(0.5, 0).setAlpha(0);
     this.mitte = this.add.text(b / 2, h / 2, '', { ...schrift, align: 'center', lineSpacing: 6 }).setOrigin(0.5);
     this.dialogAufbauen(b, h);
+    this.anzeige = [];
+    this.anzeigen({ inventar: spiel.inventar ?? {}, gruppe: spiel.gruppe ?? {} });
+    spiel.events.on('inventar', (i) => this.anzeigen(i));
 
     spiel.events.on('stand', (s) => this.zeigen(s));
     spiel.events.on('nachricht', (text) => this.melden(text));
@@ -58,6 +61,30 @@ export class Oberflaeche extends Phaser.Scene {
       p.setFillStyle(Phaser.Display.Color.HexStringToColor(FARBWERTE[s.farbe]).color);
       p.setPosition(this.liste.x - this.liste.width - 6, this.liste.y + 6 + i * (this.liste.height / spieler.length));
     });
+  }
+
+  // ---------- Was man hat: unter den Herzen ----------
+  // Gold gehört dem Spieler, Schlüssel und Risssteine der Gruppe — angezeigt
+  // wird beides gleich; wem es gehört, merkt man daran, wer es ausgeben kann.
+  anzeigen({ inventar, gruppe }) {
+    for (const t of this.anzeige) t.destroy();
+    this.anzeige = [];
+    this.anzeigeStand = [];
+    const eintraege = [['gold', 0, inventar.gold], ['schluessel', 1, gruppe.schluessel], ['rissstein', 2, gruppe.rissstein]];
+    let x = 6;
+    for (const [art, bild, anzahl] of eintraege) {
+      if (!anzahl) continue;
+      const symbol = this.add.image(x, 28, 'symbole', bild).setOrigin(0, 0.5);
+      const zahl = this.add.text(x + 14, 28, String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);
+      this.anzeige.push(symbol, zahl);
+      this.anzeigeStand.push(`${art} ${anzahl}`);
+      x += 14 + zahl.width + 8;
+    }
+  }
+
+  // Für den Prüfstand.
+  anzeigeText() {
+    return (this.anzeigeStand ?? []).join(', ');
   }
 
   // ---------- Textbox wie in Link's Awakening ----------

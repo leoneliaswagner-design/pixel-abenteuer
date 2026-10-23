@@ -29,7 +29,8 @@ const KARTEN = {
       '!': [{ text: 'Willkommen, Abenteurer!\n\nIm Südosten liegt eine alte Ruine. Man sagt, unter ihr beginne eine Höhle.' }],
       '@': [{
         name: 'Alter Mann', aussehen: 'alter_mann', richtung: 'unten',
-        text: 'Ah, Besuch! Mit der Leertaste schwingst du dein Schwert.\n\nBüsche kann man schneiden. Manchmal steckt ein Herz darin.\n\nUnten in der Höhle soll eine Truhe stehen. Sei vorsichtig!',
+        text: 'Ah, Besuch! Mit der Leertaste schwingst du dein Schwert.\n\nBüsche kann man schneiden. Manchmal steckt ein Herz darin.\n\nUnten in der Höhle flimmert seit Tagen etwas hinter einer verschlossenen Tür. Sei vorsichtig!',
+        text_wenn_tempel_geschlossen: 'Das Flimmern in der Höhle ist fort? Dann hast du den Riss geschlossen!\n\nRiftside wird Leute wie dich brauchen.',
       }],
       '$': [{ inhalt: 'gold:20', id: 'oberwelt_gold' }],
     },
@@ -69,27 +70,61 @@ TTTTTTTT=TTTTTTTTTTTTTTT~~~~TTTTTTTTTTTT
   hoehle: {
     titel: 'die Höhle',
     grund: 'hoehlenboden',
-    uebergaenge: { A: { ziel: 'start', ankunft: 'von_hoehle' } },
-    ankuenfte: { a: { id: 'von_oben', richtung: 'oben' } },
-    dinge: { '$': [{ inhalt: 'schluessel', id: 'hoehle_schluessel' }] },
+    // R: ein Dimensionsriss — offen, bis der Tempel geschlossen ist.
+    uebergaenge: {
+      A: { ziel: 'start', ankunft: 'von_hoehle' },
+      R: { ziel: 'tempel', ankunft: 'von_hoehle', art: 'riss', bedingung: '!tempel_geschlossen' },
+    },
+    ankuenfte: { a: { id: 'von_oben', richtung: 'oben' }, r: { id: 'von_tempel', richtung: 'unten' } },
+    dinge: {
+      '$': [{ inhalt: 'schluessel', id: 'hoehle_schluessel' }],
+      D: [{ id: 'hoehle_tuer' }],
+    },
     text: `
-XXXXXXXXXXXXXXXXXXXXXX
-X:$::::::XXXX::::::::X
-X::g:::::XXXX::::g:::X
-X::::::::::::::::::::X
-X:::XX::::::::::XX:::X
-X:::XX::::g:::::XX:::X
-X::::::::::::::::::::X
-X::::::::XXXX::::::::X
-X::g:::::XXXX::::g:::X
-X::::::::::::::::::::X
-X::::::::::a:::::::::X
-XXXXXXXXXXXAXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+X:$::::::XXXX::::::::X:::::X
+X::g:::::XXXX::::g:::X::R::X
+X::::::::::::::::::::X:::::X
+X:::XX::::::::::XX:::X::r::X
+X:::XX::::g:::::XX:::D:::::X
+X::::::::::::::::::::X:::::X
+X::::::::XXXX::::::::X:::::X
+X::g:::::XXXX::::g:::XXXXXXX
+X::::::::::::::::::::XXXXXXX
+X::::::::::a:::::::::XXXXXXX
+XXXXXXXXXXXAXXXXXXXXXXXXXXXX
+`,
+  },
+  tempel: {
+    titel: 'den Dschungeltempel',
+    grund: 'tempelboden',
+    uebergaenge: { R: { ziel: 'hoehle', ankunft: 'von_tempel', art: 'riss' } },
+    ankuenfte: { a: { id: 'von_hoehle', richtung: 'oben' } },
+    dinge: {
+      '$': [{
+        inhalt: 'rissstein', id: 'tempel_rissstein', setzt: 'tempel_geschlossen',
+        meldung: 'Ein Beben — der Riss in der Höhle schließt sich!',
+      }],
+      '!': [{ text: 'Eine Inschrift, halb von Moos bedeckt:\n\n„Wer den Stein nimmt, schließt das Tor."' }],
+    },
+    text: `
+WWWWWWWWWWWWWWWWWW
+W;;;;;;;;;;;;;;;;W
+W;WW;;;;;$;;;;WW;W
+W;WW;;;;;;;;;;WW;W
+W;;;;g;;;;;;;g;;;W
+W;;;;;;;;;;;;;;;;W
+W;WW;;;;;;;;;;WW;W
+W;WW;;g;;;;;g;;W;W
+W;;;;;;;!a;;;;;;;W
+W;;;;;;;;;;;;;;;;W
+W;;;;;;;;R;;;;;;;W
+WWWWWWWWWWWWWWWWWW
 `,
   },
 };
 
-const DING_ZEICHEN = { '!': 'schild', '@': 'figur', '$': 'truhe' };
+const DING_ZEICHEN = { '!': 'schild', '@': 'figur', '$': 'truhe', D: 'tuer' };
 const nachZeichen = Object.fromEntries(KACHELN.map((k, i) => [k.zeichen, i]).filter(([z]) => z));
 const eigenschaft = (name, wert) => ({ name, type: typeof wert === 'boolean' ? 'bool' : 'string', value: wert });
 
@@ -121,15 +156,16 @@ function karteBauen(name, def) {
         const a = def.ankuenfte[z];
         ort({ name: 'ankunft', point: true, ...mitte(x, y), properties: [eigenschaft('id', a.id), ...(a.richtung ? [eigenschaft('richtung', a.richtung)] : [])] });
       } else {
-        const n = nachZeichen[z];
-        if (n === undefined) throw new Error(`${name}: unbekanntes Zeichen '${z}' bei ${x},${y}`);
-        if (KACHELN[n].hindernis) oben = n;
-        else grund = n;
         const u = def.uebergaenge?.[z];
+        const n = nachZeichen[z];
+        // Ein Übergang ohne eigene Kachel (ein Riss) steht auf dem Grund.
+        if (n === undefined && !u) throw new Error(`${name}: unbekanntes Zeichen '${z}' bei ${x},${y}`);
+        if (n !== undefined && KACHELN[n].hindernis) oben = n;
+        else if (n !== undefined) grund = n;
         if (u)
           ort({
             name: 'uebergang', x: x * GROESSE, y: y * GROESSE, width: GROESSE, height: GROESSE,
-            properties: [eigenschaft('ziel', u.ziel), eigenschaft('ankunft', u.ankunft)],
+            properties: Object.entries(u).map(([k, v]) => eigenschaft(k, v)),
           });
       }
       // Gras-Abwechslung, damit die Wiese nicht wie Tapete aussieht.

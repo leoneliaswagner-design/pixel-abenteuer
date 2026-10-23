@@ -48,9 +48,10 @@ die Risse und müssen die Stadt retten.
 
 ## Offene Fragen
 
-- Namen der Kontinente, der Startinsel und der Hafenstadt.
-- Liegt die Hafenstadt auf der Startinsel, oder setzt man von dort über?
+- Namen der Kontinente und der Startinsel. (Die Hafenstadt heißt **Riftside**
+  und liegt auf der Startinsel.)
 - Welche Risse/Orte gibt es zuerst, und was „rettet" die Stadt?
 - Wie reist man zwischen den Inseln? (siehe ROADMAP)
 - Homebrew-Klassen und -Spezies.
-- Gehören Schlüssel dem Finder oder der Gruppe?
+- ~~Gehören Schlüssel dem Finder oder der Gruppe?~~ Der Gruppe (gemeinsamer
+  Schlüsselbund), vorerst.

@@ -5,7 +5,7 @@
 // Nur die eigene Position meldet jeder Browser selbst — sonst fühlt sich das
 // Laufen bei 80 ms Ping zäh an. Der Server prüft sie aber (Tempo und Wände)
 // und schickt eine Korrektur, wenn sie nicht stimmen kann.
-import { RICHTUNGEN } from '../gemeinsam/welt.js';
+import { RICHTUNGEN, erfuellt } from '../gemeinsam/welt.js';
 import { Gebiet, richtungZu } from './gebiet.js';
 
 const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
@@ -79,8 +79,41 @@ export class Spiel {
     const g = this.gebiete.get(s.gebiet);
     return {
       gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar,
-      geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), blicke: Object.fromEntries(g.blicke),
+      geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), tueren: [...g.welt.geoeffnet],
+      blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(),
     };
+  }
+
+  // ---------- Weltzustände und Gruppen-Inventar ----------
+  // Beides gehört der ganzen Runde, nicht einem Spieler, und steht im
+  // Spielstand unter „welt".
+
+  zustaende() {
+    return (this.spielstand.daten.welt.zustaende ??= {});
+  }
+
+  zustandSetzen(name, meldung) {
+    if (!name || this.zustaende()[name]) return;
+    this.zustaende()[name] = true;
+    this.geaendert = true;
+    this.anAlle({ t: 'zustand', name, wert: true });
+    if (meldung) this.anAlle({ t: 'nachricht', text: meldung });
+  }
+
+  gruppe() {
+    return (this.spielstand.daten.welt.gruppe ??= {});
+  }
+
+  gruppeGeaendert() {
+    this.geaendert = true;
+    this.anAlle({ t: 'gruppe', inventar: this.gruppe() });
+  }
+
+  // Der Text eines Schilds oder einer Figur: „text_wenn_<zustand>" gewinnt,
+  // sobald der Zustand gilt (in der Reihenfolge aus Tiled), sonst „text".
+  textFuer(e) {
+    for (const [k, v] of Object.entries(e)) if (k.startsWith('text_wenn_') && erfuellt(k.slice(10), this.zustaende())) return v;
+    return e.text ?? '…';
   }
 
   // Mehrere Spieler starten nicht auf demselben Punkt — sonst stehen sie
@@ -125,7 +158,10 @@ export class Spiel {
     s.x = x;
     s.y = y;
     const u = gebiet.uebergangBei(x, y);
-    if (u) this.wechseln(s, u.eig.ziel, u.eig.ankunft);
+    // Ein geschlossener Riss ist für den Server kein Übergang mehr. Und wer
+    // gerade zurückgestoßen wird, geht nicht hindurch: ein Schleim schob
+    // sonst Spieler rückwärts in den Riss, durch den sie gerade kamen.
+    if (u && erfuellt(u.eig.bedingung, this.zustaende()) && jetzt >= (s.stossBis ?? 0)) this.wechseln(s, u.eig.ziel, u.eig.ankunft);
   }
 
   korrigiere(s) {
@@ -177,13 +213,14 @@ export class Spiel {
     const e = ding.eig;
 
     if (ding.name === 'schild') {
-      s.senden({ t: 'dialog', seiten: seiten(e.text ?? '…') });
+      s.senden({ t: 'dialog', seiten: seiten(this.textFuer(e)) });
     } else if (ding.name === 'figur') {
       // Die Figur dreht sich zum Sprecher — für alle im Gebiet sichtbar.
       const blick = { oben: 'unten', unten: 'oben', links: 'rechts', rechts: 'links' }[s.richtung];
       gebiet.blicke.set(ding.schluessel, blick);
       gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });
-      s.senden({ t: 'dialog', name: e.name ?? '', seiten: seiten(e.text ?? '…') });
+      s.senden({ t: 'dialog', name: e.name ?? '', seiten: seiten(this.textFuer(e)) });
+      this.zustandSetzen(e.setzt, e.meldung);
     } else if (ding.name === 'truhe') {
       if (gebiet.istOffen(ding)) {
         s.senden({ t: 'dialog', seiten: ['Die Truhe ist leer.'] });
@@ -192,7 +229,12 @@ export class Spiel {
       gebiet.oeffnen(ding);
       const [art, anzahl] = inhaltLesen(e.inhalt);
       const g = this.w.gegenstaende?.[art];
-      if (art) s.inventar[art] = (s.inventar[art] ?? 0) + anzahl;
+      // Schlüssel und Ähnliches („gemeinsam" in werte.json) landen im
+      // Gruppen-Inventar: sonst müsste immer der Finder zur Tür laufen.
+      if (art && g?.gemeinsam) {
+        this.gruppe()[art] = (this.gruppe()[art] ?? 0) + anzahl;
+        this.gruppeGeaendert();
+      } else if (art) s.inventar[art] = (s.inventar[art] ?? 0) + anzahl;
       gebiet.anAlle({ t: 'truhe', ding: ding.schluessel, offen: true });
       // Grammatik steht in den Daten („einzeln" im Akkusativ): „einen kleinen
       // Schlüssel", „eine Goldmünze" — aus Name und Artikel ließe sich das
@@ -200,7 +242,21 @@ export class Spiel {
       const was = !art ? 'nichts' : anzahl === 1 ? (g?.einzeln ?? art) : `${anzahl} ${g?.mehrzahl ?? art}`;
       s.senden({ t: 'dialog', seiten: [`Du findest ${was}!`], inventar: s.inventar });
       gebiet.anAlle({ t: 'nachricht', text: `${s.name} öffnet eine Truhe.` }, s.id);
+      this.zustandSetzen(e.setzt, e.meldung);
       this.merken(s);
+      this.speichern();
+    } else if (ding.name === 'tuer') {
+      const art = e.schluessel ?? 'schluessel';
+      if (!(this.gruppe()[art] > 0)) {
+        const g = this.w.gegenstaende?.[art];
+        s.senden({ t: 'dialog', seiten: [`Verschlossen. Ihr braucht ${g?.einzeln ?? art}.`] });
+        return;
+      }
+      this.gruppe()[art]--;
+      gebiet.tuerOeffnen(ding);
+      gebiet.anAlle({ t: 'tuer', ding: ding.schluessel, offen: true });
+      gebiet.anAlle({ t: 'nachricht', text: `${s.name} schließt eine Tür auf.` }, s.id);
+      this.gruppeGeaendert();
       this.speichern();
     }
   }
@@ -213,6 +269,9 @@ export class Spiel {
     // Den Rückstoß rechnet der Browser des Getroffenen selbst — er bewegt
     // seine Figur ja ohnehin. Das Weg-Guthaben oben lässt ihn zu.
     s.senden({ t: 'getroffen', vx: rx * ws.stossGeschwindigkeit, vy: ry * ws.stossGeschwindigkeit, dauer: ws.stossDauer });
+    // Etwas länger als der Stoß selbst: die letzten Positionen davon sind
+    // noch unterwegs, wenn er beim Browser schon vorbei ist.
+    s.stossBis = jetzt + ws.stossDauer + 250;
     if (s.leben > 0) return;
     s.tot = true;
     s.wiederBei = jetzt + ws.wiederbelebung;

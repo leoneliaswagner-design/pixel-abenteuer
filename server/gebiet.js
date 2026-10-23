@@ -21,6 +21,8 @@ export class Gebiet {
     // Wohin Figuren gerade schauen (nachdem jemand sie angesprochen hat).
     // Nicht im Spielstand — nach einem Neustart schauen sie wieder geradeaus.
     this.blicke = new Map();
+    for (const d of this.welt.dinge)
+      if (d.name === 'tuer' && spiel.spielstand.daten.welt.tueren?.[this.truhenSchluessel(d)]) this.welt.geoeffnet.add(d.schluessel);
   }
 
   // Offene Truhen stehen im Spielstand unter „gebiet:schlüssel", damit zwei
@@ -37,6 +39,14 @@ export class Gebiet {
     const welt = this.spiel.spielstand.daten.welt;
     welt.truhen ??= {};
     welt.truhen[this.truhenSchluessel(ding)] = true;
+    this.spiel.geaendert = true;
+  }
+
+  tuerOeffnen(ding) {
+    const welt = this.spiel.spielstand.daten.welt;
+    welt.tueren ??= {};
+    welt.tueren[this.truhenSchluessel(ding)] = true;
+    this.welt.geoeffnet.add(ding.schluessel);
     this.spiel.geaendert = true;
   }
 

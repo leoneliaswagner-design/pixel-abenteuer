@@ -31,6 +31,7 @@ export function animationenAnlegen(szene) {
       });
   szene.anims.create({ key: 'schleim', frames: szene.anims.generateFrameNumbers('schleim', { frames: [0, 1] }), frameRate: 4, repeat: -1 });
   szene.anims.create({ key: 'rauch', frames: szene.anims.generateFrameNumbers('rauch', { frames: [0, 1, 2] }), frameRate: 14 });
+  szene.anims.create({ key: 'riss', frames: szene.anims.generateFrameNumbers('riss', { frames: [0, 1, 2, 3] }), frameRate: 7, repeat: -1 });
 }
 
 export class Figur {

@@ -25,17 +25,23 @@
   Buchstabe für Buchstabe, blättern mit E/Leertaste. Pixelschrift Press Start 2P.
   Inventar pro Spieler im Spielstand (noch ohne Anzeige).
 
+- Weltzustände (`setzt`, `bedingung`, `text_wenn_…`), Gruppen-Inventar
+  (Schlüssel, Risssteine), verschlossene Türen, Anzeige unter den Herzen.
+- Erster Dimensionsriss: Höhle (hinter der Tür) → Dschungeltempel; der
+  Rissstein schließt ihn, der alte Mann sagt danach etwas anderes.
+
 ## Grundgerüst — als Nächstes
 
-1. ~~Interaktion~~ (steht).
-2. **Gegenstände und Inventar**: Anzeige (Gold, Schlüssel), verschlossene
-   Türen, die einen Schlüssel verbrauchen — erstes Rätselelement.
-   Offen: gehört ein Schlüssel dem Finder oder der Gruppe?
-3. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
+1. **Riftside**: die Hafenstadt auf der Startinsel als echtes Startgebiet
+   (Häuser, Hafen, Gassen mit Rissen) statt der Testwiese.
+   Braucht Kacheln für Stadt (Pflaster, Hauswände, Dächer, Türen ins Haus).
+2. **Klassen und Spezies als Daten** (`inhalte/daten/klassen.json`): Aussehen
    und eine Sonderfähigkeit je Klasse — für die Homebrew-Klassen der Kampagne.
-4. **Töne.**
-5. **Handy-Steuerung.**
-6. **Weltkarte der Kampagne** in Gebiete zerlegen (wartet auf die Karte).
+3. **Töne.**
+4. **Handy-Steuerung.**
+5. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
+6. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
+   dafür muss `welt.belegt` vom Zustand abhängen.
 
 ## Später (Vorschlag — Reihenfolge offen)
 
@@ -90,3 +96,6 @@
   Start geladen sein (`document.fonts.load`), sonst bleibt die Ersatzschrift.
 - Text in Seiten teilen: `getWrappedText()` auf einem unsichtbaren Messfeld
   mit demselben Stil wie die Box — dann enden Seiten an Zeilengrenzen.
+- Ein Schleim stieß eine Spielerin rückwärts in den Riss, durch den sie
+  gerade gekommen war. Ankünfte liegen jetzt zwei Kacheln vor einem
+  Übergang, und im Rückstoß gibt es keinen Gebietswechsel.

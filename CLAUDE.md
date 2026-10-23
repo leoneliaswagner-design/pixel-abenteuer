@@ -27,6 +27,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   (`welt.belegt`), gefunden mit `welt.dingVor()` — dieselbe Funktion für das
   „E" im Browser und die Antwort des Servers. Was sie sagen, schickt der
   Server (`dialog`); offene Truhen und Inventar stehen im Spielstand.
+- **Weltzustände** (`spielstand.welt.zustaende`) und **Gruppen-Inventar**
+  (`welt.gruppe`) gehören der Runde; Änderungen gehen an alle Spieler, egal
+  in welchem Gebiet. Bedingungen prüft `erfuellt()` in gemeinsam/welt.js —
+  Server (lässt durch) und Browser (zeigt den Riss) fragen dieselbe Funktion.
+- Wer zurückgestoßen wird, geht durch keinen Übergang (`s.stossBis`).
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -53,6 +58,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   sonst schläft der Tab des ersten Spielers, sobald der zweite aufgeht.
 - `node pruefstand/interaktion.mjs` — Textbox (Helligkeit unten im Bild),
   blättern, Figur dreht sich beim anderen Spieler, Truhe öffnet für alle.
+- `node pruefstand/risse.mjs` — Gruppenschlüssel, Tür, Riss in den Tempel;
+  ein dritter Spieler nimmt den Rissstein, der zweite sieht den Riss vergehen.
+- Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas
+  prüft, tut es in der Schonfrist nach dem Beitreten (1,5 s).
 - `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter
   davor (wie der Cloudflare-Tunnel von `npm run online`). Der echte Tunnel ist
   aus der Cloud-Sitzung nicht erreichbar.

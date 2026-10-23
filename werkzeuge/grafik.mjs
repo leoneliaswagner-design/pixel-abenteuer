@@ -171,6 +171,38 @@ function treppe(b, runter) {
   b.rechteck(K - 3, 0, 3, K, '#5e5146');
 }
 
+function tempelboden(b) {
+  // Große, leicht verschobene Steinplatten mit Moos in den Fugen.
+  b.rechteck(0, 0, K, K, '#8a8a6a');
+  for (const [x, y, w, h] of [[0, 0, 15, 15], [16, 0, 16, 10], [16, 11, 16, 21], [0, 16, 15, 16]]) {
+    b.rechteck(x + 1, y + 1, w - 1, h - 1, '#9c9c78');
+    b.rechteck(x + 1, y + 1, w - 1, 1, '#b0b08a');
+  }
+  const z = zufall(91);
+  for (let i = 0; i < 9; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.6 ? '#5e8a3e' : '#76767a');
+  for (const [x, y] of [[15, 4], [15, 20], [22, 10], [5, 15]]) b.rechteck(x, y, 2, 2, '#4f7a34');
+}
+
+function tempelwand(b) {
+  // Behauene Quader, oben dunkle Kante, Ranken hängen herab.
+  b.rechteck(0, 0, K, K, '#6e6a52');
+  for (let reihe = 0; reihe < 3; reihe++) {
+    const y = 2 + reihe * 10;
+    const v = reihe % 2 ? 10 : 0;
+    for (let x = -v; x < K; x += 20) {
+      b.rechteck(x + 1, y, 18, 9, '#86825f');
+      b.rechteck(x + 1, y, 18, 1, '#a09c74');
+      b.rechteck(x + 1, y + 8, 18, 1, '#57533f');
+    }
+  }
+  b.rechteck(0, 0, K, 2, '#2a1e2e');
+  for (const [x, l] of [[6, 14], [21, 9], [27, 18]]) {
+    b.linie(x, 2, x, 2 + l, '#3f8c3a');
+    b.setze(x + 1, 6, '#62b452');
+    b.setze(x - 1, 10, '#62b452');
+  }
+}
+
 const maler = {
   gras: (b) => grasGrund(b, 1),
   gras2: (b) => grasGrund(b, 2, 14),
@@ -189,6 +221,8 @@ const maler = {
   fels,
   treppe_runter: (b) => treppe(b, true),
   treppe_hoch: (b) => treppe(b, false),
+  tempelboden,
+  tempelwand,
 };
 
 const zeilen = Math.ceil(KACHELN.length / SPALTEN);
@@ -439,6 +473,80 @@ for (const [name, l] of Object.entries(LEUTE)) {
     truhen.einfuegen(t, i * 32, 0);
   });
   truhen.speichern(ziel + 'truhe.png');
+}
+
+// ---------- Tür (zu, offen) ----------
+{
+  const blatt = new Bild(64, 32);
+  [false, true].forEach((offen, i) => {
+    const t = new Bild(32, 32);
+    // Steinrahmen wie die Höhlenwand, damit die Tür in der Wand sitzt.
+    t.rechteck(0, 0, 32, 32, '#6b5e72');
+    t.rechteck(0, 0, 32, 2, '#2a1e2e');
+    t.rechteck(4, 4, 24, 28, '#4e4456');
+    if (offen) {
+      t.rechteck(6, 6, 20, 26, '#1b1424');
+      t.rechteck(6, 6, 20, 2, '#2a1e2e');
+    } else {
+      t.rechteck(6, 6, 20, 26, P.holz);
+      for (const x of [11, 16, 21]) t.rechteck(x, 6, 1, 26, P.holzDunkel);
+      t.rechteck(6, 6, 20, 1, P.holzHell);
+      t.rechteck(6, 12, 20, 2, '#5e5146');
+      t.rechteck(6, 24, 20, 2, '#5e5146');
+      t.rechteck(13, 15, 6, 7, P.gold);
+      t.rechteck(15, 17, 2, 3, UMRISS);
+    }
+    blatt.einfuegen(t, i * 32, 0);
+  });
+  blatt.speichern(ziel + 'tuer.png');
+}
+
+// ---------- Dimensionsriss: 4 Bilder, 32×48 ----------
+// Ein senkrechter Spalt in der Luft, violett mit türkisem Kern, der flackert.
+{
+  const blatt = new Bild(128, 48);
+  for (let bild = 0; bild < 4; bild++) {
+    const r = new Bild(32, 48);
+    const z = zufall(100 + bild);
+    for (let y = 4; y < 46; y++) {
+      const t = (y - 4) / 42;
+      const breite = Math.sin(t * Math.PI) * (7 + Math.sin(t * 9 + bild * 1.6) * 2);
+      const mitte = 16 + Math.sin(t * 6 + bild) * 2;
+      for (let x = Math.floor(mitte - breite); x <= Math.ceil(mitte + breite); x++) {
+        const d = Math.abs(x - mitte) / Math.max(breite, 0.5);
+        r.setze(x, y, d < 0.35 ? '#c8fff4' : d < 0.65 ? '#5ad8e0' : d < 0.9 ? '#8a4ad0' : [90, 40, 150, 160]);
+      }
+    }
+    for (let i = 0; i < 10; i++) {
+      const x = 4 + Math.floor(z() * 24), y = 4 + Math.floor(z() * 40);
+      r.setze(x, y, z() < 0.5 ? '#e8d0ff' : '#5ad8e0');
+    }
+    blatt.einfuegen(r, bild * 32, 0);
+  }
+  blatt.speichern(ziel + 'riss.png');
+}
+
+// ---------- Symbole für die Anzeige (12×12): Gold, Schlüssel, Rissstein ----------
+{
+  const blatt = new Bild(36, 12);
+  const gold = new Bild(12, 12);
+  gold.ellipse(6, 6, 4.5, 4.5, P.gold);
+  gold.ellipse(5, 5, 2, 2, '#f8e08a');
+  gold.rechteck(6, 4, 1, 4, '#b08a2a');
+  gold.umriss(UMRISS);
+  const schl = new Bild(12, 12);
+  schl.ellipse(4, 4, 2.6, 2.6, P.gold);
+  schl.setze(4, 4, UMRISS);
+  schl.linie(5, 5, 9, 9, P.gold);
+  schl.linie(6, 5, 10, 9, P.gold);
+  schl.setze(8, 10, P.gold);
+  schl.setze(9, 11, P.gold);
+  schl.umriss(UMRISS);
+  const stein = new Bild(12, 12);
+  stein.muster(2, 1, ['   pp   ', '  pttp  ', ' pttttp ', 'pttwtttp', ' pttttp ', '  pttp  ', '   pp   '], { p: '#8a4ad0', t: '#5ad8e0', w: '#c8fff4' });
+  stein.umriss(UMRISS);
+  [gold, schl, stein].forEach((b, i) => blatt.einfuegen(b, i * 12, 0));
+  blatt.speichern(ziel + 'symbole.png');
 }
 
 // ---------- Schwert (12×32, Griff unten; gedreht wird um den Griff) ----------
