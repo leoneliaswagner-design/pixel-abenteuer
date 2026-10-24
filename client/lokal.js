@@ -16,6 +16,9 @@ export class LokalNetz extends Netz {
     });
     const werte = await lade('daten/werte.json');
     for (const d of ZUSATZDATEN) werte[d] = await lade(`daten/${d}.json`);
+    // Auf der Vorschau-Seite dauert ein Tag 4 statt 24 Minuten — sonst sähe
+    // dort kaum jemand je den Abend.
+    if (import.meta.env.VITE_ALLEIN === '1') werte.tag = { ...werte.tag, dauer: 240000 };
     const karten = Object.fromEntries(await Promise.all(werte.gebiete.map(async (g) => [g, await lade(`karten/${g}.json`)])));
     this.spiel = new Spiel(karten, werte);
     let willkommen = null;

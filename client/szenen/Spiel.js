@@ -3,9 +3,13 @@ import { Welt, bewege, erfuellt } from '../../gemeinsam/welt.js';
 import { Figur, FARBEN, ZEILE, animationenAnlegen } from '../figur.js';
 import { SCHRIFT } from '../schrift.js';
 import { kantenBerechnen } from '../kanten.js';
+import { dekoBerechnen } from '../deko.js';
 import { Fenster } from '../fenster.js';
+import { Licht } from '../licht.js';
 
 const SENDE_ABSTAND = 50;
+// Figuren sind 32×48 (schlanker als die Kacheln breit sind, s. werkzeuge/figuren.mjs).
+const FIGURBILD = { frameWidth: 32, frameHeight: 48 };
 // Geschosse zeigen im Bild nach rechts; so weit werden sie gedreht.
 const WINKEL = { rechts: 0, unten: 90, links: 180, oben: 270 };
 const GESCHOSS_BILD = { dolch: 0, pfeil: 1, feuerball: 2 };
@@ -33,6 +37,7 @@ export class SpielSzene extends Phaser.Scene {
     for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
     this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('kanten', 'grafik/kanten.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('deko', 'grafik/deko.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
@@ -42,16 +47,16 @@ export class SpielSzene extends Phaser.Scene {
     // Bewohner von Riftside sahen aus wie er.)
     const leuteLaden = (werte) => {
       for (const a of werte.aussehen ?? [])
-        if (!this.textures.exists(`figur-${a}`)) this.load.spritesheet(`figur-${a}`, `grafik/figur-${a}.png`, { frameWidth: 32, frameHeight: 32 });
+        if (!this.textures.exists(`figur-${a}`)) this.load.spritesheet(`figur-${a}`, `grafik/figur-${a}.png`, FIGURBILD);
     };
     if (this.cache.json.exists('werte')) leuteLaden(this.cache.json.get('werte'));
     else this.load.once('filecomplete-json-werte', (schluessel, art, werte) => leuteLaden(werte));
-    for (const f of FARBEN) this.load.spritesheet(`held-${f}`, `grafik/held-${f}.png`, { frameWidth: 32, frameHeight: 32 });
+    for (const f of FARBEN) this.load.spritesheet(`held-${f}`, `grafik/held-${f}.png`, FIGURBILD);
     // Ein Blatt je Klasse und Farbe. Eine Homebrew-Klasse ohne Bild lädt
     // ins Leere und läuft dann im Umhang der Farbe (s. Figur).
     for (const k of Object.keys(this.willkommen.auswahl?.klassen ?? {}))
       for (const f of FARBEN)
-        if (!this.textures.exists(`held-${k}-${f}`)) this.load.spritesheet(`held-${k}-${f}`, `grafik/held-${k}-${f}.png`, { frameWidth: 32, frameHeight: 32 });
+        if (!this.textures.exists(`held-${k}-${f}`)) this.load.spritesheet(`held-${k}-${f}`, `grafik/held-${k}-${f}.png`, FIGURBILD);
     this.load.spritesheet('geschosse', 'grafik/geschosse.png', { frameWidth: 16, frameHeight: 16 });
     this.load.image('funke', 'grafik/funke.png');
     // Monster: welche es gibt, steht in monster.json — geladen wie die Leute.
@@ -104,6 +109,7 @@ export class SpielSzene extends Phaser.Scene {
     for (const t of wk.tueren ?? []) this.welt.geoeffnet.add(t);
     this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
     this.risseAufbauen();
+    this.lichtAufbauen(wk.zeit);
     this.inventar = wk.inventar ?? {};
     this.ausruestung = wk.ausruestung ?? {};
     this.gruppe = wk.gruppe ?? {};
@@ -183,6 +189,7 @@ export class SpielSzene extends Phaser.Scene {
       zustand: () => ({
         gebiet: this.gebiet,
         kanten: this.kantenZahl,
+        deko: this.dekoZahl,
         ich: {
           id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, max: this.maxLeben, tot: this.ich.tot,
           richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar, klasse: this.charakter?.klasse, textur: this.ich.koerper.texture.key,
@@ -191,6 +198,7 @@ export class SpielSzene extends Phaser.Scene {
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key })),
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
+        licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
           bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt,
@@ -230,6 +238,9 @@ export class SpielSzene extends Phaser.Scene {
     for (const kk of kanten) this.kantenBild.create(kk.x * k0, kk.y * k0, kk.bild);
     // Gezählt wird, was wirklich gezeichnet ist — nicht, was berechnet wurde.
     this.kantenZahl = this.kantenBild.children.length;
+    this.dekoBild = this.add.blitter(0, 0, 'deko').setDepth(0.6);
+    for (const d of dekoBerechnen(this.welt)) this.dekoBild.create(d.x, d.y, d.bild);
+    this.dekoZahl = this.dekoBild.children.length;
 
     // Bäume sind höher als eine Kachel und müssen sich mit den Figuren nach
     // y sortieren — wer hinter einem Baum steht, verschwindet unter der Krone.
@@ -243,6 +254,9 @@ export class SpielSzene extends Phaser.Scene {
       const fuss = ty * k + k;
       const bild = this.add.image(tx * k + k / 2, fuss + 2, 'baum').setOrigin(0.5, 76 / 80).setDepth(10 + fuss - 6);
       this.baeume.push({ bild, x: tx * k + k / 2, fuss });
+      // Wind: jede Krone wiegt sich leicht, jede etwas anders — ein Wald,
+      // in dem sich nichts bewegt, wirkt wie ein Bild.
+      this.tweens.add({ targets: bild, angle: { from: -0.8, to: 0.8 }, duration: 2200 + ((tx * 7 + ty * 13) % 9) * 160, yoyo: true, repeat: -1, ease: 'Sine.InOut', delay: ((tx * 5 + ty * 11) % 12) * 120 });
     });
 
     const a = this.welt.gidVon('wasser'), b = this.welt.gidVon('wasser2');
@@ -295,6 +309,26 @@ export class SpielSzene extends Phaser.Scene {
   // Dimensionsrisse: Übergänge mit art „riss" bekommen ein flimmerndes
   // Bild. Sichtbar nur, solange ihre Bedingung gilt — dieselbe Prüfung wie
   // auf dem Server, sonst sähe man einen Riss, der einen nicht durchlässt.
+  // Laternen, Fenster und Risse leuchten; die Tageszeit kommt vom Server
+  // (für alle gleich) und läuft dazwischen hier weiter.
+  lichtAufbauen(zeit) {
+    this.zeit = zeit ?? 0.4;
+    this.zeitBei = this.time.now;
+    this.licht = new Licht(this, this.welt.eigenschaftenKarte.licht);
+    const k = this.welt.kachel;
+    this.welt.hindernisse.forEach((gid, i) => {
+      const name = gid && this.welt.eig(gid).name;
+      const x = (i % this.welt.breite) * k + k / 2, y = Math.floor(i / this.welt.breite) * k;
+      if (name === 'laterne') this.licht.fest(x, y + 8, 84, 0xffd890, 20);
+      else if (name === 'fenster') this.licht.fest(x, y + 16, 36, 0xffc070, 12);
+    });
+    for (const r of this.risse) if (r.bild.visible) this.licht.fest(r.bild.x, r.bild.y - 24, 64, 0xc890ff, 20);
+  }
+
+  tageszeitJetzt() {
+    return (this.zeit + (this.time.now - this.zeitBei) / (this.w.tag?.dauer ?? 1440000)) % 1;
+  }
+
   risseAufbauen() {
     this.risse = this.welt.orte
       .filter((o) => o.name === 'uebergang' && o.eig.art === 'riss')
@@ -504,6 +538,10 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   standUebernehmen(m) {
+    if (m.zeit != null) {
+      this.zeit = m.zeit;
+      this.zeitBei = this.time.now;
+    }
     const gesehen = new Set();
     for (const s of m.spieler) {
       if (s.id === this.meineId) {
@@ -616,6 +654,11 @@ export class SpielSzene extends Phaser.Scene {
       g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
       g.schatten.setPosition(g.x, g.y).setDepth(9);
     }
+
+    // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.
+    const bewegte = figuren.filter((f) => !f.tot).map((f) => ({ x: f.x, y: f.y - 20, radius: 88, farbe: 0xfff0d8, staerke: 0.85 }));
+    for (const g of this.geschosse.values()) if (g.art === 'feuerball') bewegte.push({ x: g.bild.x, y: g.bild.y, radius: 56, farbe: 0xffa040 });
+    this.licht.zeichnen(this.tageszeitJetzt(), bewegte);
   }
 
   eigeneFigur(jetzt, dt) {

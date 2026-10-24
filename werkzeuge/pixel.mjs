@@ -96,17 +96,19 @@ export class Bild {
     });
   }
 
-  // Dunkler Rand um alles Gemalte — der eigentliche Pixel-Look. Nur
-  // waagerecht/senkrecht, sonst werden die Ecken klobig.
+  // Rand um alles Gemalte. Nur waagerecht/senkrecht, sonst werden die Ecken
+  // klobig. f = 'weich': kein Schwarz, sondern eine dunkle Fassung der Farbe
+  // daneben — so umranden Stardew und Necesse; ein schwarzer Rand wirkt
+  // nach Gameboy.
   umriss(f, schwelle = 128) {
     const neu = [];
     for (let y = 0; y < this.h; y++)
       for (let x = 0; x < this.b; x++) {
         if (this.hole(x, y)[3] >= schwelle) continue;
-        const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.hole(x + dx, y + dy)[3] >= schwelle);
-        if (n) neu.push([x, y]);
+        const nachbarn = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(([dx, dy]) => this.hole(x + dx, y + dy)).filter((p) => p[3] >= schwelle);
+        if (nachbarn.length) neu.push([x, y, f === 'weich' ? dunkel(nachbarn) : f]);
       }
-    for (const [x, y] of neu) this.setze(x, y, f);
+    for (const [x, y, c] of neu) this.setze(x, y, c);
   }
 
   einfuegen(quelle, x, y, spiegeln = false) {
@@ -138,6 +140,13 @@ export class Bild {
     mkdirSync(dirname(pfad), { recursive: true });
     writeFileSync(pfad, png(this.b, this.h, this.d));
   }
+}
+
+// Mittel der Nachbarn, stark abgedunkelt und leicht ins Violette gezogen:
+// Schatten sind in diesen Spielen nie grau, sondern kühl.
+function dunkel(nachbarn) {
+  const m = [0, 1, 2].map((k) => nachbarn.reduce((n, p) => n + p[k], 0) / nachbarn.length);
+  return [Math.round(m[0] * 0.38 + 14), Math.round(m[1] * 0.32 + 10), Math.round(m[2] * 0.42 + 24), 255];
 }
 
 const crcTafel = Array.from({ length: 256 }, (_, n) => {

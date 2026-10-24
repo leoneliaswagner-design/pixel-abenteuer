@@ -3,14 +3,18 @@
 // Maßstab: Link's Awakening hat 16er-Kacheln, wir 32er — doppelte Auflösung,
 // aber dieselben Proportionen (großer Kopf, kleiner Körper, dunkler Umriss).
 import { Bild, zufall } from './pixel.mjs';
+import { blatt as figurenBlatt } from './figuren.mjs';
 import { KACHELN, GROESSE as K, SPALTEN } from './kacheln.mjs';
 import { fileURLToPath } from 'node:url';
 
 const ziel = fileURLToPath(new URL('../inhalte/grafik/', import.meta.url));
 const UMRISS = '#2a1e2e';
+// Ränder in dunkler Eigenfarbe statt Schwarz (s. pixel.mjs umriss) — moderner,
+// eher Stardew Valley als Gameboy.
+const RAND = 'weich';
 
 const P = {
-  gras: '#68b04f', grasDunkel: '#4f9440', grasHell: '#84c868',
+  gras: '#68ad45', grasDunkel: '#518f36', grasHell: '#8cc65a',
   weg: '#d8bf87', wegDunkel: '#bfa36c', wegHell: '#e8d6a6',
   wasser: '#3f86d0', wasserHell: '#7ab8f0', wasserDunkel: '#2f6aae',
   holz: '#a8743f', holzDunkel: '#7a4f2a', holzHell: '#c99560',
@@ -22,23 +26,24 @@ const P = {
 
 // ---------- Kacheln ----------
 
+// Gras: viele kurze Halme in drei Tönen statt einer Fläche mit Tupfen. Die
+// Halme laufen über den Rand hinweg auf der anderen Seite weiter (modulo),
+// so sieht man das Kachelraster nicht — das verriet die alte Wiese sofort.
 function grasGrund(b, saat, buescheln = 8) {
   const z = zufall(saat);
+  const um = (x, y, f) => b.setze(((x % K) + K) % K, ((y % K) + K) % K, f);
   b.rechteck(0, 0, K, K, P.gras);
-  // Weiche Flecken in zwei Tönen, damit eine Wiese nicht wie Tapete wirkt.
-  // Nur innen (Abstand zum Rand), sonst sähe man an Kachelkanten Schnitte.
-  for (let i = 0; i < 3; i++) {
-    const x = 6 + z() * 20, y = 6 + z() * 20, r = 3 + z() * 3;
-    b.ellipse(x, y, r, r * 0.7, i % 2 ? '#72b858' : '#61a849');
+  // Große, weiche Flecken (kühler und wärmer), auch über den Rand.
+  for (let i = 0; i < 4; i++) {
+    const cx = z() * K, cy = z() * K, r = 4 + z() * 5, f = i % 2 ? '#72b44c' : '#62a340';
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if ((x * x) / (r * r) + (y * y) / (r * r * 0.5) <= 1) um(Math.round(cx + x), Math.round(cy + y), f);
   }
-  for (let i = 0; i < buescheln; i++) {
-    const x = Math.floor(z() * (K - 4)) + 1, y = Math.floor(z() * (K - 4)) + 2;
-    b.setze(x, y + 1, P.grasDunkel);
-    b.setze(x + 1, y, P.grasDunkel);
-    b.setze(x + 2, y + 1, P.grasDunkel);
-    if (z() < 0.5) b.setze(x + 1, y - 1, P.grasHell);
+  for (let i = 0; i < 26 + buescheln * 2; i++) {
+    const x = Math.floor(z() * K), y = Math.floor(z() * K), l = 1 + Math.floor(z() * 3);
+    const dunkel = z() < 0.6;
+    for (let k = 0; k < l; k++) um(x, y - k, dunkel ? P.grasDunkel : P.grasHell);
+    if (dunkel) um(x + 1, y, '#5c9a3e');
   }
-  for (let i = 0; i < 6; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), P.grasHell);
 }
 
 function blume(b, x, y, bluete) {
@@ -71,7 +76,7 @@ function stein(b) {
   s.ellipse(16, 21, 11, 7, P.steinDunkel, (x, y) => y > 21);
   s.ellipse(12, 14, 5, 3.5, P.steinHell);
   s.linie(18, 12, 21, 17, P.steinDunkel);
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -111,16 +116,20 @@ function mauer(b) {
   }
 }
 
+// Erdweg: warm, mit weichen Flecken und Kieseln, ohne harte Kanten.
 function weg(b) {
   const z = zufall(11);
+  const um = (x, y, f) => b.setze(((x % K) + K) % K, ((y % K) + K) % K, f);
   b.rechteck(0, 0, K, K, P.weg);
-  for (let i = 0; i < 14; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), P.wegDunkel);
-  for (let i = 0; i < 8; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), P.wegHell);
-  // Ein paar Kiesel mit Licht oben.
-  for (let i = 0; i < 4; i++) {
-    const x = 3 + Math.floor(z() * 26), y = 3 + Math.floor(z() * 26);
-    b.rechteck(x, y, 2, 2, '#a88e5e');
-    b.setze(x, y, P.wegHell);
+  for (let i = 0; i < 5; i++) {
+    const cx = z() * K, cy = z() * K, r = 3 + z() * 4, f = i % 2 ? P.wegDunkel : '#e2cc98';
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) if (x * x + y * y * 1.6 <= r * r) um(Math.round(cx + x), Math.round(cy + y), f);
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = Math.floor(z() * K), y = Math.floor(z() * K);
+    um(x, y, '#a88e5e');
+    um(x + 1, y, '#a88e5e');
+    um(x, y - 1, P.wegHell);
   }
 }
 
@@ -224,19 +233,36 @@ function tempelwand(b) {
 
 // ---------- Riftside ----------
 
+// Kopfsteinpflaster aus unregelmäßigen Steinen: jeder Bildpunkt gehört zum
+// nächsten von 16 verwackelten Mittelpunkten (Abstand über den Rand hinweg —
+// so passt die Kachel an ihre Nachbarn). Fugen, wo zwei Steine gleich nah
+// sind; Licht oben links, Schatten unten rechts in jedem Stein.
 function pflaster(b) {
-  // Kopfsteine in versetzten Reihen; jeder Stein oben heller, unten dunkler.
-  b.rechteck(0, 0, K, K, '#857766');
   const z = zufall(111);
-  for (let reihe = 0; reihe < 4; reihe++) {
-    const y = reihe * 8, v = reihe % 2 ? 4 : 0;
-    for (let x = -v; x < K; x += 8) {
-      const ton = ['#a89a86', '#b2a48e', '#9e907c'][Math.floor(z() * 3)];
-      b.rechteck(x + 1, y + 1, 6, 6, ton);
-      b.rechteck(x + 1, y + 1, 6, 1, '#c4b6a0');
-      b.rechteck(x + 1, y + 6, 6, 1, '#8e806e');
+  const punkte = [];
+  for (let gy = 0; gy < 4; gy++)
+    for (let gx = 0; gx < 4; gx++)
+      punkte.push({ x: gx * 8 + 2 + z() * 4 + (gy % 2) * 2, y: gy * 8 + 2 + z() * 4, ton: ['#b3a690', '#ab9e88', '#b8aa93', '#a69a85'][Math.floor(z() * 4)] });
+  const ab = (a, x, y) => {
+    let dx = Math.abs(a.x - x), dy = Math.abs(a.y - y);
+    dx = Math.min(dx, K - dx);
+    dy = Math.min(dy, K - dy);
+    return Math.hypot(dx, dy * 1.15);
+  };
+  for (let y = 0; y < K; y++)
+    for (let x = 0; x < K; x++) {
+      const d = punkte.map((p) => [ab(p, x + 0.5, y + 0.5), p]).sort((a, c) => a[0] - c[0]);
+      const [d1, p] = d[0], d2 = d[1][0];
+      if (d2 - d1 < 1.3) { b.setze(x, y, '#857a69'); continue; }
+      let f = p.ton;
+      // Wo im Stein: oben links Licht, unten rechts Schatten.
+      let rx = x + 0.5 - p.x, ry = y + 0.5 - p.y;
+      if (rx > K / 2) rx -= K; if (rx < -K / 2) rx += K;
+      if (ry > K / 2) ry -= K; if (ry < -K / 2) ry += K;
+      if (d2 - d1 < 2.4 && rx + ry > 0) f = '#988c78';
+      else if (d2 - d1 < 2.6 && rx + ry < -1) f = '#c6b9a2';
+      b.setze(x, y, f);
     }
-  }
 }
 
 function sand(b) {
@@ -317,7 +343,7 @@ function brunnen(b) {
   s.rechteck(15, 1, 2, 4, '#8ac0f0');
   s.setze(12, 9, '#8ac0f0');
   s.setze(19, 9, '#8ac0f0');
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -331,7 +357,7 @@ function kiste(b) {
   s.rechteck(5, 26, 22, 2, P.holzDunkel);
   s.linie(7, 10, 24, 25, P.holzDunkel);
   s.linie(7, 25, 24, 10, P.holzDunkel);
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -344,7 +370,7 @@ function fass(b) {
   s.ellipse(16, 8, 7, 1.5, P.holzDunkel);
   for (const y of [12, 23]) s.rechteck(6, y, 21, 2, '#5e5146');
   s.rechteck(9, 10, 2, 17, P.holzHell);
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -357,7 +383,7 @@ function laterne(b) {
   s.rechteck(13, 4, 7, 5, '#f4d24a');
   s.rechteck(14, 4, 2, 2, '#fff2b0');
   s.rechteck(10, 1, 13, 2, '#3a3440');
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -441,7 +467,7 @@ function moebel(b, art) {
       }
     }
   }
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
@@ -513,26 +539,76 @@ satz.speichern(ziel + 'kacheln.png');
     schaumEcke.setze(Math.round(Math.cos(r) * 6.5), Math.round(Math.sin(r) * 6.5), '#e0f4ff');
   }
 
+  // Grasrand über Weg und Pflaster: runde Büschel, darunter ein weicher
+  // Schatten auf dem Weg — das Gras liegt sichtbar höher. Der alte Rand war
+  // eine gerade Kante mit Zacken.
   const grasOben = new Bild(K, K);
-  grasOben.rechteck(0, 0, K, 2, P.gras);
-  for (let x = 0; x < K; x += 2) {
-    const l = [2, 4, 1, 3, 5, 2, 3, 1][(x / 2) % 8];
-    for (let y = 2; y < 2 + l; y++) grasOben.setze(x, y, P.gras);
-    grasOben.setze(x, 2 + l, P.grasDunkel);
-    if (l > 2) grasOben.setze(x + 1, 2 + l - 2, P.grasDunkel);
+  const hoehe = (x) => 3 + Math.round(2 * Math.sin(x * 0.39 + 1) + 1.2 * Math.sin(x * 0.93));
+  for (let x = 0; x < K; x++) {
+    const h = hoehe(x);
+    for (let y = h + 1; y < h + 4; y++) grasOben.setze(x, y, [40, 30, 20, 55 - (y - h) * 14]);
+    for (let y = 0; y <= h; y++) grasOben.setze(x, y, y === h ? P.grasDunkel : y === h - 1 && x % 3 === 0 ? P.grasHell : P.gras);
   }
   const grasEcke = new Bild(K, K);
-  grasEcke.ellipse(0, 0, 4, 4, P.gras);
-  for (const [x, y] of [[4, 1], [3, 3], [1, 4], [5, 3]]) grasEcke.setze(x, y, P.grasDunkel);
+  grasEcke.ellipse(0, 0, 6, 6, [40, 30, 20, 45]);
+  grasEcke.ellipse(0, 0, 5, 5, P.gras);
+  for (let w = 0; w <= 90; w += 10) {
+    const r = (w * Math.PI) / 180;
+    grasEcke.setze(Math.round(Math.cos(r) * 4.6), Math.round(Math.sin(r) * 4.6), P.grasDunkel);
+  }
 
-  const blatt = new Bild(8 * K, 2 * K);
+  const blatt = new Bild(8 * K, 3 * K);
   const reihe = (oben, ecke, zeile) => {
     [oben, oben.gedreht(2), oben.gedreht(3), oben.gedreht(1), ecke, ecke.gedreht(1), ecke.gedreht(3), ecke.gedreht(2)]
       .forEach((b, i) => blatt.einfuegen(b, i * K, zeile * K));
   };
   reihe(schaumOben, schaumEcke, 0);
   reihe(grasOben, grasEcke, 1);
+  // Zeile 2: Schatten unter einer Wand (Licht von oben links) — nur „oben"
+  // wird gebraucht; ohne ihn klebten die Häuser flach am Boden.
+  const schatten = new Bild(K, K);
+  for (let y = 0; y < 10; y++) schatten.rechteck(0, y, K, 1, [30, 20, 40, Math.round(90 * (1 - y / 10) ** 1.5)]);
+  blatt.einfuegen(schatten, 0, 2 * K);
   blatt.speichern(ziel + 'kanten.png');
+}
+
+// ---------- Deko (16×16, s. client/deko.js) ----------
+// Kleinkram, der auf Wiesen verstreut liegt: drei Grasbüschel, drei Blumen,
+// ein Kiesel, ein Pilz. Der Browser verteilt ihn nach Kachel — fest, nicht
+// zufällig, damit alle Spieler dieselbe Wiese sehen.
+{
+  const teile = [];
+  const neu = () => new Bild(16, 16);
+  for (const [n, breite] of [[5, 2], [7, 3], [4, 1]]) {
+    const b = neu();
+    for (let i = 0; i < n; i++) {
+      const x = 8 - Math.floor(n / 2) * breite / 2 + i * breite * 0.8, l = 3 + ((i * 7) % 4);
+      for (let k = 0; k < l; k++) b.setze(Math.round(x + (i - n / 2) * 0.25 * k / l), 14 - k, k > l - 2 ? P.grasHell : i % 2 ? P.grasDunkel : '#5f9e3e');
+    }
+    teile.push(b);
+  }
+  for (const bluete of ['#ffffff', '#f4d24a', '#f78fb3']) {
+    const b = neu();
+    b.rechteck(8, 10, 1, 5, P.grasDunkel);
+    b.setze(7, 12, P.grasDunkel);
+    b.setze(8, 8, bluete); b.setze(7, 9, bluete); b.setze(9, 9, bluete); b.setze(8, 10, bluete);
+    b.setze(8, 9, bluete === '#f4d24a' ? '#e07a2a' : '#f4d24a');
+    teile.push(b);
+  }
+  const kiesel = neu();
+  kiesel.ellipse(8, 13, 3, 2, '#a8a8b4');
+  kiesel.setze(7, 12, '#d0d0dc');
+  kiesel.umriss(RAND);
+  teile.push(kiesel);
+  const pilz = neu();
+  pilz.rechteck(7, 11, 2, 4, '#efe4d0');
+  pilz.ellipse(8, 10, 3.5, 2.5, '#c84040', (x, y) => y <= 10);
+  pilz.setze(7, 9, '#ffffff');
+  pilz.umriss(RAND);
+  teile.push(pilz);
+  const blatt = new Bild(16 * teile.length, 16);
+  teile.forEach((t, i) => blatt.einfuegen(t, i * 16, 0));
+  blatt.speichern(ziel + 'deko.png');
 }
 
 // ---------- Baum (64×80, steht mit dem Stamm auf seiner Kachel) ----------
@@ -544,7 +620,7 @@ satz.speichern(ziel + 'kacheln.png');
   s.rechteck(34, 54, 4, 22, P.holzDunkel);
   s.rechteck(28, 58, 2, 10, P.holzHell);
   s.rechteck(23, 72, 18, 4, P.holz);
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
   const k = new Bild(64, 80);
   for (const [x, y, r] of [[32, 18, 16], [17, 30, 14], [47, 30, 14], [24, 44, 14], [40, 44, 14], [32, 32, 18]])
@@ -565,339 +641,41 @@ satz.speichern(ziel + 'kacheln.png');
   b.speichern(ziel + 'baum.png');
 }
 
-// ---------- Held: 4 Zeilen (unten, oben, links, rechts) × 4 Bilder ----------
-// Bilder: 0 stehen, 1 und 2 Schritte, 3 Hieb.
+// ---------- Spielfiguren und Leute (32×48, s. figuren.mjs) ----------
+// Die Tunika hat die Spielerfarbe, die Klasse bestimmt, was man am Kopf und
+// am Körper trägt — zwei Kämpfer unterscheidet man so an der Farbe.
 const TUNIKEN = {
   gruen: ['#3fae4a', '#6fd16a', '#2b7d35'],
   rot: ['#d04848', '#ef7a6a', '#932f36'],
   blau: ['#3f74d6', '#6fa0f0', '#2b4f9a'],
   lila: ['#9a52c8', '#c07fe6', '#6a3790'],
 };
-
-function beine(b, links, rechts) {
-  for (const [x, y] of [links, rechts]) {
-    b.rechteck(x, y, 4, 4, P.stiefel);
-    b.rechteck(x, y, 4, 1, P.stiefelHell);
-  }
-}
-
-// kapuze: eigene Farben für die Kapuze (Schurke dunkel, Kleriker weiß);
-// sonst hat sie die Farbe der Tunika.
-function held(t, richtung, bild, kapuze = t, umriss = true) {
-  const [tu, hell, dunkel] = t;
-  const [ku, khell, kdunkel] = kapuze;
-  const b = new Bild(32, 32);
-  const schritt = bild === 1 ? -1 : bild === 2 ? 1 : 0;
-
-  if (richtung === 'links') {
-    if (bild === 1) beine(b, [10, 26], [18, 25]);
-    else if (bild === 2) beine(b, [12, 25], [16, 26]);
-    else beine(b, [12, 26], [16, 26]);
-    b.rechteck(11, 18, 10, 6, tu);
-    b.rechteck(10, 23, 12, 4, tu);
-    b.rechteck(19, 18, 2, 9, dunkel);
-    b.rechteck(10, 26, 12, 1, dunkel);
-    b.rechteck(11, 22, 10, 1, P.guertel);
-    if (bild === 3) {
-      b.rechteck(7, 20, 7, 3, tu);
-      b.rechteck(4, 20, 3, 3, P.haut);
-    } else {
-      const a = schritt * 2;
-      b.rechteck(14 + a, 19, 3, 5, hell);
-      b.rechteck(14 + a, 24, 3, 2, P.haut);
-    }
-    b.ellipse(15, 11.5, 8, 7.5, P.haut);
-    b.ellipse(16, 10.5, 9, 8, ku, (x, y) => y <= 8 || x >= 18);
-    b.ellipse(13, 6, 3, 2, khell);
-    b.rechteck(24, 6, 3, 3, ku);
-    b.rechteck(26, 8, 3, 3, ku);
-    b.rechteck(28, 10, 2, 2, kdunkel);
-    for (let x = 8; x <= 17; x++) {
-      b.setze(x, 9, P.haare);
-      if (x % 2 === 0) b.setze(x, 10, P.haare);
-    }
-    b.rechteck(10, 12, 2, 3, P.auge);
-    b.setze(10, 12, '#ffffff');
-    b.setze(6, 14, P.haut);
-    b.rechteck(17, 13, 1, 2, P.hautDunkel);
-  } else {
-    const hinten = richtung === 'oben';
-    beine(b, [11, 26 + (schritt === -1 ? -1 : 0)], [17, 26 + (schritt === 1 ? -1 : 0)]);
-    b.rechteck(10, 18, 12, 6, tu);
-    b.rechteck(9, 23, 14, 4, tu);
-    b.rechteck(20, 18, 2, 9, dunkel);
-    b.rechteck(9, 26, 14, 1, dunkel);
-    b.rechteck(10, 18, 1, 5, hell);
-    b.rechteck(10, 22, 12, 1, P.guertel);
-    if (!hinten) b.rechteck(15, 22, 2, 1, P.gold);
-    const aL = -schritt, aR = schritt;
-    b.rechteck(7, 19 + aL, 3, 5, tu);
-    b.rechteck(7, 24 + aL, 3, 2, P.haut);
-    if (bild === 3 && !hinten) {
-      b.rechteck(20, 21, 3, 6, tu);
-      b.rechteck(20, 27, 3, 2, P.haut);
-    } else if (bild === 3) {
-      b.rechteck(22, 15, 3, 6, tu);
-      b.rechteck(22, 13, 3, 2, P.haut);
-    } else {
-      b.rechteck(22, 19 + aR, 3, 5, tu);
-      b.rechteck(22, 24 + aR, 3, 2, P.haut);
-    }
-    if (hinten) {
-      // Von hinten deckt die Kapuze den ganzen Kopf; nur unten an den
-      // Seiten schaut Haar heraus. Mehr Haar sah aus wie eine Maske.
-      b.ellipse(16, 11.5, 8.5, 7.5, ku);
-      for (const x of [9, 10, 11, 20, 21, 22]) b.rechteck(x, 14 + (x % 2), 1, 3 - (x % 2), P.haare);
-      b.rechteck(14, 13, 4, 5, kdunkel);
-      b.rechteck(15, 13, 2, 4, ku);
-      b.rechteck(15, 18, 2, 1, kdunkel);
-      b.ellipse(12, 6, 3, 2, khell);
-    } else {
-      b.ellipse(16, 11.5, 8.5, 7.5, P.haut);
-      b.ellipse(16, 9, 9.5, 6.5, ku, (x, y) => y <= 8);
-      b.ellipse(12, 5, 3, 2, khell);
-      for (let x = 9; x <= 23; x++) {
-        b.setze(x, 9, P.haare);
-        if (x % 2) b.setze(x, 10, P.haare);
-      }
-      b.rechteck(12, 12, 2, 3, P.auge);
-      b.rechteck(18, 12, 2, 3, P.auge);
-      b.setze(12, 12, '#ffffff');
-      b.setze(18, 12, '#ffffff');
-      b.setze(11, 16, '#f0a08a');
-      b.setze(20, 16, '#f0a08a');
-    }
-    b.rechteck(24, 6, 3, 3, ku);
-    b.rechteck(26, 8, 2, 3, ku);
-    b.rechteck(27, 10, 2, 2, kdunkel);
-  }
-  if (umriss) b.umriss(UMRISS);
-  return b;
-}
-
-for (const [name, t] of Object.entries(TUNIKEN)) {
-  const blatt = new Bild(128, 128);
-  ['unten', 'oben', 'links'].forEach((r, zeile) => {
-    for (let bild = 0; bild < 4; bild++) blatt.einfuegen(held(t, r, bild), bild * 32, zeile * 32);
-  });
-  for (let bild = 0; bild < 4; bild++) blatt.einfuegen(held(t, 'links', bild), bild * 32, 96, true);
-  blatt.speichern(ziel + `held-${name}.png`);
-}
-
-// ---------- Figuren (Leute in der Welt) ----------
-// Körper vom Helden, Kopf eigen: der Held hat die Kapuze, die anderen nicht —
-// so verwechselt man einen Dorfbewohner nicht mit einem Mitspieler.
-function kopfAlterMann(richtung) {
-  const k = new Bild(32, 32);
-  const grau = '#c8c8d4', grauDunkel = '#9a9aa8', bart = '#ececf2';
-  if (richtung === 'oben') {
-    k.ellipse(16, 11.5, 8.5, 7.5, grau);
-    k.ellipse(16, 14, 7, 4, grauDunkel, (x, y) => y > 14);
-    k.ellipse(13, 7, 3, 2, '#e0e0e8');
-  } else if (richtung === 'links') {
-    k.ellipse(15, 11.5, 8, 7.5, P.haut);
-    k.ellipse(17, 10, 7, 6.5, grau, (x, y) => y <= 6 || x >= 18);
-    k.rechteck(9, 9, 4, 1, grau);
-    k.rechteck(10, 11, 2, 2, P.auge);
-    k.setze(6, 13, P.haut);
-    k.ellipse(11, 17, 5, 4.5, bart);
-    k.rechteck(10, 20, 3, 3, bart);
-  } else {
-    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
-    k.ellipse(16, 8, 9, 5, grau, (x, y) => y <= 6 || x <= 9 || x >= 23);
-    k.ellipse(16, 4.5, 4, 2, P.haut);
-    k.rechteck(11, 9, 4, 1, grau);
-    k.rechteck(17, 9, 4, 1, grau);
-    k.rechteck(12, 11, 2, 2, P.auge);
-    k.rechteck(18, 11, 2, 2, P.auge);
-    k.ellipse(16, 17, 6.5, 4.5, bart);
-    k.rechteck(13, 20, 6, 3, bart);
-    k.rechteck(15, 23, 2, 1, bart);
-    k.rechteck(14, 15, 4, 1, '#c8a090');
-  }
-  k.umriss(UMRISS);
-  return k;
-}
-
-// Ein Kopf für die Leute in Riftside: Haare (kurz oder lang), Schnurrbart,
-// oder ein Helm. Bewusst ohne Kapuze — die tragen nur die Spieler.
-function kopfMensch(richtung, { haar, lang = false, schnurr = false, helm = null }) {
-  const k = new Bild(32, 32);
-  const dunkel = helm ? '#5a5a6a' : haar;
-  if (richtung === 'oben') {
-    if (lang) k.rechteck(9, 12, 14, 8, haar);
-    k.ellipse(16, 11.5, 8.5, 7.5, helm ?? haar);
-    if (helm) k.rechteck(7, 11, 18, 2, dunkel);
-  } else if (richtung === 'links') {
-    if (lang) k.rechteck(17, 10, 7, 10, haar);
-    k.ellipse(15, 11.5, 8, 7.5, P.haut);
-    k.ellipse(16, 9.5, 8.5, 7, helm ?? haar, (x, y) => y <= (helm ? 9 : 6) || (!helm && x >= 18 && y <= 14));
-    if (helm) k.rechteck(7, 9, 18, 2, dunkel);
-    k.rechteck(10, 12, 2, 2, P.auge);
-    k.setze(6, 14, P.haut);
-    if (schnurr) k.rechteck(7, 15, 4, 1, haar);
-  } else {
-    if (lang) {
-      k.rechteck(7, 10, 3, 10, haar);
-      k.rechteck(22, 10, 3, 10, haar);
-    }
-    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
-    k.ellipse(16, 9, 9.5, 6, helm ?? haar, (x, y) => y <= (helm ? 9 : 7) || (!helm && (x <= 8 || x >= 24) && y <= 12));
-    if (helm) {
-      k.rechteck(7, 9, 18, 2, dunkel);
-      k.rechteck(15, 9, 2, 5, dunkel);
-    }
-    k.rechteck(12, 12, 2, 2, P.auge);
-    k.rechteck(18, 12, 2, 2, P.auge);
-    if (schnurr) k.rechteck(12, 15, 8, 2, haar);
-    else {
-      k.setze(11, 15, '#f0a08a');
-      k.setze(20, 15, '#f0a08a');
-    }
-  }
-  k.umriss(UMRISS);
-  return k;
-}
-
-const LEUTE = {
-  alter_mann: { tunika: ['#6a6a9a', '#8c8cc0', '#4a4a72'], kopf: kopfAlterMann },
-  buergermeister: { tunika: ['#8a2a3a', '#b04a5a', '#5a1a26'], kopf: (r) => kopfMensch(r, { haar: '#5a3a22', schnurr: true }) },
-  hafenmeisterin: { tunika: ['#2a4a7a', '#4a6a9a', '#1a2a4a'], kopf: (r) => kopfMensch(r, { haar: '#a0402a', lang: true }) },
-  wache: { tunika: ['#6a6a7a', '#8a8a9a', '#4a4a5a'], kopf: (r) => kopfMensch(r, { haar: '#3a2a1a', helm: '#a8a8b8' }) },
-  kind: { tunika: ['#d0a030', '#e8c050', '#9a7020'], kopf: (r) => kopfMensch(r, { haar: '#e8c15a' }) },
-  schreiber: { tunika: ['#4a6a3a', '#6a8a5a', '#2e4a24'], kopf: (r) => kopfMensch(r, { haar: '#9a9aa8', schnurr: true }) },
-  mutter: { tunika: ['#7a4a8a', '#9a6aaa', '#4e2e5a'], kopf: (r) => kopfMensch(r, { haar: '#6a4020', lang: true }) },
-  kraemerin: { tunika: ['#b07a3a', '#d09a5a', '#7a5220'], kopf: (r) => kopfMensch(r, { haar: '#2a2a3a', lang: true }) },
-};
-for (const [name, l] of Object.entries(LEUTE)) {
-  const blatt = new Bild(128, 128);
-  const zeichnen = (r, bild) => {
-    const b = held(l.tunika, r, bild);
-    b.loeschen(0, 0, 32, 17);
-    b.einfuegen(l.kopf(r), 0, 0);
-    return b;
-  };
-  ['unten', 'oben', 'links'].forEach((r, zeile) => {
-    for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen(r, bild), bild * 32, zeile * 32);
-  });
-  for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen('links', bild), bild * 32, 96, true);
-  blatt.speichern(ziel + `figur-${name}.png`);
-}
-
-// ---------- Klassen ----------
-// Jede Klasse trägt etwas Eigenes am Kopf (und am Körper), die Tunika
-// behält die Spielerfarbe: zwei Kämpfer sind so noch zu unterscheiden.
-// Klassen ohne eigenes Bild (Homebrew) bekommen im Spiel held-<farbe>.
-function kopfHut(richtung, [tu, hell, dunkel]) {
-  const k = new Bild(32, 32);
-  if (richtung === 'oben') {
-    k.ellipse(16, 11.5, 8.5, 7.5, P.haare);
-  } else if (richtung === 'links') {
-    k.ellipse(15, 11.5, 8, 7.5, P.haut);
-    k.rechteck(16, 9, 7, 9, P.haare);
-    k.rechteck(10, 12, 2, 2, P.auge);
-    k.setze(6, 14, P.haut);
-  } else {
-    k.ellipse(16, 11.5, 8.5, 7.5, P.haut);
-    k.rechteck(8, 9, 2, 8, P.haare);
-    k.rechteck(22, 9, 2, 8, P.haare);
-    k.rechteck(12, 12, 2, 2, P.auge);
-    k.rechteck(18, 12, 2, 2, P.auge);
-    // Bart, wie es sich für einen Magier gehört
-    k.ellipse(16, 17, 4.5, 2.5, '#d8d8e0');
-  }
-  // Breite Krempe, darüber der spitze Hut mit geknickter Spitze.
-  k.ellipse(16, 9, 12, 2.5, dunkel);
-  for (let y = 0; y < 8; y++) {
-    const halb = 6 - y * 0.7;
-    k.rechteck(Math.round(15 - halb + y * 0.4), 8 - y, Math.round(halb * 2), 1, y < 2 ? tu : y < 5 ? tu : hell);
-  }
-  k.rechteck(19, 0, 4, 2, hell);
-  k.rechteck(12, 7, 8, 1, P.gold);
-  k.umriss(UMRISS);
-  return k;
-}
+// Ohne Klasse (Homebrew ohne Bild): Kapuze in der Spielerfarbe.
+for (const [name, t] of Object.entries(TUNIKEN)) figurenBlatt({ tunika: t, haar: P.haare, kopf: { art: 'kapuze', farben: t } }).speichern(ziel + `held-${name}.png`);
 
 const KLASSEN = {
-  kaempfer: {
-    kopf: (r, t) => {
-      // Helmbusch in der Spielerfarbe, hinter dem Helm
-      const k = new Bild(32, 32);
-      if (r === 'links') k.rechteck(15, 1, 7, 3, t[0]);
-      else k.rechteck(14, 0, 4, 4, t[0]);
-      k.umriss(UMRISS);
-      k.einfuegen(kopfMensch(r, { haar: '#5a3a22', helm: '#b8b8c8' }), 0, 0);
-      return k;
-    },
-    koerper: (b, r) => {
-      // Schulterstücke aus Stahl
-      if (r === 'links') b.rechteck(13, 18, 6, 2, '#b8b8c8');
-      else {
-        b.rechteck(8, 18, 4, 2, '#b8b8c8');
-        b.rechteck(20, 18, 4, 2, '#b8b8c8');
-      }
-    },
-  },
-  schurke: {
-    kapuze: ['#3a3446', '#55506a', '#24202e'],
-    koerper: (b, r) => {
-      // Tuch vor dem Mund
-      if (r === 'unten') b.rechteck(10, 15, 12, 3, '#24202e');
-      if (r === 'links') b.rechteck(6, 14, 7, 3, '#24202e');
-    },
-  },
-  magier: {
-    kopf: (r, t) => kopfHut(r, t),
-    koerper: (b, r, t) => {
-      // Langes Gewand bis über die Stiefel
-      b.rechteck(9, 26, 14, 2, t[0]);
-      b.rechteck(9, 28, 14, 1, t[2]);
-    },
-  },
-  kleriker: {
-    kapuze: ['#ece6d6', '#ffffff', '#b8ae98'],
-    koerper: (b, r) => {
-      if (r === 'unten') {
-        b.rechteck(15, 18, 2, 4, P.gold);
-        b.rechteck(13, 19, 6, 1, P.gold);
-      }
-    },
-  },
-  waldlaeufer: {
-    kapuze: ['#4a6a2a', '#6a8a3a', '#2e4618'],
-    koerper: (b, r) => {
-      const leder = '#7a4a2a';
-      if (r === 'oben') {
-        // Köcher auf dem Rücken, Federn schauen oben heraus
-        b.rechteck(18, 13, 3, 11, leder);
-        b.rechteck(18, 11, 1, 2, '#f4ecd8');
-        b.rechteck(20, 11, 1, 2, '#f4ecd8');
-      } else if (r === 'links') {
-        b.rechteck(20, 14, 3, 10, leder);
-        b.rechteck(21, 12, 1, 2, '#f4ecd8');
-      } else for (let i = 0; i < 6; i++) b.rechteck(11 + i * 2, 18 + i, 2, 1, leder);
-    },
-  },
+  kaempfer: (t) => ({ tunika: t, haar: '#5a3a22', kopf: { art: 'helm', farbe: '#b8b8c8', dunkel: '#6a6a7a', busch: t[0] }, schultern: '#b8b8c8' }),
+  schurke: (t) => ({ tunika: t, haar: '#3a2a1a', kopf: { art: 'kapuze', farben: ['#3a3446', '#55506a', '#24202e'] }, schal: '#24202e' }),
+  magier: (t) => ({ tunika: t, haar: '#d8d8e0', bart: 'voll', kopf: { art: 'hut', farben: t }, robe: true }),
+  kleriker: (t) => ({ tunika: t, haar: P.haare, kopf: { art: 'kapuze', farben: ['#ece6d6', '#ffffff', '#b8ae98'] }, symbol: P.gold }),
+  waldlaeufer: (t) => ({ tunika: t, haar: '#a0602a', kopf: { art: 'kapuze', farben: ['#4a6a2a', '#6a8a3a', '#2e4618'] }, koecher: true }),
 };
+for (const [klasse, aussehen] of Object.entries(KLASSEN))
+  for (const [farbe, t] of Object.entries(TUNIKEN)) figurenBlatt(aussehen(t)).speichern(ziel + `held-${klasse}-${farbe}.png`);
 
-for (const [klasse, k] of Object.entries(KLASSEN))
-  for (const [farbe, t] of Object.entries(TUNIKEN)) {
-    const zeichnen = (r, bild) => {
-      // Umriss erst nach der Ausrüstung, sonst läge er unter dem Köcher.
-      const b = held(t, r, bild, k.kapuze, false);
-      k.koerper?.(b, r, t);
-      if (k.kopf) b.loeschen(0, 0, 32, 17);
-      b.umriss(UMRISS);
-      if (k.kopf) b.einfuegen(k.kopf(r, t), 0, 0);
-      return b;
-    };
-    const blatt = new Bild(128, 128);
-    ['unten', 'oben', 'links'].forEach((r, zeile) => {
-      for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen(r, bild), bild * 32, zeile * 32);
-    });
-    for (let bild = 0; bild < 4; bild++) blatt.einfuegen(zeichnen('links', bild), bild * 32, 96, true);
-    blatt.speichern(ziel + `held-${klasse}-${farbe}.png`);
-  }
+// Leute in der Welt: ohne Kapuze — die tragen nur Spieler, so verwechselt
+// man einen Bewohner nicht mit einem Mitspieler.
+const LEUTE = {
+  alter_mann: { tunika: ['#6a6a9a', '#8c8cc0', '#4a4a72'], haar: '#e0e0e8', frisur: 'glatze', bart: 'voll' },
+  buergermeister: { tunika: ['#8a2a3a', '#b04a5a', '#5a1a26'], haar: '#5a3a22', bart: 'schnurr' },
+  hafenmeisterin: { tunika: ['#2a4a7a', '#4a6a9a', '#1a2a4a'], haar: '#a0402a', frisur: 'lang' },
+  wache: { tunika: ['#6a6a7a', '#8a8a9a', '#4a4a5a'], haar: '#3a2a1a', kopf: { art: 'helm', farbe: '#a8a8b8', dunkel: '#5a5a6a' } },
+  kind: { tunika: ['#d0a030', '#e8c050', '#9a7020'], haar: '#e8c15a' },
+  schreiber: { tunika: ['#4a6a3a', '#6a8a5a', '#2e4a24'], haar: '#9a9aa8', bart: 'schnurr' },
+  mutter: { tunika: ['#7a4a8a', '#9a6aaa', '#4e2e5a'], haar: '#6a4020', frisur: 'lang' },
+  kraemerin: { tunika: ['#b07a3a', '#d09a5a', '#7a5220'], haar: '#2a2a3a', frisur: 'lang', schuerze: '#e8dcc0' },
+};
+for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + `figur-${name}.png`);
 
 // ---------- Geschosse und Funken ----------
 // Alle zeigen nach rechts; der Browser dreht sie in die Flugrichtung.
@@ -910,7 +688,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   dolch.rechteck(6, 7, 7, 2, '#d8d8e4');
   dolch.rechteck(6, 7, 7, 1, '#ffffff');
   dolch.setze(13, 7, '#d8d8e4');
-  dolch.umriss(UMRISS);
+  dolch.umriss(RAND);
   blatt.einfuegen(dolch, 0, 0);
   const pfeil = new Bild(16, 16);
   pfeil.rechteck(1, 7, 11, 1, P.holz);
@@ -918,7 +696,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   pfeil.rechteck(1, 8, 3, 1, '#f4ecd8');
   pfeil.rechteck(12, 6, 2, 3, '#b8b8c8');
   pfeil.setze(14, 7, '#b8b8c8');
-  pfeil.umriss(UMRISS);
+  pfeil.umriss(RAND);
   blatt.einfuegen(pfeil, 16, 0);
   for (const [n, flamme] of [[2, 0], [3, 1]]) {
     const f = new Bild(16, 16);
@@ -1005,7 +783,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   symbol.push(b);
   const blatt = new Bild(16 * symbol.length, 16);
   symbol.forEach((sy, i) => {
-    sy.umriss(UMRISS);
+    sy.umriss(RAND);
     blatt.einfuegen(sy, i * 16, 0);
   });
   blatt.speichern(ziel + 'gegenstaende.png');
@@ -1023,7 +801,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   for (const y of [9, 13]) s.linie(7, y, 24, y, P.holzDunkel);
   s.setze(6, 7, P.holzDunkel);
   s.setze(25, 7, P.holzDunkel);
-  s.umriss(UMRISS);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
   b.speichern(ziel + 'schild.png');
 
@@ -1046,7 +824,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
       k.setze(16, 15, UMRISS);
     }
     for (const x of [7, 23]) k.rechteck(x, offen ? 14 : 8, 2, offen ? 14 : 20, P.gold);
-    k.umriss(UMRISS);
+    k.umriss(RAND);
     t.einfuegen(k, 0, 0);
     truhen.einfuegen(t, i * 32, 0);
   });
@@ -1111,7 +889,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   gold.ellipse(6, 6, 4.5, 4.5, P.gold);
   gold.ellipse(5, 5, 2, 2, '#f8e08a');
   gold.rechteck(6, 4, 1, 4, '#b08a2a');
-  gold.umriss(UMRISS);
+  gold.umriss(RAND);
   const schl = new Bild(12, 12);
   schl.ellipse(4, 4, 2.6, 2.6, P.gold);
   schl.setze(4, 4, UMRISS);
@@ -1119,10 +897,10 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   schl.linie(6, 5, 10, 9, P.gold);
   schl.setze(8, 10, P.gold);
   schl.setze(9, 11, P.gold);
-  schl.umriss(UMRISS);
+  schl.umriss(RAND);
   const stein = new Bild(12, 12);
   stein.muster(2, 1, ['   pp   ', '  pttp  ', ' pttttp ', 'pttwtttp', ' pttttp ', '  pttp  ', '   pp   '], { p: '#8a4ad0', t: '#5ad8e0', w: '#c8fff4' });
-  stein.umriss(UMRISS);
+  stein.umriss(RAND);
   [gold, schl, stein].forEach((b, i) => blatt.einfuegen(b, i * 12, 0));
   blatt.speichern(ziel + 'symbole.png');
 }
@@ -1136,7 +914,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   b.rechteck(1, 21, 10, 2, P.gold);
   b.rechteck(5, 23, 2, 5, P.guertel);
   b.rechteck(4, 28, 4, 2, P.gold);
-  b.umriss(UMRISS);
+  b.umriss(RAND);
   b.speichern(ziel + 'schwert.png');
 }
 
@@ -1153,7 +931,7 @@ for (const [klasse, k] of Object.entries(KLASSEN))
     s.rechteck(cx + 3, cy - 1, 2, 4, UMRISS);
     s.setze(cx - 4, cy - 1, '#ffffff');
     s.setze(cx + 3, cy - 1, '#ffffff');
-    s.umriss(UMRISS);
+    s.umriss(RAND);
     blatt.einfuegen(s, i * 32, 0);
   });
   blatt.speichern(ziel + 'schleim.png');
@@ -1167,7 +945,7 @@ function monsterBlatt(name, bilder) {
   bilder.forEach((zeichnen, i) => {
     const b = new Bild(32, 32);
     zeichnen(b);
-    b.umriss(UMRISS);
+    b.umriss(RAND);
     blatt.einfuegen(b, i * 32, 0);
   });
   blatt.speichern(ziel + `${name}.png`);
@@ -1295,7 +1073,7 @@ function monsterBlatt(name, bilder) {
     const leer = '#5a3a4a';
     s.muster(3, 4, form, { r: art === 'leer' ? leer : '#e8384f', w: art === 'leer' ? leer : '#ffb0b8' });
     if (art === 'halb') for (let y = 0; y < 16; y++) for (let x = 8; x < 16; x++) if (s.hole(x, y)[3]) s.setze(x, y, leer);
-    s.umriss(UMRISS);
+    s.umriss(RAND);
     blatt.einfuegen(s, i * 16, 0);
   });
   blatt.speichern(ziel + 'herz.png');

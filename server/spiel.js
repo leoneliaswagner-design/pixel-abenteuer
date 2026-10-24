@@ -32,6 +32,11 @@ export class Spiel {
         if (!this.gebiete.get(u.eig.ziel)?.ankuenfte.has(u.eig.ankunft))
           throw new Error(`Übergang in „${g.name}" führt ins Leere: ${u.eig.ziel} / ${u.eig.ankunft}`);
     this.zuletztGespeichert = jetzt();
+    // Tageszeit 0…1 (0 Mitternacht, 0,5 Mittag): für alle gleich, der
+    // Browser malt danach Tag und Nacht. TAGESZEIT=0.8 beim Start für
+    // Prüfstände und Bilder vom Abend. (globalThis.process: dieselbe Datei
+    // läuft im Alleinspiel im Browser, und dort gibt es kein process.)
+    this.tagBeginn = jetzt() - (Number(globalThis.process?.env?.TAGESZEIT ?? this.w.tag?.beginn ?? 0.3) * (this.w.tag?.dauer ?? 1440000));
     // Klassen und Spezies (inhalte/daten/klassen.json, spezies.json) — vom
     // Aufrufer an die Werte gehängt, damit Homebrew nur eine Datei ist.
     this.klassen = werte.klassen ?? {};
@@ -146,8 +151,12 @@ export class Spiel {
     return {
       gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar, ausruestung: s.ausruestung,
       geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), tueren: [...g.welt.geoeffnet],
-      blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(),
+      blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(), zeit: this.tageszeit(),
     };
+  }
+
+  tageszeit(jetzt = this.jetzt()) {
+    return (((jetzt - this.tagBeginn) / (this.w.tag?.dauer ?? 1440000)) % 1 + 1) % 1;
   }
 
   // ---------- Weltzustände und Gruppen-Inventar ----------

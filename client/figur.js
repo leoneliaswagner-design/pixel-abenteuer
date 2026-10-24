@@ -11,10 +11,10 @@ export const ZEILE = { unten: 0, oben: 1, links: 2, rechts: 3 };
 // Wo die Hand sitzt (vom Fußpunkt aus) und wohin das Schwert in der Mitte
 // des Hiebs zeigt (Grad, 0 = nach oben, im Uhrzeigersinn).
 const SCHWERT = {
-  unten: { dx: 5, dy: -6, winkel: 180 },
-  oben: { dx: 7, dy: -18, winkel: 0 },
-  links: { dx: -8, dy: -10, winkel: 270 },
-  rechts: { dx: 8, dy: -10, winkel: 90 },
+  unten: { dx: 6, dy: -12, winkel: 180 },
+  oben: { dx: 8, dy: -26, winkel: 0 },
+  links: { dx: -9, dy: -20, winkel: 270 },
+  rechts: { dx: 9, dy: -20, winkel: 90 },
 };
 
 // Animationen gehören dem ganzen Spiel, nicht der Szene — nach einem
@@ -101,7 +101,7 @@ export class Figur {
       }
     }
     if (!this.tot) this.koerper.setAlpha(this.unverwundbar && Math.floor(jetzt / 70) % 2 ? 0.25 : 1);
-    this.schild?.setPosition(Math.round(x), Math.round(y - 32));
+    this.schild?.setPosition(Math.round(x), Math.round(y - 48));
   }
 
   zerstoeren() {

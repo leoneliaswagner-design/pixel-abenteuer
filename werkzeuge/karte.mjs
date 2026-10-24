@@ -13,7 +13,8 @@
 //                  „ankunft" (Eigenschaft „id", optional „richtung") und
 //                  Rechtecke „uebergang" (Eigenschaften „ziel" = Gebiet,
 //                  „ankunft" = id der Ankunft dort)
-// Die Karte selbst hat die Eigenschaft „titel" (für Meldungen).
+// Die Karte selbst hat die Eigenschaft „titel" (für Meldungen) und „licht":
+// ohne = draußen (Tag und Nacht), „innen" = immer hell, „dunkel" = Höhle.
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { KACHELN, GROESSE, SPALTEN, nummer } from './kacheln.mjs';
@@ -99,6 +100,7 @@ TssssssssssssssssssssssssssssssssssssssssssT
   // Rand „J", Wand „I" oben, Dielen „d", Ausgang „u" unten in der Wand.
   rathaus: {
     titel: 'das Rathaus',
+    licht: 'innen',
     grund: 'dielen',
     uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_rathaus', kachel: 'fussmatte' } },
     ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
@@ -125,6 +127,7 @@ JJJJJJJuJJJJJJJJ
   },
   hafenmeisterei: {
     titel: 'die Hafenmeisterei',
+    licht: 'innen',
     grund: 'dielen',
     uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_hafenmeisterei', kachel: 'fussmatte' } },
     ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
@@ -146,6 +149,7 @@ JJJJJJuJJJJJ
   },
   haus_pip: {
     titel: 'Pips Haus',
+    licht: 'innen',
     grund: 'dielen',
     uebergaenge: { u: { ziel: 'riftside', ankunft: 'aus_haus_pip', kachel: 'fussmatte' } },
     ankuenfte: { a: { id: 'eingang', richtung: 'oben' } },
@@ -201,7 +205,7 @@ T.....b..T........~~~~...T....""""".,..T
 T..*..............~~~~........"""""....T
 T.........,...b..~~~~~...,.....g...o...T
 T.T....*.........~~~~......*...........Q
-T....b......o....~~~~..........b....Tz.Q
+T....b....o......~~~~..........b....Tz.Q
 T.....!..,..@....~~~~...o..............Q
 T..T....S........~~~~....,........*....T
 T...=============HHHH=============.....T
@@ -224,6 +228,7 @@ TTTTTTTTPTTTTTTTTTTTTTTT~~~~TTTTTTTTTTTT
   },
   hoehle: {
     titel: 'die Höhle',
+    licht: 'dunkel',
     grund: 'hoehlenboden',
     uebergaenge: {
       A: { ziel: 'wald', ankunft: 'von_hoehle' },
@@ -285,6 +290,7 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
   },
   tempel: {
     titel: 'den Dschungeltempel',
+    licht: 'dunkel',
     grund: 'tempelboden',
     uebergaenge: { R: { ziel: 'riftside', ankunft: 'aus_tempel', art: 'riss' } },
     ankuenfte: { a: { id: 'von_riftside', richtung: 'oben' } },
@@ -402,7 +408,7 @@ function karteBauen(name, def) {
     type: 'map', version: '1.10', tiledversion: '1.11.0', orientation: 'orthogonal', renderorder: 'right-down',
     width: breite, height: hoehe, tilewidth: GROESSE, tileheight: GROESSE, infinite: false,
     nextlayerid: 4, nextobjectid: id,
-    properties: [eigenschaft('titel', def.titel)],
+    properties: [eigenschaft('titel', def.titel), ...(def.licht ? [eigenschaft('licht', def.licht)] : [])],
     layers: [
       { id: 1, name: 'boden', type: 'tilelayer', width: breite, height: hoehe, x: 0, y: 0, opacity: 1, visible: true, data: boden },
       { id: 2, name: 'hindernisse', type: 'tilelayer', width: breite, height: hoehe, x: 0, y: 0, opacity: 1, visible: true, data: hindernisse },

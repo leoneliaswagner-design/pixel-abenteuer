@@ -4,7 +4,8 @@
 // Kantenkacheln setzen. Ohne Phaser, damit der Prüfstand es direkt fragen kann.
 //
 // Bilder in grafik/kanten.png: 0–7 Schaum, 8–15 Gras, je in der Reihenfolge
-// oben, unten, links, rechts, Ecke oben-links, oben-rechts, unten-links, unten-rechts.
+// oben, unten, links, rechts, Ecke oben-links, oben-rechts, unten-links, unten-rechts;
+// 16 der Schatten unter einer Wand.
 
 const ARTEN = {
   wasser: new Set(['wasser', 'wasser2']),
@@ -16,6 +17,8 @@ const REGELN = [
   { auf: 'wasser', neben: (a) => a && a !== 'wasser', erstesBild: 0 },
   { auf: 'weg', neben: (a) => a === 'gras', erstesBild: 8 },
 ];
+// Wände, unter denen ein Schatten liegt (Bild 16, nur nach unten).
+const WAENDE = new Set(['hauswand', 'fenster', 'haustuer', 'eingang', 'mauer', 'tempelwand', 'fels', 'innenwand', 'wandkante']);
 const SEITEN = [[0, -1], [0, 1], [-1, 0], [1, 0]];
 const ECKEN = [[-1, -1, 0, 2], [1, -1, 0, 3], [-1, 1, 1, 2], [1, 1, 1, 3]]; // dx, dy, Seite1, Seite2
 
@@ -29,6 +32,9 @@ export function kantenBerechnen(welt) {
   const kanten = [];
   for (let y = 0; y < welt.hoehe; y++)
     for (let x = 0; x < welt.breite; x++) {
+      const oben = y > 0 && welt.eig(welt.hindernisse[welt.index(x, y - 1)] || welt.boden[welt.index(x, y - 1)]).name;
+      const selbst = welt.eig(welt.hindernisse[welt.index(x, y)] || welt.boden[welt.index(x, y)]).name;
+      if (WAENDE.has(oben) && !WAENDE.has(selbst) && !welt.istFest(x, y)) kanten.push({ x, y, bild: 16 });
       const hier = art(x, y);
       const regel = REGELN.find((r) => r.auf === hier);
       if (!regel) continue;

@@ -48,5 +48,9 @@
   "handel": {
     "charismaRabatt": 0.05,
     "ankauf": 0.5
+  },
+  "tag": {
+    "dauer": 1440000,
+    "beginn": 0.3
   }
 }

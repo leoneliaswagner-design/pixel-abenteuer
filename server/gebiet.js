@@ -250,6 +250,7 @@ export class Gebiet {
   stand(jetzt) {
     return {
       t: 'stand',
+      zeit: this.spiel.tageszeit(jetzt),
       spieler: this.spieler().map((s) => ({
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
