@@ -226,8 +226,8 @@ probe client/szenen/Spiel.js "    const q = 1 - Math.exp(-wb.beschleunigung * dt
   "Boot ohne Schwung"
 probe client/szenen/Spiel.js "    if (this.meer) this.dunstAufbauen();" "" pruefstand/meer.mjs \
   "kein Dunst auf See"
-probe client/szenen/Oberflaeche.js "    if (!an) return;" "    if (false) return;" pruefstand/meer.mjs \
-  "Kompass auch an Land"
+probe client/szenen/Oberflaeche.js "    g.setVisible(an);" "    g.setVisible(true);" pruefstand/meer.mjs \
+  "Kompass bleibt nach dem Anlegen stehen"
 probe client/fenster.js "o.see ? 'auf See' : " "" pruefstand/meer.mjs \
   "auf See ein Punkt auf der Weltkarte"
 probe server/spiel.js "    if (gebiet.meer) this.sichten(s, jetzt);" "" pruefstand/server-regeln.mjs \

@@ -216,3 +216,4 @@
   hinein) — und zielte zuerst auf die falsche Stelle (die nach dem Rudern
   statt der Ankunft).
 - risse.mjs scheiterte in der vollen Runde an der Höhlentür: Anna trat zuerst bei, und während Bens Seite lud (langsamer, seit es mehr Bilder gibt), lief ihre Schonfrist ab — ein Schleim stieß sie weg. Wer neben Gegnern geprüft wird, tritt als Letzter bei.
+- Eine Gegenprobe („Kompass an Land") simulierte einen Fehler, der nicht vorkommen kann — die Grafik war ohnehin unsichtbar. Der echte Fehler wäre ein Kompass, der nach dem Anlegen stehen bleibt; das prüft meer.mjs jetzt.

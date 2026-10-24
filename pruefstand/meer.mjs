@@ -134,6 +134,9 @@ try {
   await halte([]);
   await warte(600);
   s = await zustand();
+  // Nach dem Anlegen darf der Kompass nicht stehen bleiben.
+  const kompassZurueck = await messen(p, kompassFeld, [244, 228, 192], 12);
+  pruefe(kompassZurueck.n === 0, `an Land wieder ohne Kompass (${kompassZurueck.n} Bildpunkte)`);
   pruefe(s.gebiet === 'riftside' && !s.imBoot, `angelegt: wieder in Riftside, zu Fuß (${s.gebiet}, Kachel ${Math.floor(s.ich.x / 32)},${Math.floor(s.ich.y / 32)})`);
 } finally {
   await browser.close();
