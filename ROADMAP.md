@@ -244,3 +244,7 @@
   nur im Umkreis, mit Ober- und Untergrenze der Anzahl.
 - Ein Stand mit Reihenfolge (Fallen als Liste ohne Namen) funktioniert nur,
   weil Server und Browser dieselben Orte in derselben Reihenfolge filtern.
+- Die Vorschau (Version 14) war ohne `VITE_ALLEIN=1` gebaut und suchte einen
+  Server — beim Spieler kam nur „Keine Verbindung zum Spielserver". Die
+  Prüfstände merken das nicht (sie laufen mit Server); vor dem Veröffentlichen
+  gehört eine Anmeldung auf der Vorschau ohne Server dazu.

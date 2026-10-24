@@ -138,6 +138,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - Ein Prüfstand sagt, wie viel er angesehen hat (Zähler am Ende).
 - Wie eine Stelle im Spiel aussieht: `node pruefstand/ansicht.mjs <gebiet> <x> <y> bild.png`
   (Kacheln; mehrere Viererpaare hintereinander möglich).
+- **Vorschau-Seite (Artifact) immer mit `VITE_ALLEIN=1 npx vite build`** bauen
+  und vor dem Veröffentlichen ohne Server im Browser anmelden. Ohne die
+  Variable sucht die Seite einen Spielserver: „Keine Verbindung zum
+  Spielserver" (Version 14, 24.10.2026).
 - Grafiken ansehen: `node pruefstand/grafik-vorschau.mjs inhalte/grafik/ bild.png`
   legt alle PNGs vierfach vergrößert auf ein Bild.
 
