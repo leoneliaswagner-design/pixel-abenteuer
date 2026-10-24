@@ -4,7 +4,7 @@
 //   Fischergasse, Dana daneben.
 //   Anna schließt auf — sie geht durch, Ben sieht den Schlüssel verschwinden.
 //   Ben geht in den Riss — er ist im Tempel.
-//   Cora steht im Tempel vor der Truhe und nimmt den Rissstein — Dana sieht
+//   Cora steht im Tempel vor dem Sockel und nimmt das Idol — Dana sieht
 //   den Riss in der Gasse verschwinden.
 //
 //   node pruefstand/risse.mjs          (baut vorher mit vite)
@@ -34,7 +34,7 @@ writeFileSync(spielstand, JSON.stringify({
   spieler: {
     anna: stelle('Anna', 'gruen', 'hoehle', 20 * 32 + 16, 5 * 32 + 24, 'rechts'),
     ben: stelle('Ben', 'rot', 'riftside', 34 * 32 + 16, 16 * 32 + 24, 'oben'),
-    cora: stelle('Cora', 'blau', 'tempel', 9 * 32 + 16, 3 * 32 + 16, 'oben'),
+    cora: stelle('Cora', 'blau', 'tempel', 10 * 32 + 16, 5 * 32 + 16, 'oben'),
     dana: stelle('Dana', 'lila', 'riftside', 33 * 32 + 16, 13 * 32 + 24, 'rechts'),
   },
 }));
@@ -93,7 +93,8 @@ try {
   const anna = await oeffnen('Anna');
   let za = await zustand(anna), zb = await zustand(ben);
   pruefe(za.anzeige === 'schluessel 1' && zb.anzeige === 'schluessel 1', `beide sehen den Gruppenschlüssel, obwohl in verschiedenen Gebieten („${za.anzeige}" / „${zb.anzeige}")`);
-  pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'Ben sieht den Riss in der Fischergasse');
+  const riss = (z, ziel) => z.risse.find((r) => r.ziel === ziel);
+  pruefe(zb.risse.length === 2 && riss(zb, 'tempel')?.sichtbar && riss(zb, 'akropolis')?.sichtbar, 'Ben sieht beide Risse: Fischergasse und Seilergasse');
   pruefe(za.hinweis, 'vor der Tür steht das „E"');
 
   await anna.keyboard.press('e');
@@ -112,25 +113,25 @@ try {
   await warte(800);
   zb = await zustand(ben);
   pruefe(zb.gebiet === 'tempel', `Ben ist durch den Riss im Tempel (${zb.gebiet})`);
-  pruefe(zb.gegner.length === 4 && zb.gegner.every((g) => g.id.startsWith('tempel-')), `im Tempel: ${zb.gegner.length} Tempel-Schleime`);
+  pruefe(zb.gegner.length === 2 && zb.gegner.every((g) => g.id.startsWith('tempel-')), `im Tempel: ${zb.gegner.length} Tempel-Schleime`);
   await ben.screenshot({ path: join(bilder, 'tempel.png') });
 
-  // --- Cora nimmt den Rissstein: der Riss in der Gasse schließt sich ---
+  // --- Cora nimmt das Idol: der Riss in der Gasse schließt sich ---
   const dana = await oeffnen('Dana');
   let zd = await zustand(dana);
-  pruefe(zd.risse[0]?.sichtbar, 'Dana in der Gasse sieht den Riss noch');
-  // Sofort nach dem Beitreten, in der Schonfrist: zwei Schleime stehen in
+  pruefe(riss(zd, 'tempel')?.sichtbar, 'Dana in der Gasse sieht den Riss noch');
+  // Sofort nach dem Beitreten, in der Schonfrist: früher standen Schleime in
   // Sichtweite der Truhe, und ein Treffer stieß Cora manchmal von ihr weg.
   const cora = await oeffnen('Cora', 150);
   await cora.keyboard.press('e');
   await warte(500);
   const zc = await zustand(cora);
-  pruefe(zc.zustaende.tempel_geschlossen && zc.anzeige === 'rissstein 1',
-    `Cora hat den Rissstein (Anzeige „${zc.anzeige}"; Cora bei ${zc.ich.x.toFixed(0)},${zc.ich.y.toFixed(0)}, Leben ${zc.ich.leben})`);
+  pruefe(zc.zustaende.tempel_geschlossen && zc.anzeige === 'idol 1',
+    `Cora hat das Idol (Anzeige „${zc.anzeige}"; Cora bei ${zc.ich.x.toFixed(0)},${zc.ich.y.toFixed(0)}, Leben ${zc.ich.leben})`);
   await warte(1000);
   zd = await zustand(dana);
-  pruefe(zd.zustaende.tempel_geschlossen && !zd.risse[0].sichtbar, 'Dana sieht den Riss in der Fischergasse verschwinden');
-  pruefe(zd.anzeige === 'rissstein 1', `Dana sieht den Rissstein der Gruppe („${zd.anzeige}")`);
+  pruefe(zd.zustaende.tempel_geschlossen && !riss(zd, 'tempel').sichtbar && riss(zd, 'akropolis').sichtbar, 'Dana sieht den Riss in der Fischergasse verschwinden — der in der Seilergasse bleibt');
+  pruefe(zd.anzeige === 'idol 1', `Dana sieht das Idol der Gruppe („${zd.anzeige}")`);
   zb = await zustand(ben);
   pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'der Rückweg-Riss im Tempel bleibt offen');
   await dana.screenshot({ path: join(bilder, 'riftside.png') });

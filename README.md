@@ -236,10 +236,23 @@ Zum Ausprobieren in einem anderen Gebiet beginnen: `STARTGEBIET=wald`
       eigene `id`, unter der sich der Spielstand merkt, dass sie offen ist.
     - `tuer` — verschlossen; geht mit einem Schlüssel der Gruppe auf (E davor)
       und bleibt offen. Optional `schluessel` = welche Art (Standard
-      `schluessel`). Eine `id` geben.
+      `schluessel`). Eine `id` geben. Mit `oeffnet_bei` = Weltzustand ist es
+      ein Tor ohne Schloss: es geht auf, sobald der Zustand gilt (`text` =
+      was man liest, solange es zu ist).
+    - `sockel` — wie eine Truhe ohne Deckel (`inhalt`, `setzt`, `meldung`);
+      `aussehen` = `marmor` für den hellen Sockel der Akropolis.
+  - **Fallen** (Punkte `falle`, Zahlen in `werte.json` unter `fallen`):
+    `art` = `stacheln` (heben und senken sich, `versatz` in ms verschiebt den
+    Takt), `pfeile` (Druckplatte: kurz nach dem Klick fliegt ein Pfeil aus der
+    Wand gegenüber `richtung`), `platte` (bleibt `dauer` ms gedrückt; sind
+    alle Platten mit demselben `setzt` zugleich unten, gilt der Zustand).
+  - **Steinkugel**: Punkte `kugel_start` (mit `ausloeser` = Bedingung) und
+    `kugel_ende`. Sie grollt, rollt senkrecht hinab, überrollt, wen sie
+    erwischt, und bleibt am Ende liegen (3×3 Kacheln fest).
   - **Weltzustände** (z. B. `tempel_geschlossen`) merkt sich der Spielstand für
     die ganze Runde. Gesetzt werden sie von Truhen und Figuren mit der
-    Eigenschaft `setzt` (dazu optional `meldung` = Text für alle).
+    Eigenschaft `setzt` (dazu optional `meldung` = Text für alle; mehrere
+    Zustände mit Komma: das Idol setzt `idol_genommen,tempel_geschlossen`).
     Abhängig davon:
     - Übergänge mit `bedingung` (z. B. `!tempel_geschlossen` = nur solange
       der Tempel offen ist; mehrere mit Komma). Mit `art` = `riss` bekommt
@@ -271,6 +284,7 @@ node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
 node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
 node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
 node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
+node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy

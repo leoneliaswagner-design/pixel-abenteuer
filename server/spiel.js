@@ -216,11 +216,17 @@ export class Spiel {
     return (this.spielstand.daten.welt.zustaende ??= {});
   }
 
-  zustandSetzen(name, meldung) {
-    if (!name || this.zustaende()[name]) return;
-    this.zustaende()[name] = true;
+  // Mehrere mit Komma: das Idol setzt „idol_genommen,tempel_geschlossen" —
+  // das eine weckt die Kugel, das andere schließt den Riss in Riftside.
+  zustandSetzen(namen, meldung) {
+    const neu = String(namen ?? '').split(',').map((n) => n.trim()).filter((n) => n && !this.zustaende()[n]);
+    if (!neu.length) return;
+    for (const name of neu) {
+      this.zustaende()[name] = true;
+      this.anAlle({ t: 'zustand', name, wert: true });
+    }
     this.geaendert = true;
-    this.anAlle({ t: 'zustand', name, wert: true });
+    for (const g of this.gebiete.values()) g.zustaendeGeaendert();
     if (meldung) this.anAlle({ t: 'nachricht', text: meldung });
   }
 
@@ -305,6 +311,20 @@ export class Spiel {
     s.senden({ t: 'korrektur', x: s.x, y: s.y, k: s.korrektur });
   }
 
+  // Jemand steht, wo plötzlich etwas fest ist (die liegende Steinkugel):
+  // zur nächsten freien Stelle, in wachsenden Ringen gesucht.
+  freiSchieben(s) {
+    const welt = this.gebiete.get(s.gebiet).welt;
+    for (let r = 8; r <= 160; r += 8)
+      for (let a = 0; a < 16; a++) {
+        const x = s.x + Math.cos((a / 16) * Math.PI * 2) * r, y = s.y + Math.sin((a / 16) * Math.PI * 2) * r;
+        if (!welt.frei(x, y)) continue;
+        [s.x, s.y] = [x, y];
+        this.korrigiere(s);
+        return;
+      }
+  }
+
   // In ein anderes Gebiet: der Server setzt die Figur um, und der Browser
   // baut die neue Karte auf. Der Korrekturzähler steigt, damit Positionen,
   // die noch aus dem alten Gebiet unterwegs sind, verworfen werden.
@@ -372,9 +392,11 @@ export class Spiel {
       gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });
       s.senden({ t: 'dialog', name: e.name ?? '', seiten: seiten(this.textFuer(e)) });
       this.zustandSetzen(e.setzt, e.meldung);
-    } else if (ding.name === 'truhe') {
+    } else if (ding.name === 'truhe' || ding.name === 'sockel') {
+      // Ein Sockel ist eine Truhe ohne Deckel: einmal nehmen, dann leer.
+      const sockel = ding.name === 'sockel';
       if (gebiet.istOffen(ding)) {
-        s.senden({ t: 'dialog', seiten: ['Die Truhe ist leer.'] });
+        s.senden({ t: 'dialog', seiten: [sockel ? 'Der Sockel ist leer.' : 'Die Truhe ist leer.'] });
         return;
       }
       const [art, anzahl] = inhaltLesen(e.inhalt);
@@ -396,12 +418,15 @@ export class Spiel {
       // Schlüssel", „eine Goldmünze" — aus Name und Artikel ließe sich das
       // nicht zuverlässig bauen.
       const was = !art ? 'nichts' : anzahl === 1 ? (g?.einzeln ?? art) : `${anzahl} ${g?.mehrzahl ?? art}`;
-      s.senden({ t: 'dialog', seiten: [`Du findest ${was}!`] });
+      s.senden({ t: 'dialog', seiten: [sockel ? `Du nimmst ${was}!` : `Du findest ${was}!`] });
       this.inventarSenden(s);
-      gebiet.anAlle({ t: 'nachricht', text: `${s.name} öffnet eine Truhe.` }, s.id);
+      gebiet.anAlle({ t: 'nachricht', text: sockel ? `${s.name} nimmt ${was} vom Sockel.` : `${s.name} öffnet eine Truhe.` }, s.id);
       this.zustandSetzen(e.setzt, e.meldung);
       this.merken(s);
       this.speichern();
+    } else if (ding.name === 'tuer' && e.oeffnet_bei) {
+      // Ein Tor ohne Schloss: es geht nur über sein Rätsel auf.
+      if (!gebiet.welt.geoeffnet.has(ding.schluessel)) s.senden({ t: 'dialog', seiten: seiten(e.text ?? 'Es rührt sich nicht.') });
     } else if (ding.name === 'tuer') {
       const art = e.schluessel ?? 'schluessel';
       // Ein Schurke knackt das Schloss — ohne Schlüssel, und keiner geht verloren.

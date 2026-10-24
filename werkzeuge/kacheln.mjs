@@ -59,6 +59,12 @@ export const KACHELN = [
   // die Figur). „wasser" ist überall sonst fest, damit niemand hineinläuft.
   { name: 'see', zeichen: '&' },
   { name: 'see2' },
+  // Tempelwand mit Fackel: leuchtet (client Spiel.lichtAufbauen).
+  { name: 'fackel', zeichen: 'F', fest: true, hindernis: true },
+  // Akropolis
+  { name: 'marmor', zeichen: '|' },
+  { name: 'saeule', zeichen: 'i', fest: true, hindernis: true },
+  { name: 'marmorwand', zeichen: 'Q', fest: true, hindernis: true },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

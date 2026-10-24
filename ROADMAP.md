@@ -72,6 +72,17 @@
   Entdecken beim Ansegeln, Anlegestellen aus `hafen` in welt.json.
   Prüfstand `meer.mjs`.
 
+- **Mehr Risse in Riftside** (24.10.2026):
+  - Fischergasse → **Dschungeltempel** nach dem Anfang von *Indiana Jones*:
+    Fackeln, Stachelfallen im Takt, Druckplatten mit Pfeilen aus der Wand,
+    goldenes Idol auf dem Sockel. Wer es nimmt, schließt den Riss und weckt
+    die Steinkugel — sie rollt den Gang hinab und bleibt in der Vorhalle
+    liegen. Prüfstand `tempel.mjs`.
+  - Seilergasse (neu, westlich vom Markt) → **Akropolis**: Marmor, Säulen,
+    Skelette; drei Bodenplatten, die nur ein paar Sekunden halten, öffnen
+    das Tor (zu zweit leicht, allein ein Wettlauf); die silberne Eule auf
+    dem Sockel schließt den Riss.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -95,6 +106,12 @@
    (Strände, Leuchtturm …), sobald die Kampagne dazu etwas sagt.
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
+9. **Weitere Risse** — welche Orte, sagt die Kampagne. Offen auch: was
+   passiert, wenn alle Risse zu sind (die Stadt „gerettet")? Die Leute in
+   Riftside kennen bisher nur die Fischergasse; Texte für die Seilergasse
+   (`text_wenn_akropolis_geschlossen`) fehlen noch.
+10. Die Akropolis-Platten prüft nur server-regeln; ein Browser-Prüfstand
+   (Platte am Bildpunkt gedrückt, Tor geht beim anderen auf) fehlt.
 
 ## Später (Vorschlag — Reihenfolge offen)
 
@@ -217,3 +234,13 @@
   statt der Ankunft).
 - risse.mjs scheiterte in der vollen Runde an der Höhlentür: Anna trat zuerst bei, und während Bens Seite lud (langsamer, seit es mehr Bilder gibt), lief ihre Schonfrist ab — ein Schleim stieß sie weg. Wer neben Gegnern geprüft wird, tritt als Letzter bei.
 - Eine Gegenprobe („Kompass an Land") simulierte einen Fehler, der nicht vorkommen kann — die Grafik war ohnehin unsichtbar. Der echte Fehler wäre ein Kompass, der nach dem Anlegen stehen bleibt; das prüft meer.mjs jetzt.
+- Die Steinkugel sollte erst im Gang liegen bleiben und ihn versperren. Wer
+  überrollt wurde, säße dann dahinter fest — sie bleibt jetzt mitten in der
+  Vorhalle liegen, und wer genau dort steht, wird zur Seite geschoben.
+- Bildpunkt-Messung im Tempel: die mittlere Farbe unterschied Kugel und
+  Boden im Dunkeln kaum; der ganze Schirm mit/ohne Kugel zählte flackernde
+  Fackeln und hüpfende Schleime mit, und einmal war jeder Bildpunkt anders.
+  Jetzt: Szene angehalten (zeichnet weiter, rechnet nicht), ohne Lichtfläche,
+  nur im Umkreis, mit Ober- und Untergrenze der Anzahl.
+- Ein Stand mit Reihenfolge (Fallen als Liste ohne Namen) funktioniert nur,
+  weil Server und Browser dieselben Orte in derselben Reihenfolge filtern.

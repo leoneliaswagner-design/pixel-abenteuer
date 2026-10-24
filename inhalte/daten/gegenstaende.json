@@ -106,5 +106,21 @@
       "tempo": 8
     },
     "preis": 60
+  },
+  "idol": {
+    "name": "Goldenes Idol",
+    "einzeln": "das goldene Idol",
+    "mehrzahl": "goldene Idole",
+    "bild": 10,
+    "gemeinsam": true,
+    "beschreibung": "Schwer, golden, und es hat einen Riss geschlossen. Gehört der ganzen Gruppe."
+  },
+  "eule": {
+    "name": "Silberne Eule",
+    "einzeln": "die silberne Eule",
+    "mehrzahl": "silberne Eulen",
+    "bild": 11,
+    "gemeinsam": true,
+    "beschreibung": "Eine Eule aus Silber, mit Augen, die einem folgen. Sie hat den Riss in der Seilergasse geschlossen."
   }
 }

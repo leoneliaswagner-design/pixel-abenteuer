@@ -42,6 +42,9 @@ export class SpielSzene extends Phaser.Scene {
     this.load.spritesheet('boot', 'grafik/boot.png', { frameWidth: 48, frameHeight: 48 });
     this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('sockel', 'grafik/sockel.png', { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet('fallen', 'grafik/fallen.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('kugel', 'grafik/kugel.png', { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
     // Aussehen der Leute in der Welt — welche es gibt, steht in werte.json.
     // Die lädt beim ersten Mal im selben Durchgang; also erst nachladen,
@@ -116,6 +119,7 @@ export class SpielSzene extends Phaser.Scene {
     this.zustaende = wk.zustaende ?? {};
     for (const t of wk.tueren ?? []) this.welt.geoeffnet.add(t);
     this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
+    this.fallenAufbauen();
     this.risseAufbauen();
     this.lichtAufbauen(wk.zeit);
     if (this.meer) this.dunstAufbauen();
@@ -227,6 +231,10 @@ export class SpielSzene extends Phaser.Scene {
         tueren: [...this.welt.geoeffnet],
         risse: this.risse.map((r) => ({ ziel: r.ort.eig.ziel, sichtbar: r.bild.visible })),
         anzeige: this.oberflaeche().anzeigeText?.(),
+        fallen: this.fallen.map((f) => ({ art: f.art, bild: f.bild.frame.name })),
+        kugel: this.kugel && { x: this.kugel.bild.x, y: this.kugel.bild.y, z: this.kugel.z, bild: this.kugel.bild.frame.name },
+        gesperrt: [...this.welt.gesperrt],
+        sockel: [...this.dinge.values()].filter((d) => d.ding.name === 'sockel').map((d) => ({ schluessel: d.ding.schluessel, leer: d.bild.frame.name === d.basis + 1 })),
         truhen: [...this.dinge.values()].filter((d) => d.ding.name === 'truhe').map((d) => ({ schluessel: d.ding.schluessel, offen: d.bild.frame.name === 1 })),
         figuren: [...this.dinge.values()].filter((d) => d.ding.name === 'figur').map((d) => ({
           schluessel: d.ding.schluessel, bild: d.bild.frame.name, name: d.ding.eig.name,
@@ -316,6 +324,8 @@ export class SpielSzene extends Phaser.Scene {
       let bild;
       if (d.name === 'schild') bild = this.add.image(d.x, fuss, 'schild');
       else if (d.name === 'truhe') bild = this.add.image(d.x, fuss, 'truhe', offen.includes(d.schluessel) ? 1 : 0);
+      // Sockel: 0/1 Stein (Tempel), 2/3 Marmor (Akropolis); das zweite Bild ist leer.
+      else if (d.name === 'sockel') bild = this.add.image(d.x, fuss, 'sockel', (d.eig.aussehen === 'marmor' ? 2 : 0) + (offen.includes(d.schluessel) ? 1 : 0));
       else if (d.name === 'tuer') bild = this.add.image(d.x, fuss, 'tuer', this.welt.geoeffnet.has(d.schluessel) ? 1 : 0);
       else {
         const art = `figur-${d.eig.aussehen ?? 'alter_mann'}`;
@@ -324,7 +334,44 @@ export class SpielSzene extends Phaser.Scene {
         bild = this.add.image(d.x, fuss, schluessel, ZEILE[blicke[d.schluessel] ?? d.eig.richtung ?? 'unten'] * 4);
       }
       bild.setOrigin(0.5, 1).setDepth(10 + fuss - 4);
-      this.dinge.set(d.schluessel, { ding: d, bild });
+      this.dinge.set(d.schluessel, { ding: d, bild, basis: d.name === 'sockel' && d.eig.aussehen === 'marmor' ? 2 : 0 });
+    }
+  }
+
+  // Fallen liegen flach im Boden; welche oben sind, sagt der Stand — in
+  // derselben Reihenfolge wie die Orte der Karte, wie auf dem Server.
+  fallenAufbauen() {
+    const k = this.welt.kachel;
+    this.fallen = this.welt.orte.filter((o) => o.name === 'falle').map((o) => ({
+      art: o.eig.art, an: 0,
+      bild: this.add.image(Math.floor(o.x / k) * k, Math.floor(o.y / k) * k, 'fallen', o.eig.art === 'stacheln' ? 0 : 2).setOrigin(0).setDepth(2),
+    }));
+    this.kugel = null;
+    const start = this.welt.orte.find((o) => o.name === 'kugel_start');
+    if (start) {
+      const schatten = this.add.image(start.x, start.y + 28, 'schatten').setScale(3, 2).setAlpha(0.7);
+      this.kugel = { x: start.x, y: start.y, zielY: start.y, z: 'ruht', bild: this.add.image(start.x, start.y, 'kugel', 0), schatten };
+      this.welt.kugelSperren(start.x, start.y, 'ruht');
+    }
+  }
+
+  fallenUebernehmen(m) {
+    m.fallen?.forEach((an, i) => {
+      const f = this.fallen[i];
+      if (!f || f.an === an) return;
+      f.an = an;
+      f.bild.setFrame((f.art === 'stacheln' ? 0 : 2) + an);
+    });
+    const k = this.kugel;
+    if (!k || !m.kugel) return;
+    // Der erste Stand nach dem Betreten: dort hinspringen, nicht gleiten.
+    if (!k.gesehen || m.kugel.z !== 'rollt') k.y = m.kugel.y;
+    k.gesehen = true;
+    k.zielY = m.kugel.y;
+    k.x = m.kugel.x;
+    if (k.z !== m.kugel.z) {
+      k.z = m.kugel.z;
+      this.welt.kugelSperren(k.x, m.kugel.y, k.z);
     }
   }
 
@@ -337,12 +384,14 @@ export class SpielSzene extends Phaser.Scene {
     this.zeit = zeit ?? 0.45;
     this.zeitBei = this.time.now;
     this.licht = new Licht(this, this.welt.eigenschaftenKarte.licht);
+    this.fackeln = [];
     const k = this.welt.kachel;
     this.welt.hindernisse.forEach((gid, i) => {
       const name = gid && this.welt.eig(gid).name;
       const x = (i % this.welt.breite) * k + k / 2, y = Math.floor(i / this.welt.breite) * k;
       if (name === 'laterne') this.licht.fest(x, y + 8, 84, 0xffd890, 20);
       else if (name === 'fenster') this.licht.fest(x, y + 16, 36, 0xffc070, 12);
+      else if (name === 'fackel') this.fackeln.push({ x, y: y + 14 });
     });
     for (const r of this.risse) if (r.bild.visible) this.licht.fest(r.bild.x, r.bild.y - 24, 64, 0xc890ff, 20);
   }
@@ -459,6 +508,7 @@ export class SpielSzene extends Phaser.Scene {
   netzAnschliessen() {
     const n = this.netz;
     n.bei('stand', (m) => this.standUebernehmen(m));
+    n.bei('beben', (m) => this.cameras.main.shake(m.dauer, m.stark));
     n.bei('hieb', (m) => this.andere.get(m.id)?.hieb(m.r, this.w.spieler.hiebDauer));
     n.bei('getroffen', (m) => {
       this.stoss = { vx: m.vx, vy: m.vy, bis: this.time.now + m.dauer };
@@ -499,7 +549,7 @@ export class SpielSzene extends Phaser.Scene {
     n.bei('truhe', (m) => {
       const d = this.dinge.get(m.ding);
       if (!d) return;
-      d.bild.setFrame(m.offen ? 1 : 0);
+      d.bild.setFrame(d.basis + (m.offen ? 1 : 0));
       if (m.offen) this.tweens.add({ targets: d.bild, y: d.bild.y - 3, duration: 90, yoyo: true });
     });
     n.bei('blick', (m) => this.dinge.get(m.ding)?.bild.setFrame(ZEILE[m.r] * 4));
@@ -585,6 +635,7 @@ export class SpielSzene extends Phaser.Scene {
   }
 
   standUebernehmen(m) {
+    this.fallenUebernehmen(m);
     if (m.zeit != null) {
       this.zeit = m.zeit;
       this.zeitBei = this.time.now;
@@ -697,6 +748,13 @@ export class SpielSzene extends Phaser.Scene {
       g.bild.setDepth(20 + g.bild.y);
       if (g.art === 'feuerball') g.bild.setFrame(2 + (Math.floor(jetzt / 90) % 2));
     }
+    const kg = this.kugel;
+    if (kg) {
+      kg.y += (kg.zielY - kg.y) * f;
+      // Vier Bilder je 16 Bildpunkte Weg: so dreht sie sich so schnell, wie sie rollt.
+      kg.bild.setPosition(kg.x, kg.y).setFrame(Math.floor(kg.y / 16) % 4).setDepth(10 + kg.y + 28);
+      kg.schatten.setPosition(kg.x, kg.y + 28).setDepth(9);
+    }
     for (const g of this.gegner.values()) {
       gleiten(g);
       g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
@@ -705,6 +763,9 @@ export class SpielSzene extends Phaser.Scene {
 
     // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.
     const bewegte = figuren.filter((f) => !f.tot).map((f) => ({ x: f.x, y: f.y - 20, radius: 88, farbe: 0xfff0d8, staerke: 0.85 }));
+    // Fackeln flackern: jede in ihrem eigenen Takt, sonst pulsiert der Tempel.
+    for (const [i, q] of this.fackeln.entries())
+      bewegte.push({ x: q.x, y: q.y, radius: 74 + Math.sin(jetzt / 90 + i * 1.7) * 3 + Math.sin(jetzt / 37 + i) * 2, farbe: 0xffb060 });
     for (const g of this.geschosse.values()) if (g.art === 'feuerball') bewegte.push({ x: g.bild.x, y: g.bild.y, radius: 56, farbe: 0xffa040 });
     this.licht.zeichnen(this.tageszeitJetzt(), bewegte);
   }

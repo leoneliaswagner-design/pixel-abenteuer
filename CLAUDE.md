@@ -70,6 +70,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   fest. Im Browser: `rudern()` mit Schwung statt Laufen, Dunst, Kompass; der
   Server ignoriert Hieb und Fähigkeit dort und deckt beim Segeln auf
   (`sichten`). Auf See hat niemand einen Punkt auf der Weltkarte.
+- **Fallen und Steinkugel** (server/fallen.js): Punkte `falle` (stacheln,
+  pfeile, platte) und `kugel_start`/`kugel_ende`; Zahlen in `werte.fallen`.
+  Der Stand schickt `fallen` als Liste in Ortsreihenfolge und `kugel`. Die
+  liegende Kugel sperrt Kacheln über `welt.kugelSperren()` — Server und
+  Browser rechnen dasselbe. Tore mit `oeffnet_bei` öffnet ein Weltzustand.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -97,7 +102,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/interaktion.mjs` — Textbox (Helligkeit unten im Bild),
   blättern, Figur dreht sich beim anderen Spieler, Truhe öffnet für alle.
 - `node pruefstand/risse.mjs` — Gruppenschlüssel, Tür, Riss in den Tempel;
-  ein dritter Spieler nimmt den Rissstein, der zweite sieht den Riss vergehen.
+  ein dritter Spieler nimmt das Idol, der zweite sieht den Riss vergehen.
+- `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
+  anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas
   prüft, tut es in der Schonfrist nach dem Beitreten (1,5 s).
 - `node pruefstand/riftside.mjs` — Start in der Stadt, Ansprechen, Stadttor.

@@ -120,11 +120,11 @@ export class Oberflaeche extends Phaser.Scene {
     this.anzeige = [];
     this.anzeigeStand = [];
     // Der Heiltrank mit seiner Taste: so sieht man, dass 1 ihn trinkt.
-    const eintraege = [['gold', 0, inventar.gold], ['schluessel', 1, gruppe.schluessel], ['rissstein', 2, gruppe.rissstein], ['heiltrank', 3, inventar.heiltrank]];
+    const eintraege = [['gold', 0, inventar.gold], ['schluessel', 1, gruppe.schluessel], ['rissstein', 2, gruppe.rissstein], ['idol', 10, gruppe.idol], ['eule', 11, gruppe.eule], ['heiltrank', 3, inventar.heiltrank]];
     let x = 6;
     for (const [art, bild, anzahl] of eintraege) {
       if (!anzahl) continue;
-      const symbol = art === 'heiltrank'
+      const symbol = art === 'heiltrank' || art === 'idol' || art === 'eule'
         ? this.add.image(x - 2, 28, 'gegenstaende', bild).setOrigin(0, 0.5)
         : this.add.image(x, 28, 'symbole', bild).setOrigin(0, 0.5);
       const zahl = this.add.text(x + 14, 28, art === 'heiltrank' ? `${anzahl} [1]` : String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);

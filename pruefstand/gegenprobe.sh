@@ -235,6 +235,44 @@ probe server/spiel.js "    if (gebiet.meer) this.sichten(s, jetzt);" "" pruefsta
 probe server/spiel.js "    if (s.tot || jetzt < s.naechsterHieb || this.gebiete.get(s.gebiet).meer) return;" "    if (s.tot || jetzt < s.naechsterHieb) return;" pruefstand/server-regeln.mjs \
   "Schwerthieb aus dem Boot"
 
+# Tempel: Fallen, Idol, Steinkugel
+probe server/fallen.js "    return (((jetzt + f.versatz) % s.periode) + s.periode) % s.periode < s.oben;" "    return false;" pruefstand/server-regeln.mjs \
+  "Stacheln kommen nie hoch"
+probe server/fallen.js "          this.pfeilAbfeuern(f, p);" "" pruefstand/server-regeln.mjs \
+  "Druckplatte schießt keinen Pfeil"
+probe server/fallen.js "        f.zielY = s.y - 10;" "        f.zielY = s.y - 10 + 40;" pruefstand/server-regeln.mjs \
+  "Pfeil fliegt an dem vorbei, der auf der Platte steht"
+probe server/spiel.js "    const neu = String(namen ?? '').split(',')" "    const neu = [String(namen ?? '')]" pruefstand/server-regeln.mjs \
+  "mehrere Weltzustände mit Komma werden nicht getrennt"
+probe server/fallen.js "      if (!erfuellt(kg.ausloeser, g.spiel.zustaende())) return;" "      return;" pruefstand/tempel.mjs \
+  "das Idol weckt die Kugel nicht"
+probe server/fallen.js "    if (Math.abs(s.x - kg.x) > w.radius" "    if (true || Math.abs(s.x - kg.x) > w.radius" pruefstand/server-regeln.mjs \
+  "die Kugel überrollt niemanden"
+probe gemeinsam/welt.js "    if (this.eig(this.boden[i]).fest || this.gesperrt.has(i)) return true;" "    if (this.eig(this.boden[i]).fest) return true;" pruefstand/server-regeln.mjs \
+  "durch die liegende Kugel kann man laufen"
+probe client/szenen/Spiel.js "      this.welt.kugelSperren(k.x, m.kugel.y, k.z);" "" pruefstand/tempel.mjs \
+  "Browser weiß nicht, dass die Kugel liegt"
+probe server/fallen.js "      for (const s of hier) if (!g.welt.frei(s.x, s.y)) g.spiel.freiSchieben(s);" "" pruefstand/server-regeln.mjs \
+  "wer unter der Kugel stand, steckt fest"
+probe client/szenen/Spiel.js "      kg.bild.setPosition(kg.x, kg.y)" "      kg.bild.setPosition(kg.x, kg.y - 200)" pruefstand/tempel.mjs \
+  "Kugel liegt im Bild woanders als im Stand"
+probe client/szenen/Spiel.js "'sockel', (d.eig.aussehen === 'marmor' ? 2 : 0) + (offen.includes(d.schluessel) ? 1 : 0));" "'sockel', (d.eig.aussehen === 'marmor' ? 2 : 0));" pruefstand/tempel.mjs \
+  "nach dem Neuladen steht das Idol wieder auf dem Sockel"
+probe server/fallen.js "      const schon = erfuellt(start.eig.ausloeser, gebiet.spiel.zustaende());" "      const schon = false;" pruefstand/server-regeln.mjs \
+  "nach dem Neustart liegt die Kugel wieder oben"
+
+# Akropolis: Platten, Tor, zweiter Riss
+probe server/fallen.js "      if (gruppe.every((f) => jetzt < f.gedruecktBis))" "      if (gruppe.some((f) => jetzt < f.gedruecktBis))" pruefstand/server-regeln.mjs \
+  "eine Platte allein öffnet das Tor"
+probe server/spiel.js "    for (const g of this.gebiete.values()) g.zustaendeGeaendert();" "" pruefstand/server-regeln.mjs \
+  "das Tor merkt nicht, dass die Platten gedrückt sind"
+probe server/spiel.js "    } else if (ding.name === 'tuer' && e.oeffnet_bei) {" "    } else if (false) {" pruefstand/server-regeln.mjs \
+  "das Tor der Akropolis geht mit einem Schlüssel auf"
+probe server/gebiet.js "    this.zustaendeGeaendert(false);" "" pruefstand/server-regeln.mjs \
+  "nach dem Neustart ist das Tor wieder zu"
+probe werkzeuge/karte.mjs "        { ziel: 'akropolis', ankunft: 'von_riftside', art: 'riss', bedingung: '!akropolis_geschlossen' }," "        { ziel: 'akropolis', ankunft: 'von_riftside', bedingung: '!akropolis_geschlossen' }," pruefstand/karten.mjs \
+  "die Seilergasse ist kein Riss, sondern eine Haustür"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

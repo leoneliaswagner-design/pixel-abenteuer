@@ -32,7 +32,7 @@ pruefe(boden(r, 21, 20) === 'pflaster', `der Startpunkt liegt auf der Straße ($
 pruefe(boden(r, 34, 15) === 'pflaster', `der Riss liegt in der gepflasterten Gasse (${boden(r, 34, 15)})`);
 
 // Die begehbaren Haustüren führen in verschiedene Häuser — nicht alle ins erste.
-const tueren = r.layers[2].objects.filter((o) => o.name === 'uebergang' && o.properties.some((p) => p.name === 'ziel' && !['wald', 'tempel', 'meer'].includes(p.value)));
+const tueren = r.layers[2].objects.filter((o) => o.name === 'uebergang' && o.properties.some((p) => p.name === 'ziel' && !['wald', 'meer'].includes(p.value)) && !o.properties.some((p) => p.name === 'art' && p.value === 'riss'));
 const hausZiele = new Set(tueren.map((o) => o.properties.find((p) => p.name === 'ziel').value));
 pruefe(tueren.length === 3 && hausZiele.size === 3, `${tueren.length} Haustüren, ${hausZiele.size} verschiedene Häuser (${[...hausZiele].join(', ')})`);
 

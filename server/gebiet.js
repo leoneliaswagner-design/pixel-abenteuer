@@ -1,7 +1,8 @@
 // Ein Gebiet ist eine Karte mit allem, was darauf lebt: Gegner, Büsche,
 // Herzen. Jedes Gebiet läuft für sich; Spieler können sich aufteilen —
 // einer in der Höhle, zwei auf der Oberwelt.
-import { Welt, bewege, hiebFlaeche, imRechteck, RICHTUNGEN } from '../gemeinsam/welt.js';
+import { Fallen } from './fallen.js';
+import { erfuellt, Welt, bewege, hiebFlaeche, imRechteck, RICHTUNGEN } from '../gemeinsam/welt.js';
 
 export class Gebiet {
   constructor(name, karte, spiel) {
@@ -26,6 +27,19 @@ export class Gebiet {
     this.blicke = new Map();
     for (const d of this.welt.dinge)
       if (d.name === 'tuer' && spiel.spielstand.daten.welt.tueren?.[this.truhenSchluessel(d)]) this.welt.geoeffnet.add(d.schluessel);
+    this.fallen = new Fallen(this);
+    this.zustaendeGeaendert(false);
+  }
+
+  // Tore, die ein Weltzustand öffnet („oeffnet_bei"), nicht ein Schlüssel.
+  // Nicht im Spielstand unter „tueren": der Zustand selbst ist gespeichert.
+  zustaendeGeaendert(melden = true) {
+    for (const d of this.welt.dinge) {
+      if (d.name !== 'tuer' || !d.eig.oeffnet_bei || this.welt.geoeffnet.has(d.schluessel)) continue;
+      if (!erfuellt(d.eig.oeffnet_bei, this.spiel.zustaende())) continue;
+      this.welt.geoeffnet.add(d.schluessel);
+      if (melden) this.anAlle({ t: 'tuer', ding: d.schluessel, offen: true });
+    }
   }
 
   // Offene Truhen stehen im Spielstand unter „gebiet:schlüssel", damit zwei
@@ -54,7 +68,7 @@ export class Gebiet {
   }
 
   offeneTruhen() {
-    return this.welt.dinge.filter((d) => d.name === 'truhe' && this.istOffen(d)).map((d) => d.schluessel);
+    return this.welt.dinge.filter((d) => (d.name === 'truhe' || d.name === 'sockel') && this.istOffen(d)).map((d) => d.schluessel);
   }
 
   neuerGegner(id, ort) {
@@ -134,6 +148,7 @@ export class Gebiet {
     for (const g of this.gegner) this.gegnerSchritt(g, dt, jetzt, hier);
     for (const s of hier) this.herzenAufheben(s);
     this.geschosseBewegen(dt, jetzt);
+    this.fallen.schritt(dt, jetzt, hier);
 
     for (const [i, bei] of this.nachwachsen) {
       if (jetzt < bei) continue;
@@ -262,6 +277,7 @@ export class Gebiet {
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
       gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
+      ...this.fallen.stand(jetzt),
     };
   }
 }

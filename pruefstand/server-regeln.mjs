@@ -279,10 +279,10 @@ sprich(bo, ...vorTuer, 'rechts');
 pruefe(!postB.length, 'eine offene Tür spricht man nicht mehr an');
 void tuer;
 
-// --- Der Riss in der Fischergasse führt in den Tempel; der Rissstein schließt ihn ---
+// --- Der Riss in der Fischergasse führt in den Tempel; das Idol schließt ihn ---
 // Riss auf Kachel (34,15) in Riftside = y 480…512; davor die Gasse.
 const riftside = spiel4.gebiete.get('riftside');
-const riss = riftside.uebergaenge.find((u) => u.eig.art === 'riss');
+const riss = riftside.uebergaenge.find((u) => u.eig.ziel === 'tempel');
 const vorRiss = { x: 34 * 32 + 16, y: 16 * 32 + 24 };
 const inRiss = 15 * 32 + 30;
 spiel4.wechseln(bo, 'riftside', 'aus_tempel');
@@ -298,8 +298,8 @@ uhr += 500;
 spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: inRiss, r: 'oben', k: bo.korrektur });
 pruefe(bo.gebiet === 'tempel', `durch den Riss in der Fischergasse: Bo ist im Tempel (${bo.gebiet}) — Riss nach ${riss?.eig.ziel}`);
 postA.length = 0;
-sprich(bo, 9 * 32 + 16, 3 * 32 + 16, 'oben');
-pruefe(spiel4.gruppe().rissstein === 1 && spiel4.zustaende().tempel_geschlossen, `Rissstein genommen: Zustand „tempel_geschlossen" gesetzt`);
+sprich(bo, 10 * 32 + 16, 5 * 32 + 16, 'oben');
+pruefe(spiel4.gruppe().idol === 1 && spiel4.zustaende().tempel_geschlossen && spiel4.zustaende().idol_genommen, `Idol genommen: „idol_genommen" und „tempel_geschlossen" gesetzt`);
 pruefe(postA.some((m) => m.t === 'zustand' && m.name === 'tempel_geschlossen') && postA.some((m) => m.t === 'nachricht' && m.text.includes('schließt sich')),
   'Ana in der Höhle erfährt es — mit Meldung');
 spiel4.wechseln(bo, 'riftside', 'aus_tempel');
@@ -322,8 +322,13 @@ spiel4.verlassen(bo.id);
 const spiel5 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei4) });
 const postC = [];
 const ana2 = mitCharakter(spiel5, 'Ana', (m) => postC.push(m));
-pruefe(ana2.inventar.gold === 20 && spiel5.gruppe().rissstein === 1, `nach dem Neustart: Ana hat noch 20 Gold, die Gruppe den Rissstein (${JSON.stringify(ana2.inventar)}, ${JSON.stringify(spiel5.gruppe())})`);
+pruefe(ana2.inventar.gold === 20 && spiel5.gruppe().idol === 1, `nach dem Neustart: Ana hat noch 20 Gold, die Gruppe das Idol (${JSON.stringify(ana2.inventar)}, ${JSON.stringify(spiel5.gruppe())})`);
 pruefe(spiel5.gebiete.get('hoehle').welt.geoeffnet.has('hoehle_tuer') && spiel5.zustaende().tempel_geschlossen, 'nach dem Neustart: Tür offen, Riss geschlossen');
+{
+  // Das Idol war schon weg: die Kugel liegt gleich unten und versperrt ihre Kacheln.
+  const t5 = spiel5.gebiete.get('tempel'), kg = t5.fallen.kugel;
+  pruefe(kg.z === 'liegt' && t5.welt.istFest(10, 27) && t5.welt.istFest(9, 26) && !t5.welt.istFest(10, 24), `nach dem Neustart liegt die Kugel in der Vorhalle (${kg.z})`);
+}
 spiel5.wechseln(ana2, 'wald', 'von_hoehle');
 const wechsel5 = postC.find((m) => m.t === 'gebiet');
 pruefe(wechsel5?.offen.includes('oberwelt_gold'), 'nach dem Neustart steht die Truhe oben noch offen');
@@ -403,7 +408,7 @@ const lesen = (klasse) => {
   const p = [];
   const x = mitCharakter(spiel8, `Leser${klasse}`, (m) => p.push(m), klasse, 'mensch');
   spiel8.wechseln(x, 'tempel', 'von_riftside');
-  Object.assign(x, { x: 9 * 32 + 16, y: 8 * 32 + 24 });
+  Object.assign(x, { x: 9 * 32 + 16, y: 7 * 32 + 24 });
   uhr += 300;
   spiel8.nachricht(x.id, { t: 'ansprechen', r: 'links' });
   spiel8.verlassen(x.id);
@@ -755,6 +760,168 @@ const arena = (art, abstand) => {
   tag.takt(0.05);
   const st = pt.find((m) => m.t === 'stand');
   pruefe(Math.abs(pt[0].zeit - z0) < 0.001 && st && Math.abs(st.zeit - tag.tageszeit()) < 0.001, 'Willkommen und jeder Stand nennen die Tageszeit');
+}
+
+// ---------- Fallen und Steinkugel im Tempel ----------
+{
+  const sp = new Spiel(karten, werte, { jetzt: () => uhr });
+  const ft = werte.fallen;
+  const lauf = (ms, je) => {
+    for (let t = 0; t < ms; t += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+      je?.();
+    }
+  };
+  const pt = [];
+  const indy = mitCharakter(sp, 'Indy', (m) => pt.push(m));
+  sp.wechseln(indy, 'tempel', 'von_riftside');
+  const tempel = sp.gebiete.get('tempel');
+  const f = tempel.fallen;
+  pruefe(f.liste.filter((x) => x.art === 'stacheln').length === 6 && f.liste.filter((x) => x.art === 'pfeile').length === 3 && f.kugel?.z === 'ruht',
+    `Tempel: ${f.liste.length} Fallen, Kugel ${f.kugel?.z}`);
+  pruefe(tempel.welt.istFest(10, 1) && !tempel.welt.istFest(10, 27), 'die ruhende Kugel belegt ihre Nische, die Vorhalle ist frei');
+
+  // Stacheln: oben tut es weh, unten nicht. Kachel (9,10) hat Versatz 0.
+  const st = f.liste.find((x) => x.art === 'stacheln' && x.versatz === 0);
+  const aufStacheln = () => Object.assign(indy, { x: st.x, y: st.y + 8, unverwundbarBis: 0, leben: 6, tot: false });
+  uhr += ft.stacheln.periode - (uhr % ft.stacheln.periode) + ft.stacheln.oben + 50; // jetzt unten
+  aufStacheln();
+  lauf(50);
+  const untenLeben = indy.leben;
+  uhr += ft.stacheln.periode - (uhr % ft.stacheln.periode) + 50; // jetzt oben
+  aufStacheln();
+  lauf(50);
+  pruefe(untenLeben === 6 && indy.leben === 6 - ft.stacheln.schaden, `Stacheln: unten ${6 - untenLeben}, oben ${6 - indy.leben} Schaden`);
+  const stand = tempel.stand(uhr);
+  pruefe(stand.fallen?.length === 9 && stand.fallen[f.liste.indexOf(st)] === 1, `der Stand nennt die Fallen (${stand.fallen?.join('')})`);
+
+  // Druckplatte: Klick, kurz danach ein Pfeil aus der linken Wand.
+  const platte = f.liste.find((x) => x.art === 'pfeile');
+  Object.assign(indy, { x: platte.x, y: platte.y + 8, unverwundbarBis: 0, leben: 6 });
+  pt.length = 0;
+  lauf(50);
+  const klick = pt.some((m) => m.t === 'falle' && m.art === 'klick');
+  let pfeil = null;
+  lauf(ft.pfeile.verzoegerung + 50, () => {
+    const p = [...tempel.geschosse.values()].find((p) => p.von === 'falle');
+    if (p && !pfeil) pfeil = { ...p };
+  });
+  lauf(800);
+  pruefe(klick && pfeil && pfeil.x < 9 * 32 + 8 && pfeil.vx > 0 && indy.leben === 6 - ft.pfeile.schaden,
+    `Druckplatte: Klick ${klick}, Pfeil aus der Wand bei x ${pfeil?.x.toFixed(0)}, trifft (${6 - indy.leben} Schaden)`);
+  // Wer nach dem Klick weiterläuft, kommt davon.
+  lauf(ft.pfeile.abklingzeit);
+  Object.assign(indy, { x: platte.x, y: platte.y + 8, unverwundbarBis: 0, leben: 6 });
+  lauf(50);
+  indy.y += 40;
+  lauf(800);
+  pruefe(indy.leben === 6, `wer nach dem Klick weiterläuft, bleibt heil (${indy.leben})`);
+
+  // Das Idol weckt die Kugel: erst Grollen, dann rollt sie den Gang hinab.
+  Object.assign(indy, { x: 10 * 32 + 16, y: 5 * 32 + 16, unverwundbarBis: uhr + 1e6, leben: 6 });
+  pt.length = 0;
+  uhr += 300;
+  sp.nachricht(indy.id, { t: 'ansprechen', r: 'oben' });
+  pruefe(pt.some((m) => m.t === 'dialog' && m.seiten[0].includes('goldene Idol')) && pt.some((m) => m.t === 'truhe' && m.offen), 'Idol vom Sockel genommen');
+  lauf(100);
+  pruefe(f.kugel.z === 'grollt' && pt.some((m) => m.t === 'beben'), `die Kugel grollt (${f.kugel.z})`);
+  lauf(ft.kugel.verzoegerung + 100);
+  const y0 = f.kugel.y;
+  lauf(1000);
+  pruefe(f.kugel.z === 'rollt' && f.kugel.y > y0 && !tempel.welt.istFest(10, 1), `die Kugel rollt (${y0.toFixed(0)} → ${f.kugel.y.toFixed(0)})`);
+  // Wer im Gang steht, wird überrollt.
+  Object.assign(indy, { x: 10 * 32 + 16, y: f.kugel.y + 60, unverwundbarBis: 0, leben: 6 });
+  lauf(1500);
+  pruefe(indy.leben === 6 - ft.kugel.schaden, `überrollt: ${6 - indy.leben} Schaden`);
+  // Unten bleibt sie liegen — mitten in der Vorhalle, der Weg zum Riss frei.
+  Object.assign(indy, { x: 10 * 32 + 16, y: 27 * 32 + 24, unverwundbarBis: uhr + 1e6 });
+  lauf(15000);
+  pruefe(f.kugel.z === 'liegt' && tempel.welt.istFest(10, 27) && tempel.welt.istFest(11, 28), `die Kugel liegt (${f.kugel.z} bei y ${f.kugel.y})`);
+  pruefe(tempel.welt.frei(indy.x, indy.y) && pt.some((m) => m.t === 'korrektur'), `wer, wo sie liegen bleibt, stand, wird zur Seite geschoben (${indy.x.toFixed(0)},${indy.y.toFixed(0)})`);
+  pruefe(tempel.welt.frei(8 * 32 + 16, 25 * 32 + 24) && tempel.welt.frei(10 * 32 + 16, 32 * 32 + 24), 'um die Kugel herum geht es zum Riss');
+}
+
+// ---------- Akropolis: drei Platten öffnen das Tor, die Eule schließt den Riss ----------
+{
+  const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+  let sp = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  const lauf = (ms) => {
+    for (let t = 0; t < ms; t += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+    }
+  };
+  const pa = [], pb = [];
+  const ari = mitCharakter(sp, 'Ari', (m) => pa.push(m));
+  const bea = mitCharakter(sp, 'Bea', (m) => pb.push(m));
+  const rift = sp.gebiete.get('riftside');
+  const risse = rift.uebergaenge.filter((u) => u.eig.art === 'riss');
+  const zurAkropolis = risse.find((u) => u.eig.ziel === 'akropolis');
+  pruefe(risse.length === 2 && zurAkropolis && risse.some((u) => u.eig.ziel === 'tempel'), `Riftside hat zwei Risse (${risse.map((u) => u.eig.ziel).join(', ')})`);
+  // Durch den Riss in der Seilergasse: von unten hineinlaufen wie ein Spieler.
+  const k = 32, rx = zurAkropolis.x + zurAkropolis.b / 2;
+  Object.assign(ari, { x: rx, y: zurAkropolis.y + zurAkropolis.h + 20, unverwundbarBis: uhr + 1e6 });
+  uhr += 500;
+  sp.nachricht(ari.id, { t: 'pos', x: rx, y: zurAkropolis.y + zurAkropolis.h - 2, r: 'oben', k: ari.korrektur });
+  pruefe(ari.gebiet === 'akropolis', `durch die Seilergasse auf die Akropolis (${ari.gebiet})`);
+  sp.wechseln(bea, 'akropolis', 'von_riftside');
+  bea.unverwundbarBis = uhr + 1e6;
+  const ak = sp.gebiete.get('akropolis');
+  const platten = ak.fallen.liste.filter((f) => f.art === 'platte');
+  const tor = ak.welt.dinge.find((d) => d.name === 'tuer');
+  pruefe(platten.length === 3 && tor && !ak.welt.geoeffnet.has(tor.schluessel), `drei Platten, Tor zu (${platten.length})`);
+  // Das Tor ohne Rätsel: kein Schlüssel hilft.
+  sp.gruppe().schluessel = 1;
+  pa.length = 0;
+  Object.assign(ari, { x: tor.x, y: tor.y + 32 });
+  uhr += 300;
+  sp.nachricht(ari.id, { t: 'ansprechen', r: 'oben' });
+  pruefe(!ak.welt.geoeffnet.has(tor.schluessel) && sp.gruppe().schluessel === 1 && pa.some((m) => m.t === 'dialog' && m.seiten[0].includes('rührt sich nicht')),
+    'das Tor geht nicht mit einem Schlüssel auf');
+  const auf = (wer, f) => Object.assign(wer, { x: f.x, y: f.y + 8 });
+  const weg = (wer) => Object.assign(wer, { x: 12 * k + 16, y: 19 * k + 24 });
+  // Zu langsam: die erste Platte ist wieder oben, bis die dritte gedrückt ist.
+  auf(ari, platten[0]);
+  lauf(100);
+  weg(ari);
+  lauf(werte.fallen.platte.dauer / 2);
+  auf(bea, platten[1]);
+  lauf(100);
+  weg(bea);
+  lauf(werte.fallen.platte.dauer / 2 + 200);
+  auf(ari, platten[2]);
+  lauf(100);
+  pruefe(!sp.zustaende().akropolis_tor, 'zu langsam: das Tor bleibt zu');
+  pruefe(ak.stand(uhr).fallen.join('') === '011', `die erste Platte ist schon wieder oben (${ak.stand(uhr).fallen.join('')})`);
+  // Zu zweit, rechtzeitig.
+  pb.length = 0;
+  auf(bea, platten[0]);
+  lauf(100);
+  auf(bea, platten[1]);
+  lauf(100);
+  pruefe(sp.zustaende().akropolis_tor && ak.welt.geoeffnet.has(tor.schluessel) && pb.some((m) => m.t === 'tuer' && m.ding === tor.schluessel && m.offen),
+    'alle drei rechtzeitig: das Tor ist offen, und alle erfahren es');
+  lauf(werte.fallen.platte.dauer + 500);
+  pruefe(ak.stand(uhr).fallen.join('') === '111', 'gelöst: die Platten bleiben unten');
+  // Durch das Tor zum Sockel, die Eule nehmen.
+  pa.length = 0;
+  const sockel = ak.welt.dinge.find((d) => d.name === 'sockel');
+  Object.assign(ari, { x: sockel.x, y: sockel.y + 32 });
+  pruefe(ak.welt.frei(tor.x, tor.y + 8), 'durch das offene Tor kommt man');
+  uhr += 300;
+  sp.nachricht(ari.id, { t: 'ansprechen', r: 'oben' });
+  pruefe(sp.gruppe().eule === 1 && sp.zustaende().akropolis_geschlossen && !sp.zustaende().tempel_geschlossen, 'die Eule genommen: nur der Riss zur Akropolis ist zu');
+  sp.wechseln(ari, 'riftside', 'aus_akropolis');
+  Object.assign(ari, { x: rx, y: zurAkropolis.y + zurAkropolis.h + 20 });
+  uhr += 500;
+  sp.nachricht(ari.id, { t: 'pos', x: rx, y: zurAkropolis.y + zurAkropolis.h - 2, r: 'oben', k: ari.korrektur });
+  pruefe(ari.gebiet === 'riftside', 'der Riss in der Seilergasse lässt niemanden mehr durch');
+  // Nach dem Neustart steht das Tor offen.
+  sp.verlassen(ari.id);
+  sp.verlassen(bea.id);
+  sp = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  pruefe(sp.gebiete.get('akropolis').welt.geoeffnet.has(tor.schluessel), 'nach dem Neustart steht das Tor offen');
 }
 
 // --- An die Wand heran, egal bei welcher Bildrate ---

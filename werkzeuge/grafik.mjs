@@ -264,35 +264,83 @@ function treppe(b, runter) {
   b.rechteck(K - 3, 0, 3, K, '#5e5146');
 }
 
+// Tempelboden: große, verschobene Platten, Moos in den Fugen, Risse.
 function tempelboden(b) {
-  // Große, leicht verschobene Steinplatten mit Moos in den Fugen.
-  b.rechteck(0, 0, K, K, '#8a8a6a');
+  const n = rauschen(93, 4), z = zufall(91);
+  for (let y = 0; y < K; y++) for (let x = 0; x < K; x++) b.setze(x, y, n(x, y) < 0.5 ? '#8e8a6c' : '#98947a');
   for (const [x, y, w, h] of [[0, 0, 15, 15], [16, 0, 16, 10], [16, 11, 16, 21], [0, 16, 15, 16]]) {
-    b.rechteck(x + 1, y + 1, w - 1, h - 1, '#9c9c78');
-    b.rechteck(x + 1, y + 1, w - 1, 1, '#b0b08a');
+    b.rechteck(x, y, w + 1, 1, '#5e5a44');
+    b.rechteck(x, y, 1, h + 1, '#5e5a44');
+    b.rechteck(x + 1, y + 1, w - 1, 1, '#b2ae8e');
   }
-  const z = zufall(91);
-  for (let i = 0; i < 9; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.6 ? '#5e8a3e' : '#76767a');
-  for (const [x, y] of [[15, 4], [15, 20], [22, 10], [5, 15]]) b.rechteck(x, y, 2, 2, '#4f7a34');
+  for (let i = 0; i < 7; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#6a6650');
+  for (const [x, y] of [[15, 4], [15, 20], [22, 10], [5, 15], [16, 27]]) {
+    b.rechteck(x, y, 2, 2, '#4f7a34');
+    b.setze(x + 1, y - 1, '#6a9a44');
+  }
+  b.linie(20, 14, 26, 19, '#6a6650');
 }
 
-function tempelwand(b) {
-  // Behauene Quader, oben dunkle Kante, Ranken hängen herab.
-  b.rechteck(0, 0, K, K, '#6e6a52');
+// Marmor der Akropolis: große helle Platten, Adern, ausgetretene Kanten.
+function marmor(b) {
+  const n = rauschen(131, 4), z = zufall(132);
+  for (let y = 0; y < K; y++) for (let x = 0; x < K; x++) b.setze(x, y, n(x, y) < 0.5 ? '#e4ded2' : '#ece6da');
+  for (const [x, y, w, h] of [[0, 0, 15, 15], [16, 0, 15, 15], [0, 16, 15, 15], [16, 16, 15, 15]]) {
+    b.rechteck(x, y + h, w + 1, 1, '#b8b0a2');
+    b.rechteck(x + w, y, 1, h + 1, '#b8b0a2');
+    b.rechteck(x, y, w, 1, '#f8f4ec');
+  }
+  b.linie(3, 20, 9, 26, '#cfc8ba');
+  b.linie(20, 4, 27, 8, '#cfc8ba');
+  for (let i = 0; i < 6; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#d4ccbe');
+}
+
+// Säule: kannelierter Schaft auf Marmor, oben ein Kapitell. Sie ist eine
+// Kachel hoch — der Schatten darunter kommt wie bei Wänden von den Kanten.
+function saeule(b) {
+  marmor(b);
+  b.ellipse(16, 29, 11, 3, '#9a9286');
+  b.rechteck(7, 2, 18, 4, '#f4f0e8');
+  b.rechteck(6, 0, 20, 3, '#e8e2d6');
+  b.rechteck(9, 6, 14, 22, '#e2dcd0');
+  for (let x = 10; x < 23; x += 3) b.rechteck(x, 6, 1, 22, '#c4bcae');
+  b.rechteck(9, 6, 2, 22, '#f6f2ea');
+  b.rechteck(21, 6, 2, 22, '#b4ac9e');
+  b.rechteck(7, 27, 18, 3, '#d4ccbe');
+}
+
+// Marmorwand: der Sockel des Tempels — Quader, oben ein Fries.
+function marmorwand(b) {
+  b.rechteck(0, 0, K, K, '#c8c0b2');
   for (let reihe = 0; reihe < 3; reihe++) {
-    const y = 2 + reihe * 10;
-    const v = reihe % 2 ? 10 : 0;
+    const y = 6 + reihe * 9, v = reihe % 2 ? 8 : 0;
+    for (let x = -v; x < K; x += 16) {
+      b.rechteck(x + 1, y, 14, 8, reihe % 2 ? '#dcd6ca' : '#e4ded2');
+      b.rechteck(x + 1, y, 14, 1, '#f4f0e8');
+    }
+  }
+  b.rechteck(0, 0, K, 5, '#a89e8e');
+  for (let x = 2; x < K; x += 6) b.rechteck(x, 1, 3, 3, '#d0c8ba');
+}
+
+// Tempelwand: behauene Quader, oben eine dunkle Kante, Ranken hängen herab.
+function tempelwand(b) {
+  const z = zufall(94);
+  b.rechteck(0, 0, K, K, '#4e4a38');
+  for (let reihe = 0; reihe < 3; reihe++) {
+    const y = 2 + reihe * 10, v = reihe % 2 ? 10 : 0;
     for (let x = -v; x < K; x += 20) {
-      b.rechteck(x + 1, y, 18, 9, '#86825f');
+      const ton = ['#7e7a5a', '#86825f', '#76724f'][Math.floor(z() * 3)];
+      b.rechteck(x + 1, y, 18, 9, ton);
       b.rechteck(x + 1, y, 18, 1, '#a09c74');
       b.rechteck(x + 1, y + 8, 18, 1, '#57533f');
     }
   }
-  b.rechteck(0, 0, K, 2, '#2a1e2e');
+  b.rechteck(0, 0, K, 2, '#2a2620');
   for (const [x, l] of [[6, 14], [21, 9], [27, 18]]) {
-    b.linie(x, 2, x, 2 + l, '#3f8c3a');
-    b.setze(x + 1, 6, '#62b452');
-    b.setze(x - 1, 10, '#62b452');
+    for (let y = 2; y < 2 + l; y++) b.setze(x + (y % 5 === 0 ? 1 : 0), y, y % 3 ? '#3d853d' : '#58a548');
+    b.setze(x + 1, 6, BL.hell);
+    b.setze(x - 1, 10, BL.hell);
   }
 }
 
@@ -576,6 +624,9 @@ const maler = {
   treppe_hoch: (b) => treppe(b, false),
   tempelboden,
   tempelwand,
+  marmor,
+  saeule,
+  marmorwand,
   pflaster,
   sand,
   dach,
@@ -600,6 +651,16 @@ const maler = {
   // tupfen — aus der Ferne gesehen, nicht zum Betreten).
   strand: sand,
   see: (b) => wasser(b, 0),
+  // Wandfackel: Halter aus Eisen, Flamme mit hellem Kern (sie leuchtet im
+  // Spiel; das Bild allein wäre am Tag zu blass).
+  fackel: (b) => {
+    tempelwand(b);
+    b.rechteck(14, 16, 4, 8, '#3a3440');
+    b.rechteck(12, 14, 8, 3, '#5a5060');
+    b.ellipse(16, 10, 4, 6, '#e8742a');
+    b.ellipse(16, 11, 2.5, 4, '#f8c848');
+    b.ellipse(16, 12, 1.2, 2, '#fff4c0');
+  },
   see2: (b) => wasser(b, 1),
   land: (b) => {
     grasGrund(b, 7, 4);
@@ -809,7 +870,8 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
 // ---------- Gegenstände (16×16, für Inventar und Laden) ----------
 // Reihenfolge = „bild" in gegenstaende.json: 0 Gold, 1 Schlüssel,
 // 2 Rissstein, 3 Heiltrank, 4 Langschwert, 5 Lederrüstung, 6 Kettenhemd,
-// 7 Zauberstab, 8 Ring, 9 Karte (nur für den Knopf).
+// 7 Zauberstab, 8 Ring, 9 Karte (nur für den Knopf), 10 Goldenes Idol,
+// 11 Eulenstatuette.
 {
   const symbol = [];
   const neu = () => new Bild(16, 16);
@@ -881,6 +943,16 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
   b.linie(5, 10, 9, 6, '#a04030');
   b.setze(9, 6, '#d04030');
   symbol.push(b);
+  b = neu(); // Goldenes Idol
+  b.rechteck(6, 9, 4, 5, '#d8a02a');
+  b.ellipse(8, 6, 3.5, 4, '#e8b84a');
+  b.setze(7, 5, '#7a4a10');
+  b.setze(9, 5, '#7a4a10');
+  b.setze(6, 3, '#fff0b0');
+  symbol.push(b);
+  b = neu(); // Eulenstatuette aus Silber
+  eule(b, 8, 9);
+  symbol.push(b);
   const blatt = new Bild(16 * symbol.length, 16);
   symbol.forEach((sy, i) => {
     sy.umriss(RAND);
@@ -913,6 +985,112 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
   blatt.einfuegen(boot, 0, 0);
   blatt.einfuegen(boot.gedreht(1), 48, 0);
   blatt.speichern(ziel + 'boot.png');
+}
+
+// ---------- Tempel: Fallen, Steinkugel, Sockel ----------
+// fallen.png (32×32): 0 Stacheln unten (Löcher), 1 Stacheln oben,
+// 2 Druckplatte, 3 Druckplatte gedrückt.
+{
+  const blatt = new Bild(4 * K, K);
+  const loecher = (b) => {
+    for (let y = 6; y < K; y += 9) for (let x = 5; x < K; x += 9) {
+      b.ellipse(x, y, 2, 1.5, '#2e2a22');
+      b.setze(x - 1, y - 1, '#57533f');
+    }
+  };
+  const unten = new Bild(K, K);
+  loecher(unten);
+  const oben = new Bild(K, K);
+  loecher(oben);
+  for (let y = 6; y < K; y += 9) for (let x = 5; x < K; x += 9) {
+    oben.rechteck(x - 1, y - 7, 3, 7, '#b8b8c8');
+    oben.setze(x, y - 8, '#e8e8f4');
+    oben.rechteck(x + 1, y - 6, 1, 6, '#7a7a8a');
+  }
+  oben.umriss(RAND);
+  const platte = (gedrueckt) => {
+    const b = new Bild(K, K);
+    b.rechteck(3, 3, 26, 26, '#5e5a44');
+    b.rechteck(4, 4 + gedrueckt, 24, 24 - gedrueckt, gedrueckt ? '#86825f' : '#a8a482');
+    if (!gedrueckt) b.rechteck(4, 4, 24, 1, '#c8c4a0');
+    b.rechteck(13, 13, 6, 6, gedrueckt ? '#6a6650' : '#8e8a6c');
+    return b;
+  };
+  [unten, oben, platte(0), platte(2)].forEach((b, i) => blatt.einfuegen(b, i * K, 0));
+  blatt.speichern(ziel + 'fallen.png');
+}
+// kugel.png: 4 Bilder 64×64 — die Kugel rollt nach unten; Risse und Flecken
+// wandern dabei nach unten mit (so sieht man das Rollen von oben).
+{
+  const blatt = new Bild(4 * 64, 64);
+  for (let i = 0; i < 4; i++) {
+    const b = new Bild(64, 64);
+    b.ellipse(32, 32, 28, 28, '#8a8070');
+    b.ellipse(26, 25, 20, 18, '#a0968a');
+    b.ellipse(20, 18, 9, 7, '#bcb2a4');
+    b.ellipse(40, 44, 16, 10, '#6e6658', (x, y) => y > 38);
+    const v = i * 7;
+    for (const [x, y, l] of [[18, 6, 9], [36, 20, 7], [26, 34, 10], [44, 2, 8]]) {
+      const yy = ((y + v) % 56) + 4;
+      const rand = Math.sqrt(Math.max(0, 28 * 28 - (yy - 32) ** 2));
+      if (Math.abs(x - 32) < rand - 4) b.linie(x, yy, x + l, yy + 2, '#5e5648');
+    }
+    for (const [x, y] of [[30, 12], [16, 40], [46, 30]]) {
+      const yy = ((y + v) % 56) + 4;
+      if (Math.hypot(x - 32, yy - 32) < 24) b.ellipse(x, yy, 3, 2, '#776e60');
+    }
+    b.umriss(RAND);
+    blatt.einfuegen(b, i * 64, 0);
+  }
+  blatt.speichern(ziel + 'kugel.png');
+}
+// sockel.png (32×48): 0 mit goldenem Idol, 1 leer; 2 Marmorsockel mit
+// Eule, 3 leer (Akropolis, Eigenschaft aussehen: marmor).
+{
+  const blatt = new Bild(128, 48);
+  for (let i = 0; i < 4; i++) {
+    const b = new Bild(32, 48);
+    bodenschatten(b, 16, 45, 12, 3, 70);
+    const s = new Bild(32, 48);
+    const marmor = i >= 2;
+    s.rechteck(8, 30, 16, 15, marmor ? '#d8d4cc' : '#8e8a6c');
+    s.rechteck(6, 28, 20, 4, marmor ? '#f0ece4' : '#a8a482');
+    s.rechteck(6, 43, 20, 3, marmor ? '#a8a49c' : '#76724f');
+    s.rechteck(9, 32, 3, 11, marmor ? '#f0ece4' : '#a8a482');
+    s.rechteck(21, 32, 3, 11, marmor ? '#b4b0a8' : '#6a6650');
+    if (marmor) for (let x = 13; x < 20; x += 3) s.rechteck(x, 32, 1, 11, '#c0bcb4');
+    if (i === 2) eule(s, 16, 20, 1.6);
+    if (i === 0) {
+      // Das Idol: eine kleine goldene Figur mit großem Kopf.
+      s.rechteck(13, 20, 6, 8, '#d8a02a');
+      s.ellipse(16, 15, 5, 5.5, '#e8b84a');
+      s.rechteck(14, 14, 1, 2, '#7a4a10');
+      s.rechteck(17, 14, 1, 2, '#7a4a10');
+      s.rechteck(14, 18, 4, 1, '#a8701a');
+      s.setze(13, 12, '#fff0b0');
+      s.rechteck(11, 21, 2, 4, '#d8a02a');
+      s.rechteck(19, 21, 2, 4, '#c8901a');
+    }
+    s.umriss(RAND);
+    b.einfuegen(s, 0, 0);
+    blatt.einfuegen(b, i * 32, 0);
+  }
+  blatt.speichern(ziel + 'sockel.png');
+}
+
+// Die Eule der Akropolis: rund, große Augen, Ohrbüschel. g = Größe.
+function eule(b, cx, cy, g = 1) {
+  b.ellipse(cx, cy + 1 * g, 4 * g, 4.5 * g, '#a8b0bc');
+  b.ellipse(cx, cy - 3 * g, 3.5 * g, 3 * g, '#c4ccd6');
+  b.setze(cx - 3 * g, cy - 6 * g, '#c4ccd6');
+  b.setze(cx + 3 * g - 1, cy - 6 * g, '#c4ccd6');
+  for (const dx of [-1.5, 1.5]) {
+    b.ellipse(cx + dx * g, cy - 3 * g, 1.3 * g, 1.3 * g, '#f4f0e0');
+    b.setze(cx + dx * g, cy - 3 * g, '#2a2430');
+  }
+  b.setze(cx, cy - 1.5 * g, '#d8a02a');
+  b.ellipse(cx, cy + 2 * g, 2 * g, 2 * g, '#dce2ea');
+  b.setze(cx - 2 * g, cy - 4.5 * g, '#ffffff');
 }
 
 // ---------- Schild und Truhe ----------

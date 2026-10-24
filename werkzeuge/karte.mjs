@@ -31,7 +31,11 @@ const KARTEN = {
       // Am Ende des mittleren Stegs liegen die Boote: hinaus aufs Meer.
       M: { ziel: 'meer', ankunft: 'hafen_riftside', kachel: 'bruecke' },
       // Die Fischergasse: ein Riss in den Dschungeltempel.
-      R: { ziel: 'tempel', ankunft: 'von_riftside', art: 'riss', bedingung: '!tempel_geschlossen' },
+      // Zeilenweise: die Seilergasse (Akropolis) liegt links von der Fischergasse.
+      R: [
+        { ziel: 'akropolis', ankunft: 'von_riftside', art: 'riss', bedingung: '!akropolis_geschlossen' },
+        { ziel: 'tempel', ankunft: 'von_riftside', art: 'riss', bedingung: '!tempel_geschlossen' },
+      ],
       // Begehbare Haustüren, zeilenweise gelesen.
       N: [
         { ziel: 'rathaus', ankunft: 'eingang' },
@@ -42,7 +46,7 @@ const KARTEN = {
     ankuenfte: {
       w: { id: 'vom_wald', richtung: 'unten' },
       Y: { id: 'vom_meer', richtung: 'oben' },
-      z: { id: 'aus_tempel', richtung: 'unten' },
+      z: [{ id: 'aus_akropolis', richtung: 'unten' }, { id: 'aus_tempel', richtung: 'unten' }],
       e: [
         { id: 'aus_rathaus', richtung: 'unten' },
         { id: 'aus_hafenmeisterei', richtung: 'unten' },
@@ -64,7 +68,7 @@ const KARTEN = {
         { name: 'Hafenmeisterin Mara', aussehen: 'hafenmeisterin', richtung: 'oben',
           text: 'Kein Schiff legt mehr an, seit die Risse da sind.\n\nDie Kapitäne sagen, der ganze Hafen flimmert schon von weitem.' },
       ],
-      '!': [{ text: 'Riftside\n\nNorden: Stadttor zum Inselwald\nSüden: Hafen\nOsten: Fischergasse' }],
+      '!': [{ text: 'Riftside\n\nNorden: Stadttor zum Inselwald\nSüden: Hafen\nOsten: Fischergasse\nWesten: Seilergasse' }],
       '$': [{ inhalt: 'gold:10', id: 'riftside_gold' }],
     },
     text: `
@@ -83,10 +87,10 @@ T.pppppppppppppppppppppppppppppppppppppppp.T
 T.pppppppppppppppppppppppppppp@ppppppppppp.T
 T.l.............pp@ppppppppp......p......l.T
 T...............pppppppppppp......p........T
-T..rrrrr.rrrrr......lppl.....rrrrrRrrrrr...T
-T..qqqqq.qqqqq.......pp......qqqqqpqqqqq...T
-T.*hfnfh.hfNfhb......pp...*..hfNfhphfnfh.b.T
-T....p.....e...b.....pp........e..z..p.....T
+T..rrrrrRrrrrr......lppl.....rrrrrRrrrrr...T
+T..qqqqqpqqqqq.......pp......qqqqqpqqqqq...T
+T.*hfnfhphfNfhb......pp...*..hfNfhphfnfh.b.T
+T....p..z..e...b.....pp........e..z..p.....T
 T$...p.....p.........pp........p..p..p.....T
 T....pkv...p.........SS..kkv...p..p..p.v...T
 T.pppppppppppppppppppppppppppppppppppppppp.T
@@ -292,6 +296,12 @@ T...T.............,......b...T
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 `,
   },
+  // Der Dschungeltempel hinter dem Riss in der Fischergasse — angelehnt an
+  // den Anfang des ersten Indiana Jones: Fackeln, Stachelfallen, Druck-
+  // platten mit Pfeilen aus der Wand, das goldene Idol auf dem Sockel. Wer
+  // es nimmt, weckt die Steinkugel (K): sie rollt den Gang hinab und bleibt
+  // mitten in der Vorhalle liegen (U). Nicht im Gang: wer zu langsam war und
+  // überrollt wurde, säße sonst hinter ihr fest.
   tempel: {
     titel: 'den Dschungeltempel',
     licht: 'dunkel',
@@ -299,26 +309,106 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     uebergaenge: { R: { ziel: 'riftside', ankunft: 'aus_tempel', art: 'riss' } },
     ankuenfte: { a: { id: 'von_riftside', richtung: 'oben' } },
     dinge: {
-      '$': [{
-        inhalt: 'rissstein', id: 'tempel_rissstein', setzt: 'tempel_geschlossen',
-        meldung: 'Ein Beben geht durch Riftside — der Riss in der Fischergasse schließt sich!',
+      '?': [{
+        inhalt: 'idol', id: 'tempel_idol', setzt: 'idol_genommen,tempel_geschlossen',
+        meldung: 'Ein Grollen geht durch den Tempel … und in Riftside schließt sich der Riss in der Fischergasse!',
       }],
       // Magische Schrift: nur ein Magier kann sie lesen (Vorteil „magie").
-      '!': [{ magisch: true, text: 'Eine Inschrift in leuchtenden Runen:\n\n„Wer den Stein nimmt, schließt das Tor."' }],
+      '!': [{ magisch: true, text: 'Eine Inschrift in leuchtenden Runen:\n\n„Wer das Gold vom Sockel hebt, weckt den Stein. Lauf."' }],
+    },
+    punkte: {
+      K: { name: 'kugel_start', ausloeser: 'idol_genommen' },
+      U: { name: 'kugel_ende' },
+      '%': [0, 1000, 0, 1000, 0, 1000].map((versatz) => ({ name: 'falle', art: 'stacheln', versatz })),
+      '+': { name: 'falle', art: 'pfeile', richtung: 'rechts' },
     },
     text: `
-WWWWWWWWWWWWWWWWWW
-W;;;;;;;;;;;;;;;;W
-W;WW;;;;;$;;;;WW;W
-W;WW;;;;;;;;;;WW;W
-W;;;;g;;;;;;;g;;;W
-W;;;;;;;;;;;;;;;;W
-W;WW;;;;;;;;;;WW;W
-W;WW;;g;;;;;g;;W;W
-W;;;;;;;!a;;;;;;;W
-W;;;;;;;;;;;;;;;;W
-W;;;;;;;;R;;;;;;;W
-WWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWW;K;WWWWWWWWW
+WWWWWWF;;;;;;;FWWWWWW
+WWWWWW;;;;;;;;;WWWWWW
+WWWWW;;;;;?;;;;;WWWWW
+WWWWW;;;;;;;;;;;WWWWW
+WWWWWF;;;;;;;;;FWWWWW
+WWWWWW;;!;;;;;;WWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWF;;;FWWWWWWWW
+WWWWWWWWW%%%WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW%%%WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWF;;;FWWWWWWWW
+WWWWWWWWW;+;WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW+;;WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW;;+WWWWWWWWW
+WWWWWWWWF;;;FWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWWWWWWW;;;WWWWWWWWW
+WWWF;;;;;;;;;;;;;FWWW
+WW;;;;;;;;;;;;;;;;;WW
+WW;;g;;;;;U;;;;;g;;WW
+WW;;;WW;;;;;;;WW;;;WW
+WW;;;WW;;;;;;;WW;;;WW
+WW;;;;;;;;;;;;;;;;;WW
+WWF;;;;;;;;;;;;;;;FWW
+WW;;;;;;;;a;;;;;;;;WW
+WW;;;;;;;;;;;;;;;;;WW
+WWWWWWWWW;R;WWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWW
+`,
+  },
+
+  // Die Akropolis hinter dem Riss in der Seilergasse: ein Tempel auf dem
+  // Hügel, das Tor zu. Davor drei Bodenplatten (+) — sie halten nur ein paar
+  // Sekunden; wer alle drei zugleich gedrückt hat, öffnet das Tor. Zu zweit
+  // stellt man sich drauf, allein muss man rennen. Drinnen steht die Eule auf
+  // dem Sockel; wer sie nimmt, schließt den Riss.
+  akropolis: {
+    titel: 'die Akropolis',
+    grund: 'marmor',
+    uebergaenge: { R: { ziel: 'riftside', ankunft: 'aus_akropolis', art: 'riss' } },
+    ankuenfte: { a: { id: 'von_riftside', richtung: 'oben' } },
+    dinge: {
+      '?': [{
+        inhalt: 'eule', id: 'akropolis_eule', aussehen: 'marmor', setzt: 'akropolis_geschlossen',
+        meldung: 'Die Eule ist fort … und in Riftside schließt sich der Riss in der Seilergasse!',
+      }],
+      D: [{ id: 'akropolis_tor', oeffnet_bei: 'akropolis_tor', text: 'Das bronzene Tor rührt sich nicht. Kein Schloss, kein Griff.' }],
+      '!': [{ text: 'In den Stein gemeißelt:\n\n„Wer die Göttin ehren will, betrete die drei Steine, ehe ihr Klang verhallt."' }],
+    },
+    punkte: {
+      '+': { name: 'falle', art: 'platte', setzt: 'akropolis_tor', meldung: 'Ein tiefer Ton — das Tor des Tempels schwingt auf!' },
+    },
+    gegner: ['skelett', 'skelett'],
+    text: `
+XXXXXXXXXXXXXXXXXXXXXXXXX
+XT,..QQQQQQQQQQQQQQQ..,TX
+X..,.Q|||||||||||||Q.,..X
+X.,..Q||||||?||||||Q..,.X
+X....Q|||||||||||||Q....X
+X.,..QQQQQQQDQQQQQQQ....X
+X....i.i.i.|||.i.i.i....X
+X.,......|||||||.....,..X
+XT...,...|||||||.......TX
+X..o......|||||.....,...X
+X..,..+...!|||....+.....X
+X.....,....|||......,...X
+Xg.........|||.........gX
+X..T....,..|||....,..T..X
+X..........|+|..........X
+X.,....o...|||....o...,.X
+XT.........|||.........TX
+X...,......|||...,......X
+X......T...|||.....T....X
+X.,........|||.......,..X
+X..........|a|..........X
+XT.,.......|||........,TX
+XXXXXXXXXXX|R|XXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXX
 `,
   },
 };

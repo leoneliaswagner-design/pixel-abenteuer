@@ -53,7 +53,9 @@ die Risse und müssen die Stadt retten.
 
 - Namen der Kontinente und der Startinsel. (Die Hafenstadt heißt **Riftside**
   und liegt auf der Startinsel.)
-- Welche Risse/Orte gibt es zuerst, und was „rettet" die Stadt?
+- Welche Risse/Orte gibt es noch, und was „rettet" die Stadt? (Eingebaut:
+  Fischergasse → Dschungeltempel mit Idol und Steinkugel, Seilergasse →
+  Akropolis mit Plattenrätsel und Eule.)
 - ~~Wie reist man zwischen den Inseln?~~ Mit Booten und Schiffen; man muss sich
   selbst mit Karte und Kompass orientieren (eingebaut: Ruderboot, Dunst,
   Kompass, Weltkarte ohne eigenen Punkt auf See).

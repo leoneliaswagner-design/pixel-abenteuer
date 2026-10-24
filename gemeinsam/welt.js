@@ -11,7 +11,7 @@ export const KOERPER = { halbeBreite: 6, hoehe: 8 };
 
 // Dinge, die man ansprechen kann. Sie stehen als Punkte in der Ebene „orte"
 // und belegen die Kachel, auf der sie stehen — man läuft nicht durch eine Truhe.
-export const DINGE = new Set(['schild', 'figur', 'truhe', 'tuer']);
+export const DINGE = new Set(['schild', 'figur', 'truhe', 'tuer', 'sockel']);
 
 // Ist eine Bedingung aus Tiled erfüllt? „tempel_geschlossen" verlangt den
 // Weltzustand, „!tempel_geschlossen" sein Fehlen; mehrere mit Komma, alle
@@ -61,6 +61,18 @@ export class Welt {
     // Geöffnete Türen (Schlüssel der Dinge): sie bleiben stehen, sind aber
     // offen und lassen durch.
     this.geoeffnet = new Set();
+    // Kacheln, die zur Laufzeit zu sind — die liegende Steinkugel im Tempel.
+    this.gesperrt = new Set();
+  }
+
+  // Die Steinkugel im Tempel: ruhend belegt sie ihre Nische, liegend drei
+  // mal drei Kacheln, rollend nichts. Server und Browser rechnen gleich —
+  // sonst liefe die eigene Figur in eine Kugel, die der Server für fest hält.
+  kugelSperren(x, y, z) {
+    this.gesperrt.clear();
+    if (z === 'rollt') return;
+    const tx = Math.floor(x / this.kachel), ty = Math.floor(y / this.kachel), r = z === 'liegt' ? 1 : 0;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) this.gesperrt.add(this.index(tx + dx, ty + dy));
   }
 
   eig(gid) {
@@ -78,7 +90,7 @@ export class Welt {
   istFest(tx, ty) {
     if (tx < 0 || ty < 0 || tx >= this.breite || ty >= this.hoehe) return true;
     const i = this.index(tx, ty);
-    if (this.eig(this.boden[i]).fest) return true;
+    if (this.eig(this.boden[i]).fest || this.gesperrt.has(i)) return true;
     const ding = this.belegt.get(i);
     if (ding && !this.geoeffnet.has(ding.schluessel)) return true;
     const h = this.hindernisse[i];

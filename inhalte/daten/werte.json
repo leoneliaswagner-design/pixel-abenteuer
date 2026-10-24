@@ -8,6 +8,7 @@
     "wald",
     "hoehle",
     "tempel",
+    "akropolis",
     "tiefwald",
     "meer"
   ],
@@ -59,5 +60,30 @@
     "beschleunigung": 1.6,
     "sicht": 28,
     "dunst": 110
+  },
+  "fallen": {
+    "kugel": {
+      "verzoegerung": 1200,
+      "anfang": 30,
+      "beschleunigung": 55,
+      "tempo": 82,
+      "schaden": 3,
+      "radius": 42
+    },
+    "stacheln": {
+      "periode": 2000,
+      "oben": 800,
+      "schaden": 1
+    },
+    "pfeile": {
+      "verzoegerung": 250,
+      "abklingzeit": 1600,
+      "tempo": 220,
+      "schaden": 1,
+      "weite": 3
+    },
+    "platte": {
+      "dauer": 7000
+    }
   }
 }

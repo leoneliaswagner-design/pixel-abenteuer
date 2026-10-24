@@ -3,7 +3,7 @@
 // aus kacheln.mjs, dazu S, g, !, @, $, D und die Übergänge/Ankünfte der Karte.
 import { KACHELN, GROESSE, SPALTEN, nummer } from './kacheln.mjs';
 
-const DING_ZEICHEN = { '!': 'schild', '@': 'figur', '$': 'truhe', D: 'tuer' };
+const DING_ZEICHEN = { '!': 'schild', '@': 'figur', '$': 'truhe', D: 'tuer', '?': 'sockel' };
 const nachZeichen = Object.fromEntries(KACHELN.map((k, i) => [k.zeichen, i]).filter(([z]) => z));
 const eigenschaft = (name, wert) => ({ name, type: typeof wert === 'boolean' ? 'bool' : 'string', value: wert });
 
@@ -55,6 +55,14 @@ export function karteBauen(name, def) {
         const eig = def.dinge?.[z]?.[n];
         if (!eig) throw new Error(`${name}: Ding '${z}' Nr. ${n + 1} bei ${x},${y} hat keine Angaben in „dinge"`);
         ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, v)) });
+      } else if (def.punkte?.[z]) {
+        // Weitere Punkte mit Namen und Eigenschaften — Fallen, Start und Ende
+        // der Steinkugel. Liste: das n-te Vorkommen nimmt den n-ten Eintrag.
+        const n = (gezaehlt[z] = (gezaehlt[z] ?? 0) + 1) - 1;
+        const p = Array.isArray(def.punkte[z]) ? def.punkte[z][n] : def.punkte[z];
+        if (!p) throw new Error(`${name}: Punkt '${z}' Nr. ${n + 1} bei ${x},${y} hat keinen Eintrag`);
+        const { name: pname, ...eig } = p;
+        ort({ name: pname, point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, typeof v === 'number' ? String(v) : v)) });
       } else if (z === 'g') {
         // „gegner": Liste der Arten in der Reihenfolge der „g" (zeilenweise);
         // ohne Liste sind es Schleime.
