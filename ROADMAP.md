@@ -67,8 +67,9 @@
    Gegenstände fallen nur aus Truhen und aus dem Laden (keine Funde auf dem
    Boden, kein Tauschen zwischen Spielern); Gegenstände der Kampagne eintragen.
 4. ~~Monster~~ — offen: Monster der Kampagne eintragen; Fledermäuse fliegen
-   noch nicht über Hindernisse; kein Sichtlinien-Test (Goblins schießen
-   durch Bäume nicht, der Pfeil bleibt aber am Baum hängen); Bosse.
+   noch nicht über Hindernisse; kein Sichtlinien-Test (ein Goblin schießt
+   auch, wenn ein Baum dazwischen steht — der Pfeil bleibt dann am Baum
+   hängen); Bosse.
 5. **Töne.**
 6. **Handy-Steuerung.**
 7. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
