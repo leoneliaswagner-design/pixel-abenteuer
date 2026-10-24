@@ -158,6 +158,8 @@ probe client/szenen/Spiel.js "this.input.keyboard.on('keydown-ONE'" "this.input.
   "Taste 1 trinkt nicht"
 probe client/index.html "#fenster .kasten { margin: auto; width: 100%; max-width: 560px;" "#fenster .kasten { margin: auto; width: 100%; min-width: 560px;" pruefstand/inventar.mjs \
   "Ladenfenster am Handy rechts abgeschnitten"
+probe client/index.html "      .symbol.leer { background-image: none; }" "" pruefstand/inventar.mjs \
+  "leere Plätze zeigen das Bildblatt gekachelt"
 
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi

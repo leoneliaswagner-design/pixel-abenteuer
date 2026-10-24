@@ -109,6 +109,21 @@ try {
   const herzenVorher = await leereHerzen(p);
   await p.keyboard.press('i');
   pruefe(await bis(p, (s) => s.fenster === 'rucksack'), 'I öffnet den Rucksack');
+  // Leere Plätze: kein Bild. Gemessen am Bildschirm — anfangs lag dort das
+  // ganze Bildblatt gekachelt.
+  const leerKasten = await p.locator('#fenster .platz.leer').first().boundingBox();
+  const leerBild = await p.screenshot({ clip: { x: leerKasten.x + 8, y: leerKasten.y + 8, width: 32, height: 32 } });
+  const goldImLeeren = await p.evaluate(async (daten) => {
+    const b = await createImageBitmap(await (await fetch(`data:image/png;base64,${daten}`)).blob());
+    const c = new OffscreenCanvas(b.width, b.height).getContext('2d');
+    c.drawImage(b, 0, 0);
+    const d = c.getImageData(0, 0, b.width, b.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] > 200 && d[i + 1] > 150 && d[i + 2] < 120) n++;
+    return n;
+  }, leerBild.toString('base64'));
+  z.bildpunkte += 32 * 32;
+  pruefe(goldImLeeren === 0, `leerer Ausrüstungsplatz ohne Bild (${goldImLeeren} goldene Bildpunkte)`);
   const schadenVorher = await p.evaluate(() => window.__spiel.szene.charakter.werte.schaden);
   await p.click('#fenster [data-tun=waehlen][data-art=langschwert]');
   await p.click('#fenster [data-tun=anlegen][data-art=langschwert]');

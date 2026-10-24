@@ -101,7 +101,7 @@ export class Fenster {
       const art = d.ausruestung[p];
       zeilen.push(art
         ? `<button class="platz voll${this.gewaehlt === art ? ' an' : ''}" data-tun="waehlen" data-art="${html(art)}">${this.symbol(art)}<span><small>${PLATZ_NAME[p]}</small>${html(d.gegenstaende[art]?.name ?? art)}</span></button>`
-        : `<div class="platz leer">${'<span class="symbol"></span>'}<span><small>${PLATZ_NAME[p]}</small>leer</span></div>`);
+        : `<div class="platz leer"><span class="symbol leer"></span><span><small>${PLATZ_NAME[p]}</small>leer</span></div>`);
     }
     zeilen.push('</div>');
     const dinge = Object.entries(d.inventar).filter(([a, n]) => n > 0 && a !== 'gold' && !d.gegenstaende[a]?.gemeinsam);
