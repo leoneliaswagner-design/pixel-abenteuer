@@ -596,6 +596,16 @@ const maler = {
   tisch: (b) => moebel(b, 'tisch'),
   bett: (b) => moebel(b, 'bett'),
   regal: (b) => moebel(b, 'regal'),
+  // Auf See: Strand an der Küste, Land dahinter (dunkleres Gras mit Wald-
+  // tupfen — aus der Ferne gesehen, nicht zum Betreten).
+  strand: sand,
+  see: (b) => wasser(b, 0),
+  see2: (b) => wasser(b, 1),
+  land: (b) => {
+    grasGrund(b, 7, 4);
+    const z = zufall(77);
+    for (let i = 0; i < 3; i++) klumpen(b, 6 + z() * 20, 6 + z() * 20, 4 + z() * 2, z);
+  },
 };
 
 const zeilen = Math.ceil(KACHELN.length / SPALTEN);
@@ -877,6 +887,32 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
     blatt.einfuegen(sy, i * 16, 0);
   });
   blatt.speichern(ziel + 'gegenstaende.png');
+}
+
+// ---------- Boot (48×48): 0 Bug nach oben, 1 Bug nach rechts ----------
+// Ein Ruderboot von oben; die Figur sitzt darin (der Rumpf liegt über ihren
+// Beinen). Nach unten und links spiegelt der Browser.
+{
+  const boot = new Bild(48, 48);
+  const breite = (y) => (y < 8 || y > 44 ? 0 : y < 18 ? 10 * Math.sqrt((y - 7) / 11) : 10 - Math.max(0, (y - 38) * 0.9));
+  for (let y = 8; y <= 44; y++) {
+    const w = breite(y);
+    if (w <= 0) continue;
+    boot.rechteck(Math.round(24 - w), y, Math.round(w * 2), 1, '#6e4426');
+    if (w > 3) boot.rechteck(Math.round(24 - w + 2), y, Math.max(0, Math.round(w * 2) - 4), 1, y % 5 === 0 ? '#8a5a32' : '#a8743f');
+    if (w > 3) boot.setze(Math.round(24 - w + 2), y, '#c99560');
+  }
+  for (const y of [22, 33]) boot.rechteck(15, y, 18, 2, '#5a3820');
+  // Ruder links und rechts
+  for (const seite of [-1, 1]) {
+    boot.linie(24 + seite * 10, 28, 24 + seite * 20, 32, '#8a5a32');
+    boot.rechteck(seite < 0 ? 2 : 42, 31, 4, 3, '#a8743f');
+  }
+  boot.umriss(RAND);
+  const blatt = new Bild(96, 48);
+  blatt.einfuegen(boot, 0, 0);
+  blatt.einfuegen(boot.gedreht(1), 48, 0);
+  blatt.speichern(ziel + 'boot.png');
 }
 
 // ---------- Schild und Truhe ----------

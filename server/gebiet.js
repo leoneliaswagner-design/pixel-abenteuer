@@ -10,6 +10,8 @@ export class Gebiet {
     this.w = spiel.w;
     this.welt = new Welt(karte);
     this.titel = this.welt.eigenschaftenKarte.titel ?? name;
+    // Auf dem Meer fährt man Boot (s. Spiel.sichten, client Spiel.eigeneFigur).
+    this.meer = !!this.welt.eigenschaftenKarte.meer;
     this.starts = this.welt.orte.filter((o) => o.name === 'spieler_start');
     this.uebergaenge = this.welt.orte.filter((o) => o.name === 'uebergang');
     this.ankuenfte = new Map(this.welt.orte.filter((o) => o.name === 'ankunft').map((o) => [o.eig.id, o]));

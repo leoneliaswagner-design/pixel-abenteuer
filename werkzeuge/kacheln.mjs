@@ -51,6 +51,14 @@ export const KACHELN = [
   { name: 'tisch', zeichen: 'm', fest: true, hindernis: true },
   { name: 'bett', zeichen: 'y', fest: true, hindernis: true },
   { name: 'regal', zeichen: 'x', fest: true, hindernis: true },
+  // Das Meer (Gebiet „meer"): Küsten der Inseln. Fest — ein Boot fährt nicht
+  // an Land; angelegt wird nur an einer Anlegestelle (Übergang).
+  { name: 'strand', zeichen: '_', fest: true },
+  { name: 'land', zeichen: '^', fest: true },
+  // Offenes Meer: sieht aus wie Wasser, ist aber befahrbar (das Boot ist
+  // die Figur). „wasser" ist überall sonst fest, damit niemand hineinläuft.
+  { name: 'see', zeichen: '&' },
+  { name: 'see2' },
 ];
 
 export const nummer = (name) => KACHELN.findIndex((k) => k.name === name);

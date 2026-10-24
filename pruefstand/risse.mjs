@@ -85,8 +85,12 @@ try {
     await warte(150);
   };
 
-  const anna = await oeffnen('Anna');
+  // Ben (in Riftside, ohne Schleime) zuerst: Anna steht in der Höhle neben
+  // Schleimen und muss gleich nach dem Beitreten an die Tür — in ihrer
+  // Schonfrist. Andersherum lief die Frist ab, während Bens Seite lud, und in
+  // der vollen Runde (Maschine ausgelastet) stieß sie ein Schleim weg.
   const ben = await oeffnen('Ben');
+  const anna = await oeffnen('Anna');
   let za = await zustand(anna), zb = await zustand(ben);
   pruefe(za.anzeige === 'schluessel 1' && zb.anzeige === 'schluessel 1', `beide sehen den Gruppenschlüssel, obwohl in verschiedenen Gebieten („${za.anzeige}" / „${zb.anzeige}")`);
   pruefe(zb.risse.length === 1 && zb.risse[0].sichtbar, 'Ben sieht den Riss in der Fischergasse');

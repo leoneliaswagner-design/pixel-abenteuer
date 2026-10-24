@@ -8,9 +8,11 @@
 // 16 der Schatten unter einer Wand.
 
 const ARTEN = {
-  wasser: new Set(['wasser', 'wasser2']),
+  wasser: new Set(['wasser', 'wasser2', 'see', 'see2']),
   weg: new Set(['weg', 'sand', 'pflaster']),
   gras: new Set(['gras', 'gras2', 'blumen', 'hohes_gras', 'busch_rest']),
+  // Küsten auf dem Meer: daneben schäumt die See.
+  kueste: new Set(['strand', 'land']),
 };
 // Worauf eine Kante liegt, und welcher Nachbar sie auslöst.
 const REGELN = [

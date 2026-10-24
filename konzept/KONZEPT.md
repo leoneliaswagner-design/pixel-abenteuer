@@ -54,7 +54,9 @@ die Risse und müssen die Stadt retten.
 - Namen der Kontinente und der Startinsel. (Die Hafenstadt heißt **Riftside**
   und liegt auf der Startinsel.)
 - Welche Risse/Orte gibt es zuerst, und was „rettet" die Stadt?
-- Wie reist man zwischen den Inseln? (siehe ROADMAP)
+- ~~Wie reist man zwischen den Inseln?~~ Mit Booten und Schiffen; man muss sich
+  selbst mit Karte und Kompass orientieren (eingebaut: Ruderboot, Dunst,
+  Kompass, Weltkarte ohne eigenen Punkt auf See).
 - Homebrew-Klassen und -Spezies.
 - ~~Gehören Schlüssel dem Finder oder der Gruppe?~~ Der Gruppe (gemeinsamer
   Schlüsselbund), vorerst.

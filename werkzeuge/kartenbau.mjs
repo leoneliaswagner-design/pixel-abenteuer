@@ -91,7 +91,7 @@ export function karteBauen(name, def) {
     type: 'map', version: '1.10', tiledversion: '1.11.0', orientation: 'orthogonal', renderorder: 'right-down',
     width: breite, height: hoehe, tilewidth: GROESSE, tileheight: GROESSE, infinite: false,
     nextlayerid: 4, nextobjectid: id,
-    properties: [eigenschaft('titel', def.titel), ...(def.licht ? [eigenschaft('licht', def.licht)] : [])],
+    properties: [eigenschaft('titel', def.titel), ...(def.licht ? [eigenschaft('licht', def.licht)] : []), ...(def.meer ? [eigenschaft('meer', true)] : [])],
     layers: [
       { id: 1, name: 'boden', type: 'tilelayer', width: breite, height: hoehe, x: 0, y: 0, opacity: 1, visible: true, data: boden },
       { id: 2, name: 'hindernisse', type: 'tilelayer', width: breite, height: hoehe, x: 0, y: 0, opacity: 1, visible: true, data: hindernisse },

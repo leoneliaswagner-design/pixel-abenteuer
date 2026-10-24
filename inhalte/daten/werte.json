@@ -8,7 +8,8 @@
     "wald",
     "hoehle",
     "tempel",
-    "tiefwald"
+    "tiefwald",
+    "meer"
   ],
   "aussehen": [
     "alter_mann",
@@ -52,5 +53,11 @@
   "tag": {
     "dauer": 1440000,
     "beginn": 0.4
+  },
+  "boot": {
+    "tempo": 150,
+    "beschleunigung": 1.6,
+    "sicht": 28,
+    "dunst": 110
   }
 }

@@ -212,12 +212,28 @@ probe client/fenster.js "    g.globalCompositeOperation = 'destination-out';" ""
   "Nebel liegt auch über Entdecktem"
 probe client/fenster.js "    const z = this.nah && hier.punkt ? 5 : 1;" "    const z = 1;" pruefstand/weltkarte.mjs \
   "Umgebungsansicht zeigt die ganze Welt"
-probe client/fenster.js "const wo = o.riss ? 'hinter einem Dimensionsriss' : w.regionen[o.region]?.name ?? '?';" "const wo = w.regionen[o.region]?.name ?? '?';" pruefstand/weltkarte.mjs \
+probe client/fenster.js "const wo = o.riss ? 'hinter einem Dimensionsriss' : o.see ? 'auf See' : w.regionen[o.region]?.name ?? '?';" "const wo = o.see ? 'auf See' : w.regionen[o.region]?.name ?? '?';" pruefstand/weltkarte.mjs \
   "wer hinter einem Riss ist, steht nirgends"
 probe werkzeuge/gebiet.mjs "  welt.gebiete[name] = region === 'riss' ? { riss: true } : { region, punkt: welt.regionen[region].mitte };" "" pruefstand/karten.mjs \
   "neues Gebiet fehlt auf der Weltkarte"
 probe werkzeuge/gebiet.mjs "    karte.tilesets = [{ ...kachelsatz(), firstgid: karte.tilesets?.[0]?.firstgid ?? 1 }];" "" pruefstand/karten.mjs \
   "kacheln erneuert nichts"
+
+# Das Meer
+probe client/szenen/Spiel.js "    if (this.meer && !ich.tot) return this.rudern(jetzt, dt);" "" pruefstand/meer.mjs \
+  "auf See läuft man wie an Land"
+probe client/szenen/Spiel.js "    const q = 1 - Math.exp(-wb.beschleunigung * dt);" "    const q = 1;" pruefstand/meer.mjs \
+  "Boot ohne Schwung"
+probe client/szenen/Spiel.js "    if (this.meer) this.dunstAufbauen();" "" pruefstand/meer.mjs \
+  "kein Dunst auf See"
+probe client/szenen/Oberflaeche.js "    if (!an) return;" "    if (false) return;" pruefstand/meer.mjs \
+  "Kompass auch an Land"
+probe client/fenster.js "o.see ? 'auf See' : " "" pruefstand/meer.mjs \
+  "auf See ein Punkt auf der Weltkarte"
+probe server/spiel.js "    if (gebiet.meer) this.sichten(s, jetzt);" "" pruefstand/server-regeln.mjs \
+  "beim Segeln wird nichts entdeckt"
+probe server/spiel.js "    if (s.tot || jetzt < s.naechsterHieb || this.gebiete.get(s.gebiet).meer) return;" "    if (s.tot || jetzt < s.naechsterHieb) return;" pruefstand/server-regeln.mjs \
+  "Schwerthieb aus dem Boot"
 
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi

@@ -67,6 +67,11 @@
   Welt; Entdecken gehört der Gruppe. Werkzeug `npm run gebiet -- neu/kacheln`
   für eigene Gebiete in Tiled. Prüfstand `weltkarte.mjs`.
 
+- **Segeln**: Meer als Gebiet aus der Weltkarte (256×256), Ruderboot am
+  Steg von Riftside, Schwung, Dunst, Kompass, Karte ohne eigenen Punkt,
+  Entdecken beim Ansegeln, Anlegestellen aus `hafen` in welt.json.
+  Prüfstand `meer.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -83,9 +88,10 @@
    hängen); Bosse.
 5. **Töne.**
 6. **Handy-Steuerung.**
-7. ~~Weltkarte~~ — offen: **Reisen zwischen den Inseln** (Schiff am Hafen
-   von Riftside? Fährmann? Teleport-Risse?) — Entscheidung des Spielleiters;
-   Namen der Kontinente und Inseln (welt.json); die Startinsel als Ganzes
+7. ~~Weltkarte~~, ~~Reisen~~ (Boote, selbst navigieren) — offen: **größere
+   Schiffe** (gemeinsam fahren, einer steuert?), Häfen auf anderen Inseln
+   (sobald es dort Gebiete gibt), Wetter/Strömung, Karten zu kaufen oder zu
+   finden (statt der ganzen Weltkarte von Anfang an?); Namen der Kontinente und Inseln (welt.json); die Startinsel als Ganzes
    (Strände, Leuchtturm …), sobald die Kampagne dazu etwas sagt.
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
@@ -202,3 +208,11 @@
   und schlug an, obwohl das Spiel richtig war. Erst die Prüfung prüfen.
 - Ein Messpunkt im Prüfstand lag plötzlich unter dem neuen Kartenknopf (HTML über dem Spiel) — die „Nacht" dort war hell. Messstellen nicht in die Ecken legen, wo Knöpfe sitzen.
 - Eine Helligkeitsmessung auf der Weltkarte traf den hellen Spielerpunkt statt der Karte — die Gegenprobe (Nebel überall) biss nicht. Was man misst, darf nicht von etwas anderem verdeckt sein.
+- Wasser ist überall `fest` — auf dem Meer konnte deshalb niemand sein, der
+  Server setzte jeden, der dort ankam, zurück nach Riftside. Eigene Kachel
+  `see`, befahrbar.
+- Eine Anlegestelle von einer Kachel trifft man mit Schwung kaum. Drei
+  Kacheln breit. Der Prüfstand steuert wie ein Spieler (erst quer, dann
+  hinein) — und zielte zuerst auf die falsche Stelle (die nach dem Rudern
+  statt der Ankunft).
+- risse.mjs scheiterte in der vollen Runde an der Höhlentür: Anna trat zuerst bei, und während Bens Seite lud (langsamer, seit es mehr Bilder gibt), lief ihre Schonfrist ab — ein Schleim stieß sie weg. Wer neben Gegnern geprüft wird, tritt als Letzter bei.

@@ -12,6 +12,10 @@ from PIL import Image
 WURZEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BILD = os.path.join(WURZEL, 'konzept', 'weltkarte.webp')
 ZIEL = os.path.join(WURZEL, 'inhalte', 'daten', 'welt.json')
+# Das Meer als Gebiet: eine Kachel je 4 Bildpunkte (karte.mjs baut daraus die
+# Karte „meer"). # = Land, ~ = Wasser.
+MASKE = os.path.join(WURZEL, 'inhalte', 'daten', 'meer-maske.txt')
+MEER_SCHRITT = 4
 S = 2  # halbe Auflösung reicht und geht schneller
 
 # Die fünf größten Landmassen in der Reihenfolge ihrer Mitte — die Namen
@@ -29,7 +33,7 @@ def wasser(r, g, b):
     return b >= r + 8 and (g - b) < 30
 
 
-def landmassen():
+def landmassen(mit_maske=False):
     im = Image.open(BILD).convert('RGB')
     klein = im.resize((im.size[0] // S, im.size[1] // S))
     w, h = klein.size
@@ -64,11 +68,32 @@ def landmassen():
             teile.append({'flaeche': len(punkte) * S * S, 'mitte': mitte,
                           'box': [min(xs) * S, min(ys) * S, max(xs) * S + S, max(ys) * S + S]})
     teile.sort(key=lambda t: -t['flaeche'])
-    return teile
+    if not mit_maske:
+        return teile
+    # Maske fürs Meer: Land nur, wo eine echte Landmasse ist (kein Rand, kein
+    # Kompass); eine Kachel ist Land, wenn die Hälfte ihrer Punkte Land ist.
+    echt = [[False] * w for _ in range(h)]
+    for t in teile:
+        x0, y0, x1, y1 = [v // S for v in t['box']]
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if land[y][x]:
+                    echt[y][x] = True
+    n = MEER_SCHRITT // S
+    zeilen = []
+    for ty in range(h // n):
+        zeile = ''
+        for tx in range(w // n):
+            summe = sum(echt[ty * n + j][tx * n + i] for j in range(n) for i in range(n))
+            zeile += '#' if summe * 2 >= n * n else '~'
+        zeilen.append(zeile)
+    return teile, zeilen
 
 
 def main():
-    teile = landmassen()
+    teile, maske = landmassen(mit_maske=True)
+    with open(MASKE, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(maske) + '\n')
     welt = json.load(open(ZIEL, encoding='utf-8')) if os.path.exists(ZIEL) else {}
     alte = welt.get('regionen', {})
     regionen = {}

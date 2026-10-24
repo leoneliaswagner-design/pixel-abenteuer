@@ -15,7 +15,8 @@
 //                  „ankunft" = id der Ankunft dort)
 // Die Karte selbst hat die Eigenschaft „titel" (für Meldungen) und „licht":
 // ohne = draußen (Tag und Nacht), „innen" = immer hell, „dunkel" = Höhle.
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { karteBauen } from './kartenbau.mjs';
 
@@ -27,6 +28,8 @@ const KARTEN = {
     grund: 'pflaster',
     uebergaenge: {
       P: { ziel: 'wald', ankunft: 'von_riftside' },
+      // Am Ende des mittleren Stegs liegen die Boote: hinaus aufs Meer.
+      M: { ziel: 'meer', ankunft: 'hafen_riftside', kachel: 'bruecke' },
       // Die Fischergasse: ein Riss in den Dschungeltempel.
       R: { ziel: 'tempel', ankunft: 'von_riftside', art: 'riss', bedingung: '!tempel_geschlossen' },
       // Begehbare Haustüren, zeilenweise gelesen.
@@ -38,6 +41,7 @@ const KARTEN = {
     },
     ankuenfte: {
       w: { id: 'vom_wald', richtung: 'unten' },
+      Y: { id: 'vom_meer', richtung: 'oben' },
       z: { id: 'aus_tempel', richtung: 'unten' },
       e: [
         { id: 'aus_rathaus', richtung: 'unten' },
@@ -90,9 +94,9 @@ T.pppppppppppppppppppppp@ppppppppppppppppp.T
 TssssssssssssssssssssssssssssssssssssssssssT
 ~~~~~~~~HH~~~~~~~~~~~HH~~~~~~~~~~HH~~~~~~~~~
 ~~~~~~~~HH~~~~~~~~~~~HH~~~~~~~~~~HH~~~~~~~~~
+~~~~~~~~HH~~~~~~~~~~~YH~~~~~~~~~~HH~~~~~~~~~
 ~~~~~~~~HH~~~~~~~~~~~HH~~~~~~~~~~HH~~~~~~~~~
-~~~~~~~~HH~~~~~~~~~~~HH~~~~~~~~~~HH~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~HH~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~MM~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 `,
   },
@@ -318,6 +322,69 @@ WWWWWWWWWWWWWWWWWW
 `,
   },
 };
+
+// ---------- Das Meer ----------
+// Aus der Land-Wasser-Maske der Weltkarte (inseln.py → meer-maske.txt): eine
+// Kachel je 4 Bildpunkte. Anlegestellen entstehen aus welt.json: jedes Gebiet
+// mit „hafen" bekommt an der nächsten Küste einen Übergang dorthin und davor
+// eine Ankunft „hafen_<gebiet>".
+function meerBauen() {
+  const daten = fileURLToPath(new URL('../inhalte/daten/', import.meta.url));
+  const maske = readFileSync(join(daten, 'meer-maske.txt'), 'utf8').trim().split('\n');
+  const welt = JSON.parse(readFileSync(join(daten, 'welt.json'), 'utf8'));
+  const SCHRITT = 4;
+  const h = maske.length, b = maske[0].length;
+  const istLand = (x, y) => maske[y]?.[x] === '#';
+  const zeilen = maske.map((z, y) =>
+    [...z].map((c, x) => {
+      if (c !== '#') return '&';
+      const kueste = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]].some(([dx, dy]) => !istLand(x + dx, y + dy));
+      return kueste ? '_' : '^';
+    }));
+  // Rand der Welt: dort ist Schluss (Fels statt Wasser, sonst segelte man
+  // aus der Karte).
+  for (let y = 0; y < h; y++) for (const x of [0, b - 1]) zeilen[y][x] = 'X';
+  for (let x = 0; x < b; x++) for (const y of [0, h - 1]) zeilen[y][x] = 'X';
+  const anleger = [], ankuenfte = [];
+  for (const [gebiet, o] of Object.entries(welt.gebiete)) {
+    if (!o.hafen || !o.punkt) continue;
+    const px = o.punkt[0] / SCHRITT, py = o.punkt[1] / SCHRITT;
+    let best = null;
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < b - 1; x++) {
+        if (zeilen[y][x] !== '&') continue;
+        const land = [[1, 0], [-1, 0], [0, 1], [0, -1]].find(([dx, dy]) => istLand(x + dx, y + dy));
+        if (!land) continue;
+        const d = Math.hypot(x + 0.5 - px, y + 0.5 - py);
+        // Die Ankunft liegt zwei Kacheln weiter draußen, und dort muss Wasser sein.
+        const ax = x - land[0] * 2, ay = y - land[1] * 2;
+        if (zeilen[ay]?.[ax] !== '&' || zeilen[y - land[1]]?.[x - land[0]] !== '&') continue;
+        if (!best || d < best.d) best = { x, y, ax, ay, d };
+      }
+    if (!best) throw new Error(`meer: kein Platz für den Anleger von „${gebiet}"`);
+    // Drei Kacheln breit (quer zur Küste): mit Schwung trifft man eine
+    // einzelne Kachel schwer — im Prüfstand fuhr das Boot daran vorbei.
+    const quer = best.ax === best.x ? [1, 0] : [0, 1];
+    for (const n of [-1, 0, 1]) {
+      const x = best.x + quer[0] * n, y = best.y + quer[1] * n;
+      if (zeilen[y]?.[x] === '&' || n === 0) {
+        zeilen[y][x] = 'Z';
+        anleger.push({ gebiet, hafen: o.hafen, x, y, ankunft: n === 0 });
+      }
+    }
+    zeilen[best.ay][best.ax] = 'a';
+    ankuenfte.push({ gebiet, x: best.ax, y: best.ay });
+  }
+  // Listen in der Reihenfolge, in der die Zeichen zeilenweise vorkommen.
+  const zeilenweise = (liste) => [...liste].sort((p, q) => p.y - q.y || p.x - q.x);
+  return {
+    titel: 'das Meer', grund: 'see', meer: true,
+    uebergaenge: { Z: zeilenweise(anleger).map((a) => ({ ziel: a.gebiet, ankunft: a.hafen, kachel: 'see' })) },
+    ankuenfte: { a: zeilenweise(ankuenfte).map((a) => ({ id: `hafen_${a.gebiet}`, richtung: 'unten' })) },
+    text: zeilen.map((z) => z.join('')).join('\n'),
+  };
+}
+KARTEN.meer = meerBauen();
 
 const nur = process.argv.slice(2);
 for (const [name, def] of Object.entries(KARTEN)) {

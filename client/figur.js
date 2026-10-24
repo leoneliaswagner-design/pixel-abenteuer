@@ -60,6 +60,17 @@ export class Figur {
       : null;
   }
 
+  // Auf See sitzt die Figur im Ruderboot: man sieht sie nur bis zum Gürtel
+  // (Bild zugeschnitten), darunter das Boot — vorn/hinten senkrecht,
+  // seitlich waagerecht.
+  imBoot(an) {
+    this.boot?.destroy();
+    this.boot = an ? this.szene.add.sprite(0, 0, 'boot', 0) : null;
+    if (an) this.koerper.setCrop(0, 0, 32, 31);
+    else this.koerper.setCrop();
+    this.schatten.setVisible(!an);
+  }
+
   hieb(richtung, dauer) {
     this.richtung = richtung;
     this.hiebBis = this.szene.time.now + dauer;
@@ -80,6 +91,19 @@ export class Figur {
     const { x, y } = this;
     const z = ZEILE[this.richtung];
     this.schatten.setPosition(x, y).setDepth(9);
+    if (this.boot) {
+      // Leichtes Schaukeln; die Figur sitzt (Stehbild, kein Laufen).
+      const wippen = Math.round(Math.sin(jetzt / 320 + x * 0.01));
+      const seitlich = this.richtung === 'links' || this.richtung === 'rechts';
+      this.boot.setFrame(seitlich ? 1 : 0).setFlipX(this.richtung === 'links').setFlipY(this.richtung === 'unten');
+      this.boot.setPosition(x, y - 12 + wippen).setDepth(10 + y - 0.5);
+      this.koerper.anims.stop();
+      this.koerper.setFrame(ZEILE[this.richtung] * 4).setAngle(0).setAlpha(1);
+      this.koerper.setPosition(x, y + 2 + wippen + 8).setDepth(10 + y);
+      this.schwert.setVisible(false);
+      this.schild?.setPosition(Math.round(x), Math.round(y - 40));
+      return;
+    }
     this.koerper.setPosition(x, y + 2).setDepth(10 + y);
 
     if (this.tot) {
@@ -106,6 +130,6 @@ export class Figur {
 
   zerstoeren() {
     this.szene.tweens.killTweensOf(this.schwert);
-    for (const t of [this.schatten, this.koerper, this.schwert, this.schild]) t?.destroy();
+    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot]) t?.destroy();
   }
 }

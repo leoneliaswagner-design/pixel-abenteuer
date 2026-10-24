@@ -36,6 +36,11 @@ export class Oberflaeche extends Phaser.Scene {
     this.faehigkeit = spiel.faehigkeitAngabe?.() ?? null;
     spiel.events.on('faehigkeit', (f) => (this.faehigkeit = f));
 
+    // Kompass (nur auf See): unten links, wo sonst die Fähigkeit steht.
+    this.kompass = this.add.graphics().setVisible(false);
+    this.kompassText = this.add.text(72, h - 38, '', schrift).setOrigin(0, 0.5).setVisible(false);
+    this.kompassZeichen = ['N', 'O', 'S', 'W'].map((z) => this.add.text(0, 0, z, { ...schrift, color: '#3e2a1c', stroke: '#f4e4c0' }).setOrigin(0.5).setVisible(false));
+
     spiel.events.on('stand', (s) => this.zeigen(s));
     spiel.events.on('nachricht', (text) => this.melden(text));
     spiel.events.on('getrennt', () => {
@@ -61,13 +66,38 @@ export class Oberflaeche extends Phaser.Scene {
   }
 
   update() {
-    const f = this.faehigkeit;
+    const spiel = this.scene.get('spiel');
+    const meer = !!spiel.meer;
+    this.kompassMalen(meer, spiel.kurs ?? 0, spiel.ich && Math.hypot(spiel.bootV?.x ?? 0, spiel.bootV?.y ?? 0) > 8);
+    const f = meer ? null : this.faehigkeit;
     this.faehigkeitText.setVisible(!!f);
     this.faehigkeitBalken.setVisible(!!f);
     if (!f) return;
     const rest = Math.max(0, f.bereitBis - this.scene.get('spiel').time.now);
     this.faehigkeitText.setText(`Q ${f.name}`).setAlpha(rest ? 0.5 : 1);
     this.faehigkeitBalken.width = this.faehigkeitText.width * (1 - rest / f.dauer);
+  }
+
+  // Ein Kompass: Rose mit N oben, die Nadel zeigt den Kurs des Boots.
+  // Norden ist auf dem Schirm immer oben — der Kompass sagt also, wohin man
+  // fährt, und die Weltkarte (ohne eigenen Punkt) muss man selbst lesen.
+  kompassMalen(an, kurs, faehrt) {
+    const g = this.kompass, cx = 40, cy = this.scale.height - 38, r = 22;
+    g.setVisible(an);
+    this.kompassText.setVisible(an);
+    this.kompassZeichen.forEach((t) => t.setVisible(an));
+    if (!an) return;
+    g.clear();
+    g.fillStyle(0x5a3820).fillCircle(cx, cy, r + 3);
+    g.fillStyle(0xf4e4c0).fillCircle(cx, cy, r);
+    g.lineStyle(1, 0xc99560).strokeCircle(cx, cy, r - 6);
+    const w = ((kurs - 90) * Math.PI) / 180;
+    g.lineStyle(3, 0xc84030).lineBetween(cx, cy, cx + Math.cos(w) * (r - 5), cy + Math.sin(w) * (r - 5));
+    g.lineStyle(3, 0x3e2a1c).lineBetween(cx, cy, cx - Math.cos(w) * (r - 10), cy - Math.sin(w) * (r - 10));
+    g.fillStyle(0x3e2a1c).fillCircle(cx, cy, 2);
+    [[0, -1], [1, 0], [0, 1], [-1, 0]].forEach(([dx, dy], i) => this.kompassZeichen[i].setPosition(cx + dx * (r + 9), cy + dy * (r + 9)));
+    const himmel = ['N', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'][Math.round((((kurs % 360) + 360) % 360) / 45) % 8];
+    this.kompassText.setPosition(cx + r + 22, cy).setText(faehrt ? `Kurs ${himmel}` : 'treibt');
   }
 
   listePunkte(spieler) {

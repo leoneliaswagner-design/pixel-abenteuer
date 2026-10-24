@@ -697,6 +697,51 @@ const arena = (art, abstand) => {
     'neue Region: aufgedeckt, alle bekommen es mit');
 }
 
+// ---------- Das Meer ----------
+{
+  const see = new Spiel(karten, werte, { jetzt: () => uhr });
+  const ps = [];
+  const kapitaen = mitCharakter(see, 'Kapitän', (m) => ps.push(m));
+  see.nachricht(kapitaen.id, { t: 'bereit' });
+  // Vom Steg in Riftside nach unten laufen, bis man im Boot sitzt.
+  const steg = see.gebiete.get('riftside').ankuenfte.get('vom_meer');
+  Object.assign(kapitaen, { gebiet: 'riftside', x: steg.x, y: steg.y + 8, budget: 0, zuletzt: uhr });
+  for (let i = 0; i < 40 && kapitaen.gebiet === 'riftside'; i++) {
+    uhr += 50;
+    see.nachricht(kapitaen.id, { t: 'pos', x: kapitaen.x, y: kapitaen.y + 4, r: 'unten', l: true, k: kapitaen.korrektur });
+  }
+  const meer = see.gebiete.get('meer');
+  pruefe(kapitaen.gebiet === 'meer' && meer.meer, `vom Steg aufs Meer (${kapitaen.gebiet}, Kachel ${Math.floor(kapitaen.x / 32)},${Math.floor(kapitaen.y / 32)})`);
+  const w = meer.welt;
+  const landKachel = w.boden.findIndex((g) => w.eig(g).name === 'land');
+  const mitte = (i) => [(i % w.breite) * 32 + 16, Math.floor(i / w.breite) * 32 + 24];
+  const draussen = meer.ankuenfte.get('hafen_riftside');
+  pruefe(!w.frei(...mitte(landKachel)) && w.frei(draussen.x, draussen.y + 8) && w.eig(w.boden[w.index(Math.floor(draussen.x / 32), Math.floor(draussen.y / 32))]).name === 'see',
+    'auf dem Meer: Land ist fest, die See vor dem Hafen befahrbar');
+  // Auf See kein Schwert.
+  const vorher = kapitaen.naechsterHieb;
+  ps.length = 0;
+  uhr += 1000;
+  see.nachricht(kapitaen.id, { t: 'hieb', r: 'unten' });
+  pruefe(kapitaen.naechsterHieb === vorher, 'im Boot kein Schwerthieb');
+  // Sichten: nahe am Nordwest-Kontinent deckt er sich auf, weit weg nicht.
+  const nw = werte.welt.regionen.nordwesten;
+  pruefe(!see.entdeckt().includes('nordwesten'), 'Nordwest-Kontinent noch nicht entdeckt');
+  // Hingesetzt, dann eine kleine echte Bewegung — wie beim Rudern.
+  Object.assign(kapitaen, { x: (nw.box[2] / 4 + 5) * 32, y: (nw.mitte[1] / 4) * 32, budget: 40, zuletzt: uhr, zuletztGesichtet: 0 });
+  uhr += 50;
+  see.nachricht(kapitaen.id, { t: 'pos', x: kapitaen.x + 2, y: kapitaen.y, r: 'rechts', l: true, k: kapitaen.korrektur });
+  pruefe(see.entdeckt().includes('nordwesten') && ps.some((m) => m.t === 'nachricht' && m.text.includes('Nordwest')), 'fünf Kacheln vor seiner Küste: Nordwest-Kontinent entdeckt');
+  // Anlegen: von der Ankunft vor der Startinsel nach oben in den Anleger.
+  const vorDemHafen = meer.ankuenfte.get('hafen_riftside');
+  Object.assign(kapitaen, { x: vorDemHafen.x, y: vorDemHafen.y + 8, budget: 0, zuletzt: uhr });
+  for (let i = 0; i < 40 && kapitaen.gebiet === 'meer'; i++) {
+    uhr += 50;
+    see.nachricht(kapitaen.id, { t: 'pos', x: kapitaen.x, y: kapitaen.y - 4, r: 'oben', l: true, k: kapitaen.korrektur });
+  }
+  pruefe(kapitaen.gebiet === 'riftside' && Math.abs(kapitaen.y - (steg.y + 8)) < 1, `angelegt: zurück am Steg von Riftside (${kapitaen.gebiet})`);
+}
+
 // ---------- Tageszeit ----------
 {
   const tag = new Spiel(karten, werte, { jetzt: () => uhr });

@@ -39,6 +39,7 @@ export class SpielSzene extends Phaser.Scene {
     this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('kanten', 'grafik/kanten.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('deko', 'grafik/deko.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('boot', 'grafik/boot.png', { frameWidth: 48, frameHeight: 48 });
     this.load.spritesheet('tuer', 'grafik/tuer.png', { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('riss', 'grafik/riss.png', { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet('symbole', 'grafik/symbole.png', { frameWidth: 12, frameHeight: 12 });
@@ -96,6 +97,12 @@ export class SpielSzene extends Phaser.Scene {
     this.faehigkeitBereit ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
+    // Auf dem Meer: Boot, Schwung, Dunst, Kompass (s. eigeneFigur).
+    this.meer = !!this.welt.eigenschaftenKarte.meer;
+    this.dunst = null;
+    this.ich.imBoot(this.meer);
+    this.bootV = { x: 0, y: 0 };
+    this.kurs = 0;
     this.ich.x = wk.x;
     this.ich.y = wk.y;
     this.ich.richtung = wk.r ?? 'unten';
@@ -111,6 +118,7 @@ export class SpielSzene extends Phaser.Scene {
     this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
     this.risseAufbauen();
     this.lichtAufbauen(wk.zeit);
+    if (this.meer) this.dunstAufbauen();
     this.inventar = wk.inventar ?? {};
     this.ausruestung = wk.ausruestung ?? {};
     this.gruppe = wk.gruppe ?? {};
@@ -203,6 +211,7 @@ export class SpielSzene extends Phaser.Scene {
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
+        meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
           bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt,
@@ -264,8 +273,8 @@ export class SpielSzene extends Phaser.Scene {
       this.tweens.add({ targets: bild, angle: { from: -0.8, to: 0.8 }, duration: 2200 + ((tx * 7 + ty * 13) % 9) * 160, yoyo: true, repeat: -1, ease: 'Sine.InOut', delay: ((tx * 5 + ty * 11) % 12) * 120 });
     });
 
-    const a = this.welt.gidVon('wasser'), b = this.welt.gidVon('wasser2');
-    this.time.addEvent({ delay: 550, loop: true, callback: () => this.bodenEbene.swapByIndex(a, b) });
+    for (const [a, b] of [['wasser', 'wasser2'], ['see', 'see2']].map(([x, y]) => [this.welt.gidVon(x), this.welt.gidVon(y)]))
+      this.time.addEvent({ delay: 550, loop: true, callback: () => this.bodenEbene.swapByIndex(a, b) });
     this.gidBusch = this.welt.gidVon('busch');
     this.gidBuschRest = this.welt.gidVon('busch_rest');
   }
@@ -336,6 +345,24 @@ export class SpielSzene extends Phaser.Scene {
       else if (name === 'fenster') this.licht.fest(x, y + 16, 36, 0xffc070, 12);
     });
     for (const r of this.risse) if (r.bild.visible) this.licht.fest(r.bild.x, r.bild.y - 24, 64, 0xc890ff, 20);
+  }
+
+  // Dunst auf See: man sieht nur ein Stück weit — wer wissen will, wo er
+  // ist, vergleicht Küsten mit der Weltkarte. Unter der Lichtfläche, damit
+  // auch der Dunst nachts dunkel wird.
+  dunstAufbauen() {
+    const { width: b, height: h } = this.scale;
+    if (!this.textures.exists('dunst')) {
+      const c = this.textures.createCanvas('dunst', b, h), g = c.context;
+      const r = this.w.boot?.dunst ?? 110;
+      const v = g.createRadialGradient(b / 2, h / 2, r * 0.55, b / 2, h / 2, r * 2.1);
+      v.addColorStop(0, 'rgba(200,214,226,0)');
+      v.addColorStop(1, 'rgba(200,214,226,0.94)');
+      g.fillStyle = v;
+      g.fillRect(0, 0, b, h);
+      c.refresh();
+    }
+    this.dunst = this.add.image(0, 0, 'dunst').setOrigin(0).setScrollFactor(0).setDepth(6990);
   }
 
   tageszeitJetzt() {
@@ -576,6 +603,7 @@ export class SpielSzene extends Phaser.Scene {
       let f = this.andere.get(s.id);
       if (!f) {
         f = new Figur(this, s.farbe, s.name, s.klasse);
+        f.imBoot(this.meer);
         f.x = s.x;
         f.y = s.y;
         this.andere.set(s.id, f);
@@ -710,6 +738,7 @@ export class SpielSzene extends Phaser.Scene {
       return;
     }
 
+    if (this.meer && !ich.tot) return this.rudern(jetzt, dt);
     if (!ich.tot) {
       if (this.stoss && jetzt < this.stoss.bis) {
         dx = this.stoss.vx * dt;
@@ -779,6 +808,38 @@ export class SpielSzene extends Phaser.Scene {
     this.hinweis.setVisible(!!vor);
     if (vor) this.hinweis.setPosition(vor.x, Math.floor(vor.y / this.welt.kachel) * this.welt.kachel - 2);
 
+    this.positionSenden(jetzt, true);
+  }
+
+  // Im Boot: das Boot nimmt langsam Fahrt auf und gleitet nach, wenn man
+  // loslässt. Schwert, Fähigkeit und Ansprechen gibt es auf See nicht.
+  rudern(jetzt, dt) {
+    const ich = this.ich, t = this.tasten, wb = this.w.boot ?? { tempo: 150, beschleunigung: 1.6 };
+    this.hiebGewuenscht = this.ansprechGewuenscht = this.faehigkeitGewuenscht = false;
+    const ix = (t.RIGHT.isDown || t.D.isDown ? 1 : 0) - (t.LEFT.isDown || t.A.isDown ? 1 : 0);
+    const iy = (t.DOWN.isDown || t.S.isDown ? 1 : 0) - (t.UP.isDown || t.W.isDown ? 1 : 0);
+    const l = Math.hypot(ix, iy) || 1;
+    const q = 1 - Math.exp(-wb.beschleunigung * dt);
+    this.bootV.x += ((ix / l) * wb.tempo - this.bootV.x) * q;
+    this.bootV.y += ((iy / l) * wb.tempo - this.bootV.y) * q;
+    const v = Math.hypot(this.bootV.x, this.bootV.y);
+    if (v < 2 && !ix && !iy) this.bootV.x = this.bootV.y = 0;
+    if (v > 8) {
+      // Kurs in Grad, 0 = Norden, im Uhrzeigersinn — für den Kompass.
+      this.kurs = (Math.atan2(this.bootV.x, -this.bootV.y) * 180) / Math.PI;
+      ich.richtung = Math.abs(this.bootV.x) > Math.abs(this.bootV.y) ? (this.bootV.x < 0 ? 'links' : 'rechts') : this.bootV.y < 0 ? 'oben' : 'unten';
+    }
+    const dx = this.bootV.x * dt, dy = this.bootV.y * dt;
+    const neu = bewege(this.welt, ich.x, ich.y, dx, dy);
+    // An der Küste verliert das Boot die Fahrt in der Richtung, in der es
+    // anstößt — entlang der Küste gleitet es weiter.
+    if (Math.abs(neu.x - (ich.x + dx)) > 0.01) this.bootV.x = 0;
+    if (Math.abs(neu.y - (ich.y + dy)) > 0.01) this.bootV.y = 0;
+    ich.x = neu.x;
+    ich.y = neu.y;
+    ich.laeuft = v > 8;
+    ich.aktualisieren(jetzt);
+    this.hinweis.setVisible(false);
     this.positionSenden(jetzt, true);
   }
 

@@ -204,7 +204,8 @@ export class Fenster {
     for (const [gebiet, leute] of Object.entries(nachGebiet)) {
       const o = ort(gebiet);
       leute.forEach((p, i) => {
-        const wo = o.riss ? 'hinter einem Dimensionsriss' : w.regionen[o.region]?.name ?? '?';
+        // Auf See gibt es keinen Punkt: wo man ist, muss man selbst herausfinden.
+        const wo = o.riss ? 'hinter einem Dimensionsriss' : o.see ? 'auf See' : w.regionen[o.region]?.name ?? '?';
         legende.push(`<li><span class="punkt ${html(p.farbe)}"></span>${html(p.name)}${p.id === d.meineId ? ' (du)' : ''} — ${html(wo)}</li>`);
         if (!o.punkt) return;
         // Mehrere im selben Gebiet nebeneinander, nicht übereinander.

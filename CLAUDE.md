@@ -64,6 +64,12 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   sonst startet der Server nicht. Entdeckte Regionen (`welt.entdeckt` im
   Spielstand) gehören der Gruppe. Neue Gebiete: `npm run gebiet -- neu …`
   (werkzeuge/gebiet.mjs), Kartenbau-Bibliothek: `werkzeuge/kartenbau.mjs`.
+- **Meer**: Gebiet `meer` (Karteneigenschaft `meer`), gebaut von karte.mjs aus
+  `meer-maske.txt` (inseln.py, 4 Bildpunkte je Kachel) und den `hafen` in
+  welt.json. See-Kacheln (`see`) sind befahrbar, `wasser` sonst überall
+  fest. Im Browser: `rudern()` mit Schwung statt Laufen, Dunst, Kompass; der
+  Server ignoriert Hieb und Fähigkeit dort und deckt beim Segeln auf
+  (`sichten`). Auf See hat niemand einen Punkt auf der Weltkarte.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -107,6 +113,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.
 - `node pruefstand/weltkarte.mjs` — Kartenknopf und M, Nebel über dem
   Nordwest-Kontinent, Startinsel klar (Bildpunkte), Umgebung mittig, Riss.
+- `node pruefstand/meer.mjs` — vom Steg ins Boot, Boot/Dunst/Kompass am
+  Bildpunkt, Schwung, Karte ohne eigenen Punkt, Anlegen (steuert wie ein
+  Spieler auf die Anlegestelle zu).
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner

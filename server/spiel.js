@@ -38,7 +38,7 @@ export class Spiel {
     if (this.welt)
       for (const name of this.gebiete.keys()) {
         const o = this.welt.gebiete?.[name];
-        if (!o || (!o.riss && !this.welt.regionen?.[o.region]))
+        if (!o || (!o.riss && !o.see && !this.welt.regionen?.[o.region]))
           throw new Error(`Gebiet „${name}" fehlt auf der Weltkarte (inhalte/daten/welt.json → gebiete) oder hat eine unbekannte Region`);
       }
     // Tageszeit 0…1 (0 Mitternacht, 0,5 Mittag): für alle gleich, der
@@ -173,12 +173,28 @@ export class Spiel {
   }
 
   entdecken(gebiet) {
-    const region = this.welt?.gebiete?.[gebiet]?.region;
-    if (!region || this.entdeckt().includes(region)) return;
+    this.regionEntdecken(this.welt?.gebiete?.[gebiet]?.region);
+  }
+
+  regionEntdecken(region) {
+    if (!region || !this.welt?.regionen?.[region] || this.entdeckt().includes(region)) return;
     this.entdeckt().push(region);
     this.geaendert = true;
     this.anAlle({ t: 'entdeckt', region });
     this.anAlle({ t: 'nachricht', text: `Neu auf der Weltkarte: ${this.welt.regionen[region].name}` });
+  }
+
+  // Auf See: was in Sichtweite kommt, deckt sich auf. Eine Meerkachel sind
+  // 4 Bildpunkte der Weltkarte; gemessen wird bis zum Rand der Region.
+  sichten(s, jetzt) {
+    if (jetzt - (s.zuletztGesichtet ?? 0) < 400) return;
+    s.zuletztGesichtet = jetzt;
+    const k = this.gebiete.get(s.gebiet).welt.kachel, schritt = 4;
+    const px = (s.x / k) * schritt, py = (s.y / k) * schritt, sicht = this.w.boot?.sicht ?? 28;
+    for (const [id, r] of Object.entries(this.welt?.regionen ?? {})) {
+      const [x0, y0, x1, y1] = r.box;
+      if (Math.hypot(Math.max(x0 - px, 0, px - x1), Math.max(y0 - py, 0, py - y1)) <= sicht) this.regionEntdecken(id);
+    }
   }
 
   weltkarte(s) {
@@ -275,6 +291,7 @@ export class Spiel {
     s.budget -= weg;
     s.x = x;
     s.y = y;
+    if (gebiet.meer) this.sichten(s, jetzt);
     const u = gebiet.uebergangBei(x, y);
     // Ein geschlossener Riss ist für den Server kein Übergang mehr. Und wer
     // gerade zurückgestoßen wird, geht nicht hindurch: ein Schleim schob
@@ -310,7 +327,8 @@ export class Spiel {
 
   hieb(s, m) {
     const jetzt = this.jetzt();
-    if (s.tot || jetzt < s.naechsterHieb) return;
+    // Im Boot hat man die Hände an den Rudern.
+    if (s.tot || jetzt < s.naechsterHieb || this.gebiete.get(s.gebiet).meer) return;
     const ws = this.w.spieler;
     if (RICHTUNGEN[m.r]) s.richtung = m.r;
     s.naechsterHieb = jetzt + ws.hiebDauer + ws.hiebPause;
@@ -502,7 +520,7 @@ export class Spiel {
   faehigkeit(s, m) {
     const f = s.werte?.faehigkeit;
     const jetzt = this.jetzt();
-    if (!f || s.tot || jetzt < s.faehigkeitBereit) return;
+    if (!f || s.tot || jetzt < s.faehigkeitBereit || this.gebiete.get(s.gebiet).meer) return;
     if (RICHTUNGEN[m.r]) s.richtung = m.r;
     s.faehigkeitBereit = jetzt + f.abklingzeit;
     const gebiet = this.gebiete.get(s.gebiet);

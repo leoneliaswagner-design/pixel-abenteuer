@@ -41,6 +41,28 @@ vergrößert um einen herum, „Ganze Welt" zeigt alles.
 - `gebiete`: zu jedem Gebiet die Region und der Punkt im Kartenbild, oder
   `riss: true`. Ein Gebiet, das hier fehlt, meldet der Server beim Start.
 
+## Segeln
+
+Zwischen den Inseln fährt man Boot — und muss sich selbst zurechtfinden:
+
+- Am Ende des **mittleren Stegs in Riftside** steigt man ins Ruderboot.
+- Das **Meer** ist ein eigenes Gebiet, gebaut aus der Weltkarte: jede Insel
+  und jeder Kontinent liegt dort, wo er auf dem Bild liegt (eine Kachel = 4
+  Bildpunkte, 256×256 Kacheln).
+- Das Boot nimmt langsam Fahrt auf und gleitet nach. Schwert und Fähigkeit
+  ruhen, solange man rudert.
+- Über dem Wasser liegt **Dunst** — man sieht nur ein Stück weit. Unten
+  links zeigt ein **Kompass** den Kurs. Die **Weltkarte** (M) zeigt auf See
+  keinen eigenen Punkt: wo man ist, findet man heraus, indem man Küsten mit
+  der Karte vergleicht. Was man ansegelt, deckt sich auf der Karte auf.
+- Anlegen kann man, wo ein Gebiet einen Hafen hat (`welt.json` →
+  `gebiete.<name>.hafen` = id der Ankunft dort); das Meer bekommt an der
+  nächsten Küste automatisch eine Anlegestelle (`npm run karte -- meer`).
+  Inseln ohne Gebiet sind vorerst nur Küste.
+
+Zahlen in `werte.json` → `boot`: Tempo, Beschleunigung, wie weit man
+Inseln erkennt (`sicht`), wie dicht der Dunst ist (`dunst`).
+
 ## Eigene Gebiete bauen
 
 ```sh
@@ -255,6 +277,7 @@ node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand,
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
 node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48
 node pruefstand/weltkarte.mjs       # Weltkarte: Nebel am Bildpunkt, eigener Punkt, Mitspieler hinter dem Riss
+node pruefstand/meer.mjs            # Segeln: Boot, Dunst, Schwung, Kompass, Karte ohne Punkt, Anlegen
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
