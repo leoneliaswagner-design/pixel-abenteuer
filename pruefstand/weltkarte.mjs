@@ -97,6 +97,9 @@ try {
   // --- Ganze Welt: Nebel über dem Nordwest-Kontinent, die Startinsel klar ---
   await ana.click('#fenster [data-tun=zoom]');
   await warte(300);
+  // Ohne die Spielerpunkte messen: Anas Punkt sitzt genau auf der Insel und
+  // ist hell — die Prüfung blieb damit grün, auch als Nebel darüber lag.
+  await ana.evaluate(() => document.querySelectorAll('#fenster .marke').forEach((m) => (m.style.visibility = 'hidden')));
   const insel = await hell(ana, welt.regionen['insel-047'].mitte, 8);
   const nordwest = await hell(ana, welt.regionen.nordwesten.mitte, 20);
   pruefe(insel > nordwest + 25, `Startinsel klar (${insel.toFixed(0)}), Nordwest-Kontinent im Nebel (${nordwest.toFixed(0)})`);

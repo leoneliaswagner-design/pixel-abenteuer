@@ -201,3 +201,4 @@
 - „Dimensionsriss" enthält „riss", nicht „Riss": ein Prüfstand suchte groß
   und schlug an, obwohl das Spiel richtig war. Erst die Prüfung prüfen.
 - Ein Messpunkt im Prüfstand lag plötzlich unter dem neuen Kartenknopf (HTML über dem Spiel) — die „Nacht" dort war hell. Messstellen nicht in die Ecken legen, wo Knöpfe sitzen.
+- Eine Helligkeitsmessung auf der Weltkarte traf den hellen Spielerpunkt statt der Karte — die Gegenprobe (Nebel überall) biss nicht. Was man misst, darf nicht von etwas anderem verdeckt sein.
