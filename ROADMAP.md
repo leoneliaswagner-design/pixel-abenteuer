@@ -145,3 +145,8 @@
 - Tempo im Browser messen: Weg durch die Summe der `delta` aus
   `postupdate` — nicht durch Uhrzeit (`setTimeout` oder `time`): Phaser
   glättet delta, gegen die Uhr schwankte es um ±5 %, mehr als der Bonus.
+- Die Vorschau-Seite liegt nicht an der Wurzel ihres Servers. Mit Vites
+  Standard (`/assets/…`) fand sie ihr Skript nicht, „Losspielen" tat nichts —
+  der eigene Test lief an der Wurzel und merkte es nicht. Jetzt `base: './'`
+  in vite.config.js; Vorschau vor dem Veröffentlichen unter einem Unterordner
+  testen.
