@@ -1,0 +1,110 @@
+{
+  "gold": {
+    "name": "Goldmünze",
+    "einzeln": "eine Goldmünze",
+    "mehrzahl": "Goldmünzen",
+    "bild": 0,
+    "beschreibung": "Damit wird bezahlt."
+  },
+  "schluessel": {
+    "name": "kleiner Schlüssel",
+    "einzeln": "einen kleinen Schlüssel",
+    "mehrzahl": "kleine Schlüssel",
+    "gemeinsam": true,
+    "bild": 1,
+    "beschreibung": "Öffnet eine verschlossene Tür. Gehört der ganzen Gruppe."
+  },
+  "rissstein": {
+    "name": "Rissstein",
+    "einzeln": "einen Rissstein",
+    "mehrzahl": "Risssteine",
+    "gemeinsam": true,
+    "bild": 2,
+    "beschreibung": "Ein Splitter, der leise summt. Gehört der ganzen Gruppe."
+  },
+  "heiltrank": {
+    "name": "Heiltrank",
+    "einzeln": "einen Heiltrank",
+    "mehrzahl": "Heiltränke",
+    "bild": 3,
+    "beschreibung": "Ein roter Trank. Heilt zwei Herzen.",
+    "art": "verbrauch",
+    "wirkung": {
+      "heilung": 4
+    },
+    "preis": 12
+  },
+  "langschwert": {
+    "name": "Langschwert",
+    "einzeln": "ein Langschwert",
+    "mehrzahl": "Langschwerter",
+    "bild": 4,
+    "beschreibung": "Länger und schwerer als das Schwert, mit dem man anfängt.",
+    "platz": "waffe",
+    "boni": {
+      "schaden": 1
+    },
+    "preis": 40,
+    "klassen": [
+      "kaempfer",
+      "kleriker",
+      "waldlaeufer"
+    ]
+  },
+  "zauberstab": {
+    "name": "Zauberstab",
+    "einzeln": "einen Zauberstab",
+    "mehrzahl": "Zauberstäbe",
+    "bild": 7,
+    "beschreibung": "Bündelt die Magie: die Fähigkeit wird stärker.",
+    "platz": "waffe",
+    "boni": {
+      "faehigkeit": 1
+    },
+    "preis": 45,
+    "klassen": [
+      "magier"
+    ]
+  },
+  "lederruestung": {
+    "name": "Lederrüstung",
+    "einzeln": "eine Lederrüstung",
+    "mehrzahl": "Lederrüstungen",
+    "bild": 5,
+    "beschreibung": "Leicht und biegsam. Ein halbes Herz mehr.",
+    "platz": "ruestung",
+    "boni": {
+      "leben": 1
+    },
+    "preis": 20
+  },
+  "kettenhemd": {
+    "name": "Kettenhemd",
+    "einzeln": "ein Kettenhemd",
+    "mehrzahl": "Kettenhemden",
+    "bild": 6,
+    "beschreibung": "Schwer, aber sicher: ein Herz mehr, dafür etwas langsamer.",
+    "platz": "ruestung",
+    "boni": {
+      "leben": 2,
+      "tempo": -6
+    },
+    "preis": 50,
+    "klassen": [
+      "kaempfer",
+      "kleriker"
+    ]
+  },
+  "flinkring": {
+    "name": "Ring der Eile",
+    "einzeln": "einen Ring der Eile",
+    "mehrzahl": "Ringe der Eile",
+    "bild": 8,
+    "beschreibung": "Ein schmaler Silberring. Wer ihn trägt, läuft schneller.",
+    "platz": "schmuck",
+    "boni": {
+      "tempo": 8
+    },
+    "preis": 60
+  }
+}

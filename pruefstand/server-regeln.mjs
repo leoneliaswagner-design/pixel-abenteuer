@@ -6,11 +6,11 @@ import { join } from 'node:path';
 import { Spiel } from '../server/spiel.js';
 import { Spielstand } from '../server/spielstand.js';
 import { bewege } from '../gemeinsam/welt.js';
+import { ZUSATZDATEN, kaufpreis, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 
 const lies = (p) => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const werte = lies('inhalte/daten/werte.json');
-werte.klassen = lies('inhalte/daten/klassen.json');
-werte.spezies = lies('inhalte/daten/spezies.json');
+for (const d of ZUSATZDATEN) werte[d] = lies(`inhalte/daten/${d}.json`);
 const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/karten/${g}.json`)]));
 let uhr = 100000;
 // Die meisten Prüfungen spielen im Inselwald (Schleime, Büsche, Ruine);
@@ -431,6 +431,123 @@ for (let i = 0; i < 80; i++) {
   spiel10.schritt(0.05);
 }
 pruefe(elfe2.leben === elfe2.werte.maxLeben, `wiederkehrend, noch nicht bereit: 4 s neben dem Schleim ohne Schaden (${elfe2.leben} Leben)`);
+
+// ---------- Inventar, Ausrüstung, Laden ----------
+const laden = new Spiel(karten, werte, { jetzt: () => uhr });
+const markt = laden.gebiete.get('riftside');
+const kraemerin = markt.welt.dinge.find((d) => d.eig.laden === 'kraemerin');
+pruefe(!!kraemerin, 'die Krämerin steht in Riftside');
+const vorDerKraemerin = (x) => Object.assign(x, { x: kraemerin.x - 32 + 4, y: Math.floor(kraemerin.y / 32) * 32 + 24, richtung: 'rechts' });
+const pk = [];
+const kunde = mitCharakter(laden, 'Kunde', (m) => pk.push(m), 'kaempfer', 'mensch');
+laden.nachricht(kunde.id, { t: 'bereit' });
+kunde.inventar.gold = 100;
+vorDerKraemerin(kunde);
+laden.nachricht(kunde.id, { t: 'ansprechen', r: 'rechts' });
+const angebot = pk.find((m) => m.t === 'laden');
+pruefe(angebot?.waren.heiltrank === 12 && angebot.waren.langschwert === 40, `Laden öffnet: Heiltrank ${angebot?.waren.heiltrank}, Langschwert ${angebot?.waren.langschwert} Gold`);
+// Charisma: ein Halbling-Schurke (CHA 14+1, Mod. +2) zahlt 10 % weniger.
+const pk2 = [];
+const feilscher = mitCharakter(laden, 'Feilscher', (m) => pk2.push(m), 'schurke', 'halbling');
+vorDerKraemerin(feilscher);
+uhr += 300;
+laden.nachricht(feilscher.id, { t: 'ansprechen', r: 'rechts' });
+const angebot2 = pk2.find((m) => m.t === 'laden');
+pruefe(angebot2?.waren.langschwert === 36 && angebot2.ankauf.langschwert > angebot.ankauf.langschwert,
+  `Charisma: der Halbling zahlt ${angebot2?.waren.langschwert} statt 40 und bekommt ${angebot2?.ankauf.langschwert} statt ${angebot?.ankauf.langschwert}`);
+
+const schadenVorher = kunde.werte.schaden;
+laden.nachricht(kunde.id, { t: 'kaufen', art: 'langschwert' });
+pruefe(kunde.inventar.gold === 60 && kunde.inventar.langschwert === 1, `Langschwert gekauft (Gold ${kunde.inventar.gold})`);
+laden.nachricht(kunde.id, { t: 'anlegen', art: 'langschwert' });
+pruefe(kunde.ausruestung.waffe === 'langschwert' && !kunde.inventar.langschwert && kunde.werte.schaden === schadenVorher + 1,
+  `angelegt: Schwertschaden ${schadenVorher} → ${kunde.werte.schaden}, nicht mehr im Rucksack`);
+const meldungInventar = pk.filter((m) => m.t === 'inventar').at(-1);
+pruefe(meldungInventar?.ausruestung.waffe === 'langschwert' && meldungInventar.werte.schaden === kunde.werte.schaden, 'der Browser bekommt Ausrüstung und neue Werte');
+
+// Klassen-Beschränkung: der Schurke darf kein Kettenhemd tragen.
+feilscher.inventar.kettenhemd = 1;
+laden.nachricht(feilscher.id, { t: 'anlegen', art: 'kettenhemd' });
+pruefe(!feilscher.ausruestung.ruestung && feilscher.inventar.kettenhemd === 1, 'Schurke kann kein Kettenhemd anlegen');
+
+// Kettenhemd: ein Herz mehr, etwas langsamer; ablegen nimmt das Herz wieder.
+const ohneHemd = { max: kunde.werte.maxLeben, tempo: kunde.werte.tempo };
+kunde.inventar.kettenhemd = 1;
+laden.nachricht(kunde.id, { t: 'anlegen', art: 'kettenhemd' });
+pruefe(kunde.werte.maxLeben === ohneHemd.max + 2 && kunde.werte.tempo === ohneHemd.tempo - 6, `Kettenhemd: ${ohneHemd.max} → ${kunde.werte.maxLeben} halbe Herzen, Tempo ${ohneHemd.tempo} → ${kunde.werte.tempo}`);
+kunde.leben = kunde.werte.maxLeben;
+laden.nachricht(kunde.id, { t: 'ablegen', platz: 'ruestung' });
+pruefe(!kunde.ausruestung.ruestung && kunde.inventar.kettenhemd === 1 && kunde.leben === ohneHemd.max, `abgelegt: Leben wieder höchstens ${ohneHemd.max} (${kunde.leben})`);
+// Das Tempo des Spielers prüft der Server nach den neuen Werten.
+pruefe(kunde.werte.tempo === ohneHemd.tempo, 'ohne Kettenhemd wieder das alte Tempo');
+
+// Heiltrank: bei vollem Leben nicht, verletzt schon.
+laden.nachricht(kunde.id, { t: 'kaufen', art: 'heiltrank' });
+laden.nachricht(kunde.id, { t: 'benutzen', art: 'heiltrank' });
+pruefe(kunde.inventar.heiltrank === 1, 'Heiltrank bei vollem Leben wird nicht verbraucht');
+kunde.leben = 2;
+laden.nachricht(kunde.id, { t: 'benutzen', art: 'heiltrank' });
+pruefe(!kunde.inventar.heiltrank && kunde.leben === 6, `Heiltrank: 2 → ${kunde.leben} Leben`);
+
+// Verkaufen: halber Preis; Schlüssel gehören der Gruppe und sind unverkäuflich.
+const goldVorher = kunde.inventar.gold;
+laden.nachricht(kunde.id, { t: 'verkaufen', art: 'kettenhemd' });
+pruefe(kunde.inventar.gold === goldVorher + 25 && !kunde.inventar.kettenhemd, `Kettenhemd für ${kunde.inventar.gold - goldVorher} Gold verkauft`);
+kunde.inventar.schluessel = 1;
+laden.nachricht(kunde.id, { t: 'verkaufen', art: 'schluessel' });
+pruefe(kunde.inventar.schluessel === 1, 'einen Schlüssel kauft niemand');
+delete kunde.inventar.schluessel;
+
+// Weggegangen: kein Handel mehr.
+kunde.x += 200;
+laden.nachricht(kunde.id, { t: 'kaufen', art: 'heiltrank' });
+pruefe(!kunde.inventar.heiltrank, 'wer nicht mehr vor der Krämerin steht, kauft nichts');
+laden.nachricht(kunde.id, { t: 'kaufen', art: 'gibtsnicht' });
+laden.nachricht(kunde.id, { t: 'anlegen', art: '__proto__' });
+pruefe(!kunde.ausruestung.__proto__?.length, 'Unsinn wird ignoriert');
+
+// Rucksack voll (hier 2 Plätze): kein Kauf, und die Truhe bleibt zu.
+const knapp = { ...werte, inventar: { plaetze: 2 } };
+const karteRing = JSON.parse(JSON.stringify(karten.riftside));
+const truheRing = karteRing.layers.find((l) => l.objects).objects.find((o) => o.properties?.some((p) => p.value === 'riftside_gold'));
+truheRing.properties.find((p) => p.name === 'inhalt').value = 'flinkring';
+const voll = new Spiel({ ...karten, riftside: karteRing }, knapp, { jetzt: () => uhr });
+const pv = [];
+const packer = mitCharakter(voll, 'Packer', (m) => pv.push(m));
+Object.assign(packer.inventar, { gold: 100, heiltrank: 2, lederruestung: 1 });
+vorDerKraemerin(packer);
+voll.nachricht(packer.id, { t: 'ansprechen', r: 'rechts' });
+voll.nachricht(packer.id, { t: 'kaufen', art: 'langschwert' });
+voll.nachricht(packer.id, { t: 'kaufen', art: 'heiltrank' });
+pruefe(!packer.inventar.langschwert && packer.inventar.heiltrank === 3, `voller Rucksack: kein neues Ding, aber mehr vom selben (Heiltränke ${packer.inventar.heiltrank})`);
+const truhe = voll.gebiete.get('riftside').welt.dinge.find((d) => d.schluessel === 'riftside_gold');
+Object.assign(packer, { x: truhe.x, y: Math.floor(truhe.y / 32) * 32 + 32 + 12, richtung: 'oben' });
+uhr += 300;
+voll.nachricht(packer.id, { t: 'ansprechen', r: 'oben' });
+pruefe(!voll.gebiete.get('riftside').istOffen(truhe) && pv.some((m) => m.t === 'dialog' && m.seiten[0].includes('voll')),
+  'volle Truhe bei vollem Rucksack: bleibt zu, mit Begründung');
+
+// Beute: ein besiegter Schleim gibt Gold.
+const spiel13 = new Spiel(karten, werteWald, { jetzt: () => uhr });
+const jaeger = mitCharakter(spiel13, 'Jäger', () => {});
+spiel13.nachricht(jaeger.id, { t: 'bereit' });
+const schleim13 = spiel13.gebiete.get('wald').gegner[0];
+Object.assign(schleim13, { vx: 0, vy: 0, tot: false, leben: 2, getroffenBis: 0, x: jaeger.x, y: jaeger.y + 20, stossBis: uhr + 1e6 });
+uhr += 400;
+spiel13.nachricht(jaeger.id, { t: 'hieb', r: 'unten' });
+pruefe(schleim13.tot && jaeger.inventar.gold >= 1 && jaeger.inventar.gold <= 3, `besiegter Schleim gibt ${jaeger.inventar.gold} Gold`);
+
+// Ausrüstung im Spielstand: nach dem Neustart noch angelegt, Werte stimmen.
+const datei11 = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
+const spiel11 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei11) });
+const ritter = mitCharakter(spiel11, 'Ritter', () => {});
+ritter.inventar.langschwert = 1;
+spiel11.nachricht(ritter.id, { t: 'anlegen', art: 'langschwert' });
+const schaden11 = ritter.werte.schaden;
+spiel11.verlassen(ritter.id);
+const spiel12 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei11) });
+const ritter2 = spiel12.beitreten('Ritter', () => {});
+pruefe(ritter2.ausruestung.waffe === 'langschwert' && ritter2.werte.schaden === schaden11, `nach dem Neustart: Langschwert angelegt, Schaden ${ritter2.werte.schaden}`);
 
 // --- An die Wand heran, egal bei welcher Bildrate ---
 // Der Busch auf Kachel (8,16) beginnt bei y = 512.

@@ -6,7 +6,7 @@
 // Laufen bei 80 ms Ping zäh an. Der Server prüft sie aber (Tempo und Wände)
 // und schickt eine Korrektur, wenn sie nicht stimmen kann.
 import { RICHTUNGEN, erfuellt, hiebFlaeche, imRechteck } from '../gemeinsam/welt.js';
-import { werteBerechnen } from '../gemeinsam/regeln.js';
+import { PLAETZE, darfTragen, kaufpreis, passtHinein, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 import { Gebiet, richtungZu } from './gebiet.js';
 
 const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
@@ -36,13 +36,27 @@ export class Spiel {
     // Aufrufer an die Werte gehängt, damit Homebrew nur eine Datei ist.
     this.klassen = werte.klassen ?? {};
     this.spezies = werte.spezies ?? {};
+    this.gegenstaende = werte.gegenstaende ?? {};
+    this.laeden = werte.laeden ?? {};
   }
 
   // Klasse und Spezies festlegen und die Werte daraus berechnen.
   charakterSetzen(s, klasse, spezies) {
     s.klasse = klasse;
     s.spezies = spezies;
-    s.werte = werteBerechnen(this.klassen[klasse], this.spezies[spezies], this.w.spieler);
+    this.werteNeu(s);
+  }
+
+  // Nach jeder Änderung an Klasse oder Ausrüstung: Werte neu, und wer
+  // eine Rüstung ablegt, hat danach nicht mehr Leben als Herzen.
+  werteNeu(s) {
+    const an = PLAETZE.map((p) => this.gegenstaende[s.ausruestung[p]]).filter(Boolean);
+    s.werte = werteBerechnen(this.klassen[s.klasse], this.spezies[s.spezies], this.w.spieler, an);
+    s.leben = Math.min(s.leben, s.werte.maxLeben);
+  }
+
+  gegenstand(art) {
+    return typeof art === 'string' && Object.hasOwn(this.gegenstaende, art) ? this.gegenstaende[art] : null;
   }
 
   charakterGueltig(klasse, spezies) {
@@ -75,6 +89,9 @@ export class Spiel {
       leben: Math.max(1, alt?.leben ?? this.w.spieler.leben), tot: false, wiederBei: 0,
       ankunft: alt?.ankunft && this.gebiete.has(alt.ankunft.gebiet) ? alt.ankunft : ort,
       inventar: { ...(alt?.inventar ?? {}) }, zuletztAngesprochen: 0,
+      // Nur, was es (noch) gibt und an den richtigen Platz gehört — ein
+      // umbenannter Gegenstand im Spielstand soll nichts kaputt machen.
+      ausruestung: Object.fromEntries(PLAETZE.filter((p) => this.gegenstand(alt?.ausruestung?.[p])?.platz === p).map((p) => [p, alt.ausruestung[p]])),
       // Unverwundbar, bis der Browser „bereit" meldet (höchstens 15 s), dann
       // noch 1,5 s. Die Schonfrist lief früher ab dem Beitreten — und war
       // vorbei, während der Browser noch Karte und Bilder lud.
@@ -127,7 +144,7 @@ export class Spiel {
   ortsangabe(s) {
     const g = this.gebiete.get(s.gebiet);
     return {
-      gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar,
+      gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar, ausruestung: s.ausruestung,
       geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), tueren: [...g.welt.geoeffnet],
       blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(),
     };
@@ -185,6 +202,11 @@ export class Spiel {
     else if (m.t === 'faehigkeit') this.faehigkeit(s, m);
     else if (m.t === 'hieb') this.hieb(s, m);
     else if (m.t === 'ansprechen') this.ansprechen(s, m);
+    else if (m.t === 'anlegen') this.anlegen(s, m.art);
+    else if (m.t === 'ablegen') this.ablegen(s, m.platz);
+    else if (m.t === 'benutzen') this.benutzen(s, m.art);
+    else if (m.t === 'kaufen') this.kaufen(s, m.art);
+    else if (m.t === 'verkaufen') this.verkaufen(s, m.art);
     else if (m.t === 'bereit') s.unverwundbarBis = Math.min(s.unverwundbarBis, this.jetzt() + this.w.spieler.schonfrist);
   }
 
@@ -273,6 +295,14 @@ export class Spiel {
         return;
       }
       s.senden({ t: 'dialog', seiten: seiten(this.textFuer(e)) });
+    } else if (ding.name === 'figur' && this.laeden[e.laden]) {
+      // Händler: statt Text das Ladenfenster. Gekauft wird nur, solange man
+      // davor steht (s. imLaden).
+      const blick = { oben: 'unten', unten: 'oben', links: 'rechts', rechts: 'links' }[s.richtung];
+      gebiet.blicke.set(ding.schluessel, blick);
+      gebiet.anAlle({ t: 'blick', ding: ding.schluessel, r: blick });
+      s.laden = { id: e.laden, gebiet: s.gebiet, x: ding.x, y: ding.y };
+      s.senden(this.ladenAngabe(s));
     } else if (ding.name === 'figur') {
       // Die Figur dreht sich zum Sprecher — für alle im Gebiet sichtbar.
       const blick = { oben: 'unten', unten: 'oben', links: 'rechts', rechts: 'links' }[s.richtung];
@@ -285,9 +315,14 @@ export class Spiel {
         s.senden({ t: 'dialog', seiten: ['Die Truhe ist leer.'] });
         return;
       }
-      gebiet.oeffnen(ding);
       const [art, anzahl] = inhaltLesen(e.inhalt);
-      const g = this.w.gegenstaende?.[art];
+      const g = this.gegenstaende[art];
+      // Voll: die Truhe bleibt zu — sonst wäre ihr Inhalt verloren.
+      if (art && !passtHinein(s.inventar, art, this.gegenstaende, this.w.inventar.plaetze)) {
+        s.senden({ t: 'dialog', seiten: ['Dein Rucksack ist voll. Verkauf oder benutz erst etwas.'] });
+        return;
+      }
+      gebiet.oeffnen(ding);
       // Schlüssel und Ähnliches („gemeinsam" in werte.json) landen im
       // Gruppen-Inventar: sonst müsste immer der Finder zur Tür laufen.
       if (art && g?.gemeinsam) {
@@ -299,7 +334,8 @@ export class Spiel {
       // Schlüssel", „eine Goldmünze" — aus Name und Artikel ließe sich das
       // nicht zuverlässig bauen.
       const was = !art ? 'nichts' : anzahl === 1 ? (g?.einzeln ?? art) : `${anzahl} ${g?.mehrzahl ?? art}`;
-      s.senden({ t: 'dialog', seiten: [`Du findest ${was}!`], inventar: s.inventar });
+      s.senden({ t: 'dialog', seiten: [`Du findest ${was}!`] });
+      this.inventarSenden(s);
       gebiet.anAlle({ t: 'nachricht', text: `${s.name} öffnet eine Truhe.` }, s.id);
       this.zustandSetzen(e.setzt, e.meldung);
       this.merken(s);
@@ -309,7 +345,7 @@ export class Spiel {
       // Ein Schurke knackt das Schloss — ohne Schlüssel, und keiner geht verloren.
       const knackt = s.werte?.vorteile.includes('schloesser') && !e.zauber;
       if (!knackt && !(this.gruppe()[art] > 0)) {
-        const g = this.w.gegenstaende?.[art];
+        const g = this.gegenstaende[art];
         s.senden({ t: 'dialog', seiten: [`Verschlossen. Ihr braucht ${g?.einzeln ?? art}.`] });
         return;
       }
@@ -320,6 +356,102 @@ export class Spiel {
       this.gruppeGeaendert();
       this.speichern();
     }
+  }
+
+  // ---------- Inventar ----------
+  // Der Browser zeigt an, was geht, und sperrt Knöpfe mit Begründung; der
+  // Server prüft trotzdem alles selbst und schickt danach den neuen Stand.
+
+  inventarSenden(s) {
+    s.senden({ t: 'inventar', inventar: s.inventar, ausruestung: s.ausruestung, werte: s.werte, leben: s.leben });
+    this.merken(s);
+  }
+
+  dazu(s, art, n) {
+    s.inventar[art] = (s.inventar[art] ?? 0) + n;
+    if (s.inventar[art] <= 0) delete s.inventar[art];
+  }
+
+  anlegen(s, art) {
+    const g = this.gegenstand(art);
+    if (s.tot || !g?.platz || !(s.inventar[art] > 0) || !darfTragen(g, s.klasse)) return;
+    const vorher = s.ausruestung[g.platz];
+    this.dazu(s, art, -1);
+    if (vorher) this.dazu(s, vorher, 1);
+    s.ausruestung[g.platz] = art;
+    this.werteNeu(s);
+    this.inventarSenden(s);
+  }
+
+  ablegen(s, platz) {
+    const art = PLAETZE.includes(platz) ? s.ausruestung[platz] : null;
+    if (!art || !passtHinein(s.inventar, art, this.gegenstaende, this.w.inventar.plaetze)) return;
+    delete s.ausruestung[platz];
+    this.dazu(s, art, 1);
+    this.werteNeu(s);
+    this.inventarSenden(s);
+  }
+
+  benutzen(s, art) {
+    const g = this.gegenstand(art);
+    if (s.tot || g?.art !== 'verbrauch' || !(s.inventar[art] > 0)) return;
+    const heilung = g.wirkung?.heilung ?? 0;
+    // Ein Trank bei vollem Leben wäre verschenkt.
+    if (heilung && s.leben >= this.maxLeben(s)) {
+      s.senden({ t: 'nachricht', text: 'Du bist nicht verletzt.' });
+      return;
+    }
+    this.dazu(s, art, -1);
+    s.leben = Math.min(this.maxLeben(s), s.leben + heilung);
+    this.gebiete.get(s.gebiet).anAlle({ t: 'heilung', von: s.id, ziele: [s.id] });
+    this.inventarSenden(s);
+  }
+
+  // Nur, wer noch vor dem Händler steht, kann handeln.
+  imLaden(s) {
+    const l = s.laden;
+    return l && l.gebiet === s.gebiet && Math.hypot(l.x - s.x, l.y - s.y) < 72 ? this.laeden[l.id] : null;
+  }
+
+  ladenAngabe(s) {
+    const l = this.laeden[s.laden.id];
+    const preise = (liste, f) => Object.fromEntries(liste.filter((a) => this.gegenstand(a)?.preis).map((a) => [a, f(this.gegenstaende[a], s.werte.mod, this.w.handel)]));
+    return {
+      t: 'laden', name: l.name, gruss: l.gruss ?? '',
+      waren: preise(l.waren, kaufpreis),
+      ankauf: preise(Object.keys(this.gegenstaende).filter((a) => !this.gegenstaende[a].gemeinsam && a !== 'gold'), verkaufspreis),
+    };
+  }
+
+  kaufen(s, art) {
+    const l = this.imLaden(s);
+    const g = this.gegenstand(art);
+    if (!l || !g?.preis || !l.waren.includes(art)) return;
+    const preis = kaufpreis(g, s.werte.mod, this.w.handel);
+    if ((s.inventar.gold ?? 0) < preis || !passtHinein(s.inventar, art, this.gegenstaende, this.w.inventar.plaetze)) return;
+    this.dazu(s, 'gold', -preis);
+    this.dazu(s, art, 1);
+    this.inventarSenden(s);
+  }
+
+  verkaufen(s, art) {
+    const g = this.gegenstand(art);
+    if (!this.imLaden(s) || !g?.preis || g.gemeinsam || !(s.inventar[art] > 0)) return;
+    this.dazu(s, art, -1);
+    this.dazu(s, 'gold', verkaufspreis(g, s.werte.mod, this.w.handel));
+    this.inventarSenden(s);
+  }
+
+  // Ein besiegter Gegner gibt dem, der ihn besiegt hat, etwas Gold.
+  beute(id, g) {
+    const s = this.spieler.get(id);
+    const [von, bis] = g.w.gold ?? [0, 0];
+    if (!s || !bis) return;
+    const n = von + Math.floor(Math.random() * (bis - von + 1));
+    if (!n) return;
+    this.dazu(s, 'gold', n);
+    s.senden({ t: 'beute', art: 'gold', anzahl: n, x: g.x, y: g.y });
+    this.inventarSenden(s);
   }
 
   // Die Klassenfähigkeit (Taste Q). Welche Art es ist, steht in klassen.json.
@@ -412,7 +544,7 @@ export class Spiel {
     this.spielstand.daten.spieler[s.schluessel] = {
       name: s.name, farbe: s.farbe, richtung: s.richtung,
       gebiet: tot ? s.ankunft.gebiet : s.gebiet, x: tot ? s.ankunft.x : s.x, y: tot ? s.ankunft.y : s.y,
-      leben: tot ? this.maxLeben(s) : s.leben, ankunft: s.ankunft, inventar: s.inventar,
+      leben: tot ? this.maxLeben(s) : s.leben, ankunft: s.ankunft, inventar: s.inventar, ausruestung: s.ausruestung,
       klasse: s.klasse, spezies: s.spezies,
     };
     this.geaendert = true;

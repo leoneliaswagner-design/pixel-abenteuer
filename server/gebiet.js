@@ -93,8 +93,8 @@ export class Gebiet {
     }
   }
 
-  // s ist, wer trifft — oder ein Geschoss: gebraucht werden nur x, y und
-  // richtung, für die Richtung des Rückstoßes.
+  // s ist, wer trifft — oder ein Geschoss: gebraucht werden x, y und
+  // richtung für den Rückstoß, und id für die Beute.
   gegnerTreffen(g, s, jetzt, schaden = 1) {
     g.leben -= schaden;
     g.getroffenBis = jetzt + 250;
@@ -109,6 +109,7 @@ export class Gebiet {
     g.tot = true;
     g.wiederBei = jetzt + g.w.neuErscheinen;
     this.anAlle({ t: 'gegner_tot', id: g.id, x: g.x, y: g.y });
+    this.spiel.beute(s.id, g);
     this.vielleichtHerz(g.x, g.y, g.w.herzChance);
   }
 
@@ -164,7 +165,7 @@ export class Gebiet {
         else {
           const g = this.gegner.find((g) => !g.tot && Math.hypot(g.x - p.x, g.y - 6 - p.y) < 14);
           if (g) {
-            this.gegnerTreffen(g, { x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden);
+            this.gegnerTreffen(g, { id: p.von, x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden);
             weg = 'treffer';
           }
         }

@@ -89,12 +89,15 @@ export class Oberflaeche extends Phaser.Scene {
     for (const t of this.anzeige) t.destroy();
     this.anzeige = [];
     this.anzeigeStand = [];
-    const eintraege = [['gold', 0, inventar.gold], ['schluessel', 1, gruppe.schluessel], ['rissstein', 2, gruppe.rissstein]];
+    // Der Heiltrank mit seiner Taste: so sieht man, dass 1 ihn trinkt.
+    const eintraege = [['gold', 0, inventar.gold], ['schluessel', 1, gruppe.schluessel], ['rissstein', 2, gruppe.rissstein], ['heiltrank', 3, inventar.heiltrank]];
     let x = 6;
     for (const [art, bild, anzahl] of eintraege) {
       if (!anzahl) continue;
-      const symbol = this.add.image(x, 28, 'symbole', bild).setOrigin(0, 0.5);
-      const zahl = this.add.text(x + 14, 28, String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);
+      const symbol = art === 'heiltrank'
+        ? this.add.image(x - 2, 28, 'gegenstaende', bild).setOrigin(0, 0.5)
+        : this.add.image(x, 28, 'symbole', bild).setOrigin(0, 0.5);
+      const zahl = this.add.text(x + 14, 28, art === 'heiltrank' ? `${anzahl} [1]` : String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);
       this.anzeige.push(symbol, zahl);
       this.anzeigeStand.push(`${art} ${anzahl}`);
       x += 14 + zahl.width + 8;

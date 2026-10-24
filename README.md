@@ -22,7 +22,26 @@ Spielregeln laufen dann im Browser (`client/lokal.js`).
 
 **Steuerung:** Pfeiltasten oder WASD zum Laufen, Leertaste oder J für das Schwert,
 E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern),
-Q oder K für die Fähigkeit der Klasse.
+Q oder K für die Fähigkeit der Klasse, I für den Rucksack (oder der Knopf
+unten rechts), 1 trinkt einen Heiltrank, Esc schließt Fenster.
+
+## Rucksack, Ausrüstung, Laden
+
+- **Rucksack** (I): 12 Plätze, jede Art Gegenstand belegt einen, egal wie
+  viele. Gold hat einen eigenen Beutel; Schlüssel und Risssteine gehören der
+  Gruppe und zählen nicht mit. Ist er voll, bleibt eine Truhe zu.
+- **Ausrüstung**: Waffe, Rüstung, Schmuck. Was man anlegt, ändert die Werte
+  (Schwertschaden, Herzen, Tempo, Stärke der Fähigkeit). Manches dürfen nur
+  bestimmte Klassen tragen — der Knopf sagt dann, wer.
+- **Laden**: die Krämerin auf dem Markt in Riftside (E). Charisma macht die
+  Preise: je Punkt Modifikator 5 % billiger, und man bekommt mehr beim
+  Verkaufen (sonst die Hälfte).
+- Besiegte Schleime geben dem, der sie besiegt hat, 1–3 Gold.
+
+Gegenstände stehen in `inhalte/daten/gegenstaende.json` (Name, Bild, Platz,
+`boni`, `klassen`, `preis`, `wirkung`), Läden in `laeden.json`. Ein Händler
+ist eine Figur mit der Eigenschaft `laden`. Platzzahl und Handel in
+`werte.json` (`inventar`, `handel`).
 
 ## Klassen und Spezies
 
@@ -77,7 +96,7 @@ Die IP ändert sich meist einmal am Tag.
 ## Spielstände
 
 Der Server merkt sich jeden Spieler an seinem **Namen** (Groß-/Kleinschreibung
-egal): Gebiet, Stelle, Leben, Klasse und Spezies, Gegenstände; dazu, welche Truhen offen sind. Wer mit demselben Namen wiederkommt, steht da,
+egal): Gebiet, Stelle, Leben, Klasse und Spezies, Rucksack und Ausrüstung; dazu, welche Truhen offen sind. Wer mit demselben Namen wiederkommt, steht da,
 wo er aufgehört hat. Gespeichert wird alle 5 Sekunden, beim Verlassen und
 beim Beenden mit Strg+C.
 
@@ -162,6 +181,7 @@ node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet f
 node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
+node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen

@@ -64,7 +64,7 @@ try {
 
   let z = await zustand();
   pruefe(z.gebiet === 'riftside', `neu: Start in Riftside (${z.gebiet})`);
-  pruefe(z.figuren.length === 4, `${z.figuren.length} Leute in der Stadt`);
+  pruefe(z.figuren.length === 5, `${z.figuren.length} Leute in der Stadt (mit der Krämerin)`);
   // Jeder sieht aus wie er soll — nicht nur „irgendeine Figur ist da".
   const falsch = z.figuren.filter((f) => f.textur !== `figur-${f.aussehen}`);
   pruefe(!falsch.length, `alle tragen ihr eigenes Aussehen (${z.figuren.map((f) => `${f.name}: ${f.textur}`).join(', ')})`);

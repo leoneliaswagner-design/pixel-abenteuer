@@ -16,7 +16,8 @@
     "wache",
     "kind",
     "schreiber",
-    "mutter"
+    "mutter",
+    "kraemerin"
   ],
   "spieler": {
     "leben": 6,
@@ -42,7 +43,11 @@
       "stossGeschwindigkeit": 240,
       "stossDauer": 180,
       "neuErscheinen": 12000,
-      "herzChance": 0.35
+      "herzChance": 0.35,
+      "gold": [
+        1,
+        3
+      ]
     }
   },
   "busch": {
@@ -53,23 +58,11 @@
     "heilung": 2,
     "verschwinden": 15000
   },
-  "gegenstaende": {
-    "gold": {
-      "name": "Goldmünze",
-      "einzeln": "eine Goldmünze",
-      "mehrzahl": "Goldmünzen"
-    },
-    "schluessel": {
-      "name": "kleiner Schlüssel",
-      "einzeln": "einen kleinen Schlüssel",
-      "mehrzahl": "kleine Schlüssel",
-      "gemeinsam": true
-    },
-    "rissstein": {
-      "name": "Rissstein",
-      "einzeln": "einen Rissstein",
-      "mehrzahl": "Risssteine",
-      "gemeinsam": true
-    }
+  "inventar": {
+    "plaetze": 12
+  },
+  "handel": {
+    "charismaRabatt": 0.05,
+    "ankauf": 0.5
   }
 }

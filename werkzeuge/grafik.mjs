@@ -767,6 +767,7 @@ const LEUTE = {
   kind: { tunika: ['#d0a030', '#e8c050', '#9a7020'], kopf: (r) => kopfMensch(r, { haar: '#e8c15a' }) },
   schreiber: { tunika: ['#4a6a3a', '#6a8a5a', '#2e4a24'], kopf: (r) => kopfMensch(r, { haar: '#9a9aa8', schnurr: true }) },
   mutter: { tunika: ['#7a4a8a', '#9a6aaa', '#4e2e5a'], kopf: (r) => kopfMensch(r, { haar: '#6a4020', lang: true }) },
+  kraemerin: { tunika: ['#b07a3a', '#d09a5a', '#7a5220'], kopf: (r) => kopfMensch(r, { haar: '#2a2a3a', lang: true }) },
 };
 for (const [name, l] of Object.entries(LEUTE)) {
   const blatt = new Bild(128, 128);
@@ -934,6 +935,80 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   funke.rechteck(0, 3, 8, 2, '#fff4b0');
   funke.rechteck(3, 3, 2, 2, '#ffffff');
   funke.speichern(ziel + 'funke.png');
+}
+
+// ---------- Gegenstände (16×16, für Inventar und Laden) ----------
+// Reihenfolge = „bild" in gegenstaende.json: 0 Gold, 1 Schlüssel,
+// 2 Rissstein, 3 Heiltrank, 4 Langschwert, 5 Lederrüstung, 6 Kettenhemd,
+// 7 Zauberstab, 8 Ring.
+{
+  const symbol = [];
+  const neu = () => new Bild(16, 16);
+  let b = neu(); // Gold: kleiner Münzstapel
+  for (const [x, y] of [[3, 9], [8, 10], [5, 5]]) {
+    b.ellipse(x + 2.5, y + 2.5, 3, 2.5, P.gold);
+    b.rechteck(x + 1, y + 1, 2, 1, '#fff0b0');
+  }
+  symbol.push(b);
+  b = neu(); // Schlüssel
+  b.ellipse(5, 5, 3.5, 3.5, P.gold);
+  b.loeschen(4, 4, 2, 2);
+  b.rechteck(7, 7, 2, 7, P.gold);
+  b.rechteck(9, 11, 3, 1, P.gold);
+  b.rechteck(9, 13, 2, 1, P.gold);
+  symbol.push(b);
+  b = neu(); // Rissstein: violetter Splitter
+  for (let y = 2; y < 14; y++) {
+    const w = y < 8 ? (y - 1) * 0.8 : (14 - y) * 0.9;
+    b.rechteck(Math.round(8 - w / 2), y, Math.max(1, Math.round(w)), 1, y < 6 ? '#e0b0ff' : '#9a52c8');
+  }
+  symbol.push(b);
+  b = neu(); // Heiltrank
+  b.rechteck(6, 2, 4, 2, P.holz);
+  b.rechteck(7, 4, 2, 2, '#d8e4f0');
+  b.ellipse(8, 10, 5, 4.5, '#d8e4f0');
+  b.ellipse(8, 10.5, 4, 3.5, '#d03040');
+  b.rechteck(6, 8, 2, 2, '#ff8a90');
+  symbol.push(b);
+  b = neu(); // Langschwert, schräg
+  for (let i = 0; i < 9; i++) b.rechteck(4 + i, 11 - i, 2, 1, i > 6 ? '#ffffff' : '#c8c8d8');
+  b.rechteck(2, 10, 5, 2, P.gold);
+  b.rechteck(3, 12, 2, 3, P.holzDunkel);
+  symbol.push(b);
+  b = neu(); // Lederrüstung
+  b.rechteck(3, 3, 10, 10, '#9a6a3a');
+  b.rechteck(1, 3, 3, 4, '#9a6a3a');
+  b.rechteck(12, 3, 3, 4, '#9a6a3a');
+  b.loeschen(6, 3, 4, 2);
+  b.rechteck(3, 9, 10, 1, '#6a4420');
+  b.rechteck(7, 9, 2, 1, P.gold);
+  symbol.push(b);
+  b = neu(); // Kettenhemd
+  b.rechteck(3, 3, 10, 11, '#9a9aaa');
+  b.rechteck(1, 3, 3, 5, '#9a9aaa');
+  b.rechteck(12, 3, 3, 5, '#9a9aaa');
+  b.loeschen(6, 3, 4, 2);
+  for (let y = 4; y < 14; y += 2) for (let x = 3 + (y % 4 ? 1 : 0); x < 13; x += 2) b.setze(x, y, '#d0d0e0');
+  symbol.push(b);
+  b = neu(); // Zauberstab
+  for (let i = 0; i < 10; i++) b.rechteck(3 + i, 13 - i, 1, 1, P.holz);
+  b.ellipse(12.5, 3.5, 2.5, 2.5, '#6fd0ff');
+  b.setze(12, 3, '#ffffff');
+  symbol.push(b);
+  b = neu(); // Ring
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      const d = Math.hypot(x + 0.5 - 8, y + 0.5 - 10);
+      if (d <= 4.6 && d > 2.6) b.setze(x, y, y < 9 ? '#ffffff' : '#c8c8d8');
+    }
+  b.ellipse(8, 4.5, 2, 2, '#6fe0a0');
+  symbol.push(b);
+  const blatt = new Bild(16 * symbol.length, 16);
+  symbol.forEach((sy, i) => {
+    sy.umriss(UMRISS);
+    blatt.einfuegen(sy, i * 16, 0);
+  });
+  blatt.speichern(ziel + 'gegenstaende.png');
 }
 
 // ---------- Schild und Truhe ----------

@@ -127,6 +127,38 @@ probe client/szenen/Spiel.js "for (const taste of ['Q', 'K'])" "for (const taste
 probe client/index.html "#start { position: fixed; inset: 0; display: flex;" "#start { position: fixed; inset: 0; display: flex; min-width: 720px;" pruefstand/klassen.mjs \
   "Charakterwahl am Handy rechts abgeschnitten"
 
+# Inventar, Ausrüstung, Laden
+probe server/spiel.js "|| !(s.inventar[art] > 0) || !darfTragen(g, s.klasse)) return;" "|| !(s.inventar[art] > 0)) return;" pruefstand/server-regeln.mjs \
+  "jede Klasse trägt alles"
+probe gemeinsam/regeln.js "(1 - handel.charismaRabatt * mod.charisma)" "1" pruefstand/server-regeln.mjs \
+  "Charisma macht nichts billiger"
+probe server/spiel.js "Math.hypot(l.x - s.x, l.y - s.y) < 72" "true" pruefstand/server-regeln.mjs \
+  "Handel von überall"
+probe server/spiel.js "if (art && !passtHinein(s.inventar, art, this.gegenstaende, this.w.inventar.plaetze)) {" "if (false) {" pruefstand/server-regeln.mjs \
+  "Truhe öffnet trotz vollem Rucksack"
+probe server/spiel.js "    s.leben = Math.min(s.leben, s.werte.maxLeben);" "" pruefstand/server-regeln.mjs \
+  "nach dem Ablegen mehr Leben als Herzen"
+probe gemeinsam/regeln.js "1 + bonus(mod.staerke) + plus('schaden')" "1 + bonus(mod.staerke)" pruefstand/server-regeln.mjs \
+  "Waffe macht keinen Schaden"
+probe server/gebiet.js "    this.spiel.beute(s.id, g);" "" pruefstand/server-regeln.mjs \
+  "Schleime geben kein Gold"
+probe server/spiel.js "ankunft: s.ankunft, inventar: s.inventar, ausruestung: s.ausruestung," "ankunft: s.ankunft, inventar: s.inventar," pruefstand/inventar.mjs \
+  "Ausrüstung fehlt im Spielstand"
+probe server/spiel.js "if (heilung && s.leben >= this.maxLeben(s)) {" "if (false) {" pruefstand/server-regeln.mjs \
+  "Trank bei vollem Leben verschenkt"
+probe client/szenen/Spiel.js "if (this.fenster.offen || jetzt - this.fensterZu < 200) {" "if (this.fenster.offen) {" pruefstand/inventar.mjs \
+  "Enter auf ✕ öffnet den Laden gleich wieder"
+probe client/szenen/Spiel.js "      this.fenster.aktualisieren();" "" pruefstand/inventar.mjs \
+  "Fenster zeigt nach dem Kauf den alten Stand"
+probe client/fenster.js '${gesperrt ? `<small class="grund">${html(gesperrt)}</small>` : '"''"'}' "" pruefstand/inventar.mjs \
+  "gesperrte Knöpfe ohne Begründung"
+probe client/szenen/Spiel.js "      this.maxLeben = m.werte.maxLeben;" "" pruefstand/inventar.mjs \
+  "Kettenhemd: kein Herz mehr oben links"
+probe client/szenen/Spiel.js "this.input.keyboard.on('keydown-ONE'" "this.input.keyboard.on('keydown-NINE'" pruefstand/inventar.mjs \
+  "Taste 1 trinkt nicht"
+probe client/index.html "#fenster .kasten { margin: auto; width: 100%; max-width: 560px;" "#fenster .kasten { margin: auto; width: 100%; min-width: 560px;" pruefstand/inventar.mjs \
+  "Ladenfenster am Handy rechts abgeschnitten"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

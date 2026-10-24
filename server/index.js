@@ -7,6 +7,7 @@ import { join, extname, normalize } from 'node:path';
 import { WebSocketServer } from 'ws';
 import { Spiel } from './spiel.js';
 import { Spielstand } from './spielstand.js';
+import { ZUSATZDATEN } from '../gemeinsam/regeln.js';
 import { fileURLToPath } from 'node:url';
 
 // fileURLToPath statt .pathname: unter Windows ergibt .pathname „/C:/…“,
@@ -17,8 +18,7 @@ const PORT = Number(process.env.PORT) || 3001;
 const TAKT = 50;
 
 const werte = lies('inhalte/daten/werte.json');
-werte.klassen = lies('inhalte/daten/klassen.json');
-werte.spezies = lies('inhalte/daten/spezies.json');
+for (const d of ZUSATZDATEN) werte[d] = lies(`inhalte/daten/${d}.json`);
 // Für Prüfstände und zum Ausprobieren: in einem anderen Gebiet beginnen
 // (z. B. STARTGEBIET=wald, wo es Schleime und Büsche gibt).
 if (process.env.STARTGEBIET) werte.startGebiet = process.env.STARTGEBIET;

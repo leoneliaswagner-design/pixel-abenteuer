@@ -15,7 +15,7 @@ export const HOEHE = 270;
 const ALLEIN = import.meta.env.VITE_ALLEIN === '1' || new URLSearchParams(location.search).has('allein');
 if (ALLEIN) {
   document.getElementById('hinweis').textContent =
-    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q.';
+    'Vorschau zum Alleinspielen. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q, Rucksack mit I, Trank mit 1.';
 }
 
 const form = document.getElementById('anmelden');
@@ -56,6 +56,7 @@ form.addEventListener('submit', async (e) => {
       willkommen.charakter = { klasse: c.klasse, spezies: c.spezies, werte: c.werte };
       willkommen.leben = c.leben;
     }
+    willkommen.name = name;
     document.getElementById('start').remove();
     starten(netz, willkommen);
   } catch (err) {

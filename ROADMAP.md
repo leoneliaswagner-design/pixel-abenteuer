@@ -47,6 +47,10 @@
   Schlösser knacken, Feuerball + magische Schrift, Heilung, Pfeil), vier
   Spezies. Jede Klasse mit eigener Kopfbedeckung, Tunika in Spielerfarbe.
   Prüfstand `klassen.mjs`.
+- **Inventar**: Rucksack (12 Plätze) mit Ausrüstung (Waffe, Rüstung,
+  Schmuck; manche nur für bestimmte Klassen), Heiltrank auf Taste 1,
+  Krämerin in Riftside mit Charisma-Preisen, Gold von Schleimen. Alles als
+  Daten (`gegenstaende.json`, `laeden.json`). Prüfstand `inventar.mjs`.
 
 ## Grundgerüst — als Nächstes
 
@@ -55,8 +59,9 @@
 2. ~~Klassen und Spezies~~ — offen: die Homebrew-Klassen und -Spezies der
    Kampagne eintragen; Stufen/Erfahrung; Charisma wirkt erst mit Läden.
    Spezies sehen noch alle gleich aus (nur die Klasse hat ein eigenes Bild).
-3. **Inventar**: Fenster, Ausrüstung, Tränke, klassenabhängige Gegenstände,
-   Läden (Preise nach Charisma).
+3. ~~Inventar~~ — offen: Ausrüstung sieht man der Figur noch nicht an;
+   Gegenstände fallen nur aus Truhen und aus dem Laden (keine Funde auf dem
+   Boden, kein Tauschen zwischen Spielern); Gegenstände der Kampagne eintragen.
 4. **Monster aus dem D&D-SRD** als Daten.
 5. **Töne.**
 6. **Handy-Steuerung.**
@@ -150,3 +155,9 @@
   der eigene Test lief an der Wurzel und merkte es nicht. Jetzt `base: './'`
   in vite.config.js; Vorschau vor dem Veröffentlichen unter einem Unterordner
   testen.
+- Enter auf dem ✕ des Ladenfensters schloss es — und Phaser sah dasselbe
+  Enter einen Augenblick später als „ansprechen": der Laden ging sofort
+  wieder auf. Nach dem Schließen zählen Tasten 200 ms lang nicht.
+- Ein Prüfstand erwartete, der Heiltrank sei „bei vollem Leben" gesperrt —
+  aber das neue Kettenhemd hatte die Herzen erhöht, Kai war gar nicht voll.
+  Der Prüfstand irrte, nicht das Spiel; jetzt prüft er das Trinken.

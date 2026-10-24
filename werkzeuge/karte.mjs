@@ -48,6 +48,8 @@ const KARTEN = {
       '@': [
         { name: 'Torwache Bruno', aussehen: 'wache', richtung: 'unten',
           text: 'Halt! … Ach, ihr seid es.\n\nHinter dem Tor liegt der Inselwald. Seit die Risse aufgetaucht sind, wimmelt es dort von Schleimen.' },
+        // Händlerin: „laden" verweist auf inhalte/daten/laeden.json.
+        { name: 'Krämerin', aussehen: 'kraemerin', richtung: 'unten', laden: 'kraemerin' },
         { name: 'Pip', aussehen: 'kind', richtung: 'links',
           text: 'Ich hab es gesehen! In der Fischergasse ist die Luft aufgerissen, und dahinter war ein Dschungel!\n\nMama sagt, ich darf da nicht hin.',
           text_wenn_tempel_geschlossen: 'Der Riss in der Fischergasse ist weg! Wart ihr das? Ihr seid echte Helden!' },
@@ -70,7 +72,7 @@ TT.hfnfh.hfnfhhfhNhfhpp......hfnfh.hfnfh...T
 T....p.....p.....e...pp........p.....p.....T
 T....p.....p.....p..lppl.......p.....p.....T
 T.b..p..b..p....pppppppppppp...p.....p..b..T
-T....p.....p..**ppppppppppppb..p.....p.....T
+T....p.....p..**pppppppp@pppb..p.....p.....T
 T....p.....p....ppBppppp!ppp...p.....p.....T
 T.pppppppppppppppppppppppppppppppppppppppp.T
 T.pppppppppppppppppppppppppppp@ppppppppppp.T

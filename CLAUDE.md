@@ -40,6 +40,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Server rechnet damit alles, der Browser Tempo und die Vorschau der Wahl.
   Wer noch wählt (`s.waehlt`), ist für die anderen nicht da. Fähigkeiten
   entscheidet der Server; der Schildstoß kommt als `stoss` wie ein Rückstoß.
+- **Inventar**: Rucksack (`s.inventar`, Anzahl je Art) und `s.ausruestung`
+  ({waffe, ruestung, schmuck}). Jede Änderung geht über den Server und kommt
+  als `inventar` (mit neuen Werten) zurück; der Browser rechnet nichts
+  selbst. Regeln, die beide brauchen (Platz, Preise, wer was tragen darf),
+  stehen in `gemeinsam/regeln.js`. Neue Daten-Dateien in `ZUSATZDATEN`.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -73,6 +78,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/riftside.mjs` — Start in der Stadt, Ansprechen, Stadttor.
 - `node pruefstand/klassen.mjs` — Charakterwahl bei 360 Punkten, Klassenbild
   beim anderen Spieler (Bildpunkte), Feuerball, Heilung, gemessenes Tempo.
+- `node pruefstand/inventar.mjs` — Krämerin, kaufen, gesperrte Knöpfe mit
+  Grund, anlegen, Trank auf 1, leere Herzen am Bildpunkt, Spielstand-Datei,
+  Ladenfenster bei 360 Punkten.
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner

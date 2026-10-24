@@ -1,0 +1,14 @@
+{
+  "kraemerin": {
+    "name": "Krämerin",
+    "gruss": "Sieh dich um — alles frisch vom Schiff.",
+    "waren": [
+      "heiltrank",
+      "lederruestung",
+      "langschwert",
+      "zauberstab",
+      "kettenhemd",
+      "flinkring"
+    ]
+  }
+}

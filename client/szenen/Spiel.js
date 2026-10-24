@@ -3,6 +3,7 @@ import { Welt, bewege, erfuellt } from '../../gemeinsam/welt.js';
 import { Figur, FARBEN, ZEILE, animationenAnlegen } from '../figur.js';
 import { SCHRIFT } from '../schrift.js';
 import { kantenBerechnen } from '../kanten.js';
+import { Fenster } from '../fenster.js';
 
 const SENDE_ABSTAND = 50;
 // Geschosse zeigen im Bild nach rechts; so weit werden sie gedreht.
@@ -26,6 +27,8 @@ export class SpielSzene extends Phaser.Scene {
     if (!this.cache.tilemap.exists(this.kartenSchluessel))
       this.load.tilemapTiledJSON(this.kartenSchluessel, `karten/${this.willkommen.gebiet}.json`);
     this.load.json('werte', 'daten/werte.json');
+    this.load.json('gegenstaende', 'daten/gegenstaende.json');
+    this.load.spritesheet('gegenstaende', 'grafik/gegenstaende.png', { frameWidth: 16, frameHeight: 16 });
     this.load.image('kacheln', 'grafik/kacheln.png');
     for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
     this.load.spritesheet('truhe', 'grafik/truhe.png', { frameWidth: 32, frameHeight: 32 });
@@ -100,7 +103,18 @@ export class SpielSzene extends Phaser.Scene {
     this.dingeAufbauen(wk.offen ?? [], wk.blicke ?? {});
     this.risseAufbauen();
     this.inventar = wk.inventar ?? {};
+    this.ausruestung = wk.ausruestung ?? {};
     this.gruppe = wk.gruppe ?? {};
+    // Ein Fenster für das ganze Spiel: die Szene startet bei jedem
+    // Gebietswechsel neu, das HTML darunter bleibt.
+    this.fenster ??= new Fenster(() => this.fensterDaten(), (m) => this.netz.senden(m), () => (this.fensterZu = this.time.now));
+    this.fenster.schliessen();
+    this.fensterZu = 0;
+    const knopf = document.getElementById('rucksack-knopf');
+    if (knopf) {
+      knopf.hidden = false;
+      knopf.onclick = () => this.rucksackUmschalten();
+    }
     this.dialogOffen = false;
     this.oberflaeche()?.dialogSchliessen?.();
 
@@ -131,6 +145,14 @@ export class SpielSzene extends Phaser.Scene {
     for (const [taste, r] of Object.entries(RICHTUNG_DER_TASTE)) this.input.keyboard.on(`keydown-${taste}`, () => (this.getippt = r));
     this.faehigkeitGewuenscht = false;
     for (const taste of ['Q', 'K']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.faehigkeitGewuenscht = true));
+    this.input.keyboard.on('keydown-I', (e) => !e.repeat && this.rucksackUmschalten());
+    this.input.keyboard.on('keydown-ESC', () => this.fenster.schliessen());
+    // Schnelltaste 1: der erste Trank im Rucksack.
+    this.input.keyboard.on('keydown-ONE', (e) => {
+      const g = this.cache.json.get('gegenstaende');
+      const art = Object.keys(this.inventar).find((a) => this.inventar[a] > 0 && g[a]?.art === 'verbrauch');
+      if (!e.repeat && art && !this.ich.tot) this.netz.senden({ t: 'benutzen', art });
+    });
     this.ansprechGewuenscht = false;
     for (const taste of ['E', 'ENTER']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.ansprechGewuenscht = true));
     // Kleines „E" über dem Ding, vor dem man steht — damit man weiß, dass es
@@ -172,6 +194,8 @@ export class SpielSzene extends Phaser.Scene {
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
         hinweis: this.hinweis.visible,
         inventar: this.inventar,
+        ausruestung: this.ausruestung,
+        fenster: this.fenster.art,
         gruppe: this.gruppe,
         zustaende: this.zustaende,
         tueren: [...this.welt.geoeffnet],
@@ -220,6 +244,21 @@ export class SpielSzene extends Phaser.Scene {
     this.time.addEvent({ delay: 550, loop: true, callback: () => this.bodenEbene.swapByIndex(a, b) });
     this.gidBusch = this.welt.gidVon('busch');
     this.gidBuschRest = this.welt.gidVon('busch_rest');
+  }
+
+  fensterDaten() {
+    const wk = this.willkommen, c = this.charakter;
+    return {
+      gegenstaende: this.cache.json.get('gegenstaende'), inventar: this.inventar, ausruestung: this.ausruestung,
+      gruppe: this.gruppe, charakter: c, leben: this.leben, plaetze: this.w.inventar?.plaetze ?? 12,
+      klassen: wk.auswahl?.klassen ?? {}, name: wk.name ?? '',
+      klassenName: wk.auswahl?.klassen?.[c?.klasse]?.name ?? '', speziesName: wk.auswahl?.spezies?.[c?.spezies]?.name ?? '',
+    };
+  }
+
+  rucksackUmschalten() {
+    if (this.fenster.offen) this.fenster.schliessen();
+    else if (!this.dialogOffen && !this.wechselt) this.fenster.rucksack();
   }
 
   oberflaeche() {
@@ -392,6 +431,26 @@ export class SpielSzene extends Phaser.Scene {
       this.gruppe = m.inventar;
       this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
     });
+    n.bei('inventar', (m) => {
+      this.inventar = m.inventar;
+      this.ausruestung = m.ausruestung;
+      this.leben = m.leben;
+      // Dasselbe Objekt wie in willkommen: so stimmen Tempo und Herzen auch
+      // nach dem nächsten Gebietswechsel.
+      if (this.charakter) this.charakter.werte = m.werte;
+      this.tempo = m.werte.tempo;
+      this.maxLeben = m.werte.maxLeben;
+      this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
+      this.fenster.aktualisieren();
+    });
+    n.bei('laden', (m) => {
+      this.ich.laeuft = false;
+      this.fenster.laden(m);
+    });
+    n.bei('beute', (m) => {
+      const t = this.add.text(m.x, m.y - 24, `+${m.anzahl}`, { fontFamily: SCHRIFT, fontSize: '8px', color: '#ffd84a', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5).setDepth(6000);
+      this.tweens.add({ targets: t, y: t.y - 16, alpha: 0, duration: 900, onComplete: () => t.destroy() });
+    });
     n.bei('dialog', (m) => {
       if (m.inventar) {
         this.inventar = m.inventar;
@@ -419,6 +478,7 @@ export class SpielSzene extends Phaser.Scene {
   // die Zuhörer gleich abhängen (sonst setzte ein Stand aus der Höhle noch
   // Gegner in die Oberwelt) und erst nach dem Abblenden neu starten.
   gebietWechseln(m) {
+    this.fenster.schliessen();
     this.netz.zuruecksetzen();
     this.ich.laeuft = false;
     this.wechselt = true;
@@ -441,6 +501,7 @@ export class SpielSzene extends Phaser.Scene {
         this.leben = s.leben;
         this.ich.unverwundbar = s.unv;
         this.ich.tot = s.tot;
+        if (s.tot) this.fenster.schliessen();
         continue;
       }
       gesehen.add(s.id);
@@ -545,6 +606,19 @@ export class SpielSzene extends Phaser.Scene {
 
     // Im Gespräch steht die Figur; Leertaste und E blättern weiter. Das
     // Spiel läuft für die anderen weiter — anhalten ginge online nicht.
+    // Rucksack oder Laden offen: die Figur steht. Und gleich nach dem
+    // Schließen zählen Tasten nicht — Enter auf „✕" sprach sonst die
+    // Krämerin wieder an, und der Laden ging sofort wieder auf.
+    if (this.fenster.offen || jetzt - this.fensterZu < 200) {
+      this.ansprechGewuenscht = this.hiebGewuenscht = this.faehigkeitGewuenscht = false;
+      this.getippt = null;
+    }
+    if (this.fenster.offen) {
+      this.hinweis.setVisible(false);
+      ich.laeuft = false;
+      ich.aktualisieren(jetzt);
+      return;
+    }
     if (this.dialogOffen) {
       if (this.ansprechGewuenscht || this.hiebGewuenscht) this.dialogOffen = this.oberflaeche().weiter();
       this.ansprechGewuenscht = this.hiebGewuenscht = this.faehigkeitGewuenscht = false;
