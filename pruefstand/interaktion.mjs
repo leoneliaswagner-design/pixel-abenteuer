@@ -99,7 +99,8 @@ try {
   pruefe(za.dialog?.name === 'Alter Mann', `Textbox mit Namen „${za.dialog?.name}"`);
   pruefe(za.dialog && za.dialog.text.length > 0 && za.dialog.seiten === 3, `Text wird geschrieben („${za.dialog?.text}"), ${za.dialog?.seiten} Seiten`);
   const hellOffen = await untenHell(anna);
-  pruefe(hellOffen < hellVorher - 30, `unten im Bild ist die Box zu sehen (Helligkeit ${hellVorher.toFixed(0)} → ${hellOffen.toFixed(0)})`);
+  // Die Box ist Pergament auf Holz — heller als die Wiese; früher war sie dunkel.
+  pruefe(Math.abs(hellOffen - hellVorher) > 30, `unten im Bild ist die Box zu sehen (Helligkeit ${hellVorher.toFixed(0)} → ${hellOffen.toFixed(0)})`);
 
   await anna.keyboard.press('e');
   await warte(100);

@@ -130,13 +130,14 @@ try {
     `Mia ist Elfen-Magierin: Tempo ${zm.ich.tempo}, ${zm.ich.max} halbe Herzen`);
   pruefe(zt.andere[0]?.textur?.startsWith('held-magier-'), `Tom sieht Mia als Magierin (${zt.andere[0]?.textur})`);
   pruefe(zm.andere[0]?.textur?.startsWith('held-kleriker-'), `Mia sieht Tom als Kleriker (${zm.andere[0]?.textur})`);
-  // Die weiße Kapuze des Klerikers, auf Mias Schirm.
+  // Die weiße Kapuze des Klerikers, auf Mias Schirm (Figuren sind 48 hoch,
+  // die Kapuze sitzt 25…45 Punkte über dem Fuß).
   const tomBeiMia = zm.andere[0];
   if (process.env.BILDER) await mia.screenshot({ path: wurzel + 'pruefstand/bilder/klassen-mia.png' });
   // Mehrmals: in der Schonfrist blinkt Tom (jedes zweite Bild fast durchsichtig).
   let weiss = 0;
   for (let i = 0; i < 6 && weiss <= 20; i++) {
-    weiss = Math.max(weiss, await farbeZaehlen(mia, tomBeiMia.x - 16, tomBeiMia.y - 30, 32, 32, [236, 230, 214]));
+    weiss = Math.max(weiss, await farbeZaehlen(mia, tomBeiMia.x - 16, tomBeiMia.y - 48, 32, 30, [236, 230, 214]));
     await warte(37);
   }
   pruefe(weiss > 20, `weiße Kapuze bei Mia auf dem Schirm (${weiss} Bildpunkte)`);

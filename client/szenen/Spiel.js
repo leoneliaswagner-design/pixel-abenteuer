@@ -190,6 +190,7 @@ export class SpielSzene extends Phaser.Scene {
         gebiet: this.gebiet,
         kanten: this.kantenZahl,
         deko: this.dekoZahl,
+        schatten: this.schattenZahl,
         ich: {
           id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, max: this.maxLeben, tot: this.ich.tot,
           richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar, klasse: this.charakter?.klasse, textur: this.ich.koerper.texture.key,
@@ -238,6 +239,7 @@ export class SpielSzene extends Phaser.Scene {
     for (const kk of kanten) this.kantenBild.create(kk.x * k0, kk.y * k0, kk.bild);
     // Gezählt wird, was wirklich gezeichnet ist — nicht, was berechnet wurde.
     this.kantenZahl = this.kantenBild.children.length;
+    this.schattenZahl = kanten.filter((kk) => kk.bild === 16).length;
     this.dekoBild = this.add.blitter(0, 0, 'deko').setDepth(0.6);
     for (const d of dekoBerechnen(this.welt)) this.dekoBild.create(d.x, d.y, d.bild);
     this.dekoZahl = this.dekoBild.children.length;
@@ -312,7 +314,7 @@ export class SpielSzene extends Phaser.Scene {
   // Laternen, Fenster und Risse leuchten; die Tageszeit kommt vom Server
   // (für alle gleich) und läuft dazwischen hier weiter.
   lichtAufbauen(zeit) {
-    this.zeit = zeit ?? 0.4;
+    this.zeit = zeit ?? 0.45;
     this.zeitBei = this.time.now;
     this.licht = new Licht(this, this.welt.eigenschaftenKarte.licht);
     const k = this.welt.kachel;

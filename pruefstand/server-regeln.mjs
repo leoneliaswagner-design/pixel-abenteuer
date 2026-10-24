@@ -660,6 +660,21 @@ const arena = (art, abstand) => {
   pruefe(f.includes('drache'), `unbekanntes Monster wird gemeldet („${f}")`);
 }
 
+// ---------- Tageszeit ----------
+{
+  const tag = new Spiel(karten, werte, { jetzt: () => uhr });
+  const z0 = tag.tageszeit();
+  const halb = tag.tageszeit(uhr + werte.tag.dauer / 2);
+  pruefe(Math.abs(z0 - werte.tag.beginn) < 0.001 && Math.abs(((halb - z0 + 1) % 1) - 0.5) < 0.001,
+    `Tageszeit beginnt bei ${z0.toFixed(2)} und ist nach einem halben Tag bei ${halb.toFixed(2)}`);
+  const pt = [];
+  const t1 = mitCharakter(tag, 'Uhr', (m) => pt.push(m));
+  tag.nachricht(t1.id, { t: 'bereit' });
+  tag.takt(0.05);
+  const st = pt.find((m) => m.t === 'stand');
+  pruefe(Math.abs(pt[0].zeit - z0) < 0.001 && st && Math.abs(st.zeit - tag.tageszeit()) < 0.001, 'Willkommen und jeder Stand nennen die Tageszeit');
+}
+
 // --- An die Wand heran, egal bei welcher Bildrate ---
 // Der Busch auf Kachel (8,16) beginnt bei y = 512.
 const anWand = [60, 20, 8].map((bps) => {

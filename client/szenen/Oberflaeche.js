@@ -109,23 +109,31 @@ export class Oberflaeche extends Phaser.Scene {
     return (this.anzeigeStand ?? []).join(', ');
   }
 
-  // ---------- Textbox wie in Link's Awakening ----------
+  // ---------- Textbox: Holzrahmen mit Pergament ----------
 
   dialogAufbauen(b, h) {
     const box = { x: 8, y: h - 76, b: b - 16, h: 68 };
     this.dialogBox = box;
-    this.dialogRahmen = this.add.graphics();
-    this.dialogRahmen.fillStyle(0x1b1424, 0.94).fillRoundedRect(box.x, box.y, box.b, box.h, 4);
-    this.dialogRahmen.lineStyle(2, 0xf4ecd8).strokeRoundedRect(box.x + 1, box.y + 1, box.b - 2, box.h - 2, 4);
-    this.dialogNameFeld = this.add.text(box.x + 10, box.y - 6, '', {
-      fontFamily: SCHRIFT, fontSize: '8px', color: '#1b1424', backgroundColor: '#e8b84a', padding: { x: 4, y: 3 },
+    // Holzrahmen mit Pergament, wie in Stardew Valley: außen dunkles Holz,
+    // eine helle Kante innen, dann das Papier mit einem Schatten oben.
+    const r = this.add.graphics();
+    this.dialogRahmen = r;
+    r.fillStyle(0x000000, 0.25).fillRoundedRect(box.x + 2, box.y + 3, box.b, box.h, 5);
+    r.fillStyle(0x5a3820).fillRoundedRect(box.x, box.y, box.b, box.h, 5);
+    r.fillStyle(0x8a5a32).fillRoundedRect(box.x + 2, box.y + 2, box.b - 4, box.h - 4, 4);
+    r.fillStyle(0xc99560).fillRect(box.x + 4, box.y + 3, box.b - 8, 1);
+    r.fillStyle(0x5a3820).fillRect(box.x + 5, box.y + 5, box.b - 10, box.h - 10);
+    r.fillStyle(0xf4e4c0).fillRect(box.x + 6, box.y + 6, box.b - 12, box.h - 12);
+    r.fillStyle(0xe2cc9c).fillRect(box.x + 6, box.y + 6, box.b - 12, 2);
+    this.dialogNameFeld = this.add.text(box.x + 12, box.y - 4, '', {
+      fontFamily: SCHRIFT, fontSize: '8px', color: '#fbeed0', backgroundColor: '#5a3820', padding: { x: 5, y: 4 },
     }).setOrigin(0, 0.5);
-    const stil = { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', lineSpacing: 8, wordWrap: { width: box.b - 28, useAdvancedWrap: true } };
+    const stil = { fontFamily: SCHRIFT, fontSize: '8px', color: '#3e2a1c', lineSpacing: 8, wordWrap: { width: box.b - 28, useAdvancedWrap: true } };
     this.dialogTextFeld = this.add.text(box.x + 14, box.y + 14, '', stil);
     // Unsichtbares Messfeld: bricht den ganzen Text so um wie die Box,
     // damit die Seiten an Zeilen- statt an Buchstabengrenzen enden.
     this.messFeld = this.add.text(0, 0, '', stil).setVisible(false);
-    this.dialogPfeil = this.add.text(box.x + box.b - 14, box.y + box.h - 8, '▼', { fontFamily: SCHRIFT, fontSize: '8px', color: '#e8b84a' }).setOrigin(1, 1);
+    this.dialogPfeil = this.add.text(box.x + box.b - 14, box.y + box.h - 8, '▼', { fontFamily: SCHRIFT, fontSize: '8px', color: '#8a5a32' }).setOrigin(1, 1);
     this.tweens.add({ targets: this.dialogPfeil, y: '+=2', duration: 300, yoyo: true, repeat: -1 });
     this.dialogSchliessen();
   }

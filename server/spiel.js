@@ -36,7 +36,7 @@ export class Spiel {
     // Browser malt danach Tag und Nacht. TAGESZEIT=0.8 beim Start für
     // Prüfstände und Bilder vom Abend. (globalThis.process: dieselbe Datei
     // läuft im Alleinspiel im Browser, und dort gibt es kein process.)
-    this.tagBeginn = jetzt() - (Number(globalThis.process?.env?.TAGESZEIT ?? this.w.tag?.beginn ?? 0.3) * (this.w.tag?.dauer ?? 1440000));
+    this.tagBeginn = jetzt() - (Number(globalThis.process?.env?.TAGESZEIT ?? this.w.tag?.beginn ?? 0.4) * (this.w.tag?.dauer ?? 1440000));
     // Klassen und Spezies (inhalte/daten/klassen.json, spezies.json) — vom
     // Aufrufer an die Werte gehängt, damit Homebrew nur eine Datei ist.
     this.klassen = werte.klassen ?? {};

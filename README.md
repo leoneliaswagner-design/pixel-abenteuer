@@ -1,7 +1,7 @@
 # Pixel-Abenteuer
 
-Ein Koop-Abenteuer für 2–4 Leute im Browser, im Stil von *Link's Awakening* —
-mit 32er- statt 16er-Kacheln. Das Spiel zur D&D-Kampagne: Es beginnt in
+Ein Koop-Abenteuer für 2–4 Leute im Browser: gespielt wie *Link's Awakening*,
+im Aussehen eher wie *Stardew Valley* oder *Necesse*. Das Spiel zur D&D-Kampagne: Es beginnt in
 **Riftside**, einer Hafenstadt, in deren Gassen sich Dimensionsrisse öffnen
 (mehr in `konzept/KONZEPT.md`).
 
@@ -24,6 +24,14 @@ Spielregeln laufen dann im Browser (`client/lokal.js`).
 E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern),
 Q oder K für die Fähigkeit der Klasse, I für den Rucksack (oder der Knopf
 unten rechts), 1 trinkt einen Heiltrank, Esc schließt Fenster.
+
+## Tag und Nacht
+
+Ein Tag dauert 24 Minuten (`werte.json` → `tag.dauer`) und ist für alle
+Spieler gleich. Abends wird es golden, nachts dunkel; Laternen, Fenster,
+Risse und die Spieler selbst leuchten. Höhle und Tempel sind immer dunkel,
+Häuser innen immer hell (Karteneigenschaft `licht`). Zum Ausprobieren:
+`TAGESZEIT=0.9` (Windows: `set TAGESZEIT=0.9`) vor `npm start` beginnt nachts.
 
 ## Monster
 
@@ -206,6 +214,7 @@ node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs 
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
+node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen

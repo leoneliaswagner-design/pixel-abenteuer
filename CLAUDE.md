@@ -2,7 +2,9 @@
 
 ## Was es ist
 
-Koop-Abenteuer für 2–4 Spieler im Browser, Stil *Link's Awakening*, 32er-Kacheln.
+Koop-Abenteuer für 2–4 Spieler im Browser, 32er-Kacheln. Spielidee wie *Link's
+Awakening*, Aussehen eher *Stardew Valley* / *Necesse*: Figuren 32×48, weiche
+Ränder in Eigenfarbe, Tag und Nacht mit Licht.
 Phaser 3 im Browser, Node + `ws` auf dem Server. Ein späterer Umzug nach Godot
 ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 `werte.json`), nicht im Code.
@@ -49,6 +51,14 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Gegner-Pfeile sind Geschosse mit `feind: true` und treffen Spieler. Neue
   Monster nur in Gebieten, die kein Prüfstand für Ruhe braucht — der tiefe
   Wald ist dafür da; Wald und Höhle bleiben bei Schleimen.
+- **Licht**: Tageszeit 0…1 vom Server (`tageszeit()`, in `willkommen`, `gebiet`
+  und jedem `stand`), der Browser malt sie (`client/licht.js`). Karteneigenschaft
+  `licht`: ohne = draußen, `innen` = immer hell, `dunkel` = Höhle.
+  `TAGESZEIT=0.9` beim Server-Start für Nacht im Prüfstand. Der Tag beginnt um
+  0,4 — um 0,3 lag noch Morgenrot, und Bildpunkt-Prüfungen schwankten.
+- **Grafik**: Figuren aus `werkzeuge/figuren.mjs` (32×48), alles andere aus
+  `grafik.mjs`; Umriss mit `umriss('weich')` statt Schwarz. Deko
+  (`client/deko.js`) und Kanten werden aus der Karte berechnet.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -87,6 +97,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Ladenfenster bei 360 Punkten.
 - `node pruefstand/monster.mjs` — alle Monsterbilder geladen und gespiegelt,
   Goblin-Pfeil trifft im Browser, Wolf duckt sich sichtbar.
+- `node pruefstand/optik.mjs` — Nacht/Tag am Bildpunkt (Laterne hell, abseits
+  dunkel), Höhle mittags dunkel, Rathaus nachts hell, Deko, Wind, Hausschatten,
+  Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner

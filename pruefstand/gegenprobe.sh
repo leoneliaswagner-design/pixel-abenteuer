@@ -183,6 +183,26 @@ probe client/szenen/Spiel.js "      if (e.duckt && e.sprite.texture.has(2)) e.sp
 probe client/szenen/Spiel.js "      e.sprite.setFlipX(g.b === 'rechts');" "" pruefstand/monster.mjs \
   "Monster laufen rückwärts nach rechts"
 
+# Optik: Licht, Tageszeit, Deko, Wind, Figuren 32×48
+probe client/licht.js "    if (this.art === 'innen') return INNEN;" "" pruefstand/optik.mjs \
+  "Innenräume werden nachts dunkel"
+probe client/licht.js "    if (this.art === 'dunkel') return HOEHLE;" "" pruefstand/optik.mjs \
+  "Höhle mittags hell"
+probe client/szenen/Spiel.js "if (name === 'laterne') this.licht.fest(x, y + 8, 84, 0xffd890, 20);" "if (false) void 0;" pruefstand/optik.mjs \
+  "Laternen leuchten nicht"
+probe server/gebiet.js "      zeit: this.spiel.tageszeit(jetzt)," "" pruefstand/server-regeln.mjs \
+  "der Stand nennt keine Tageszeit"
+probe server/spiel.js "globalThis.process?.env?.TAGESZEIT ?? " "" pruefstand/optik.mjs \
+  "TAGESZEIT wird nicht beachtet (keine Nacht im Prüfstand)"
+probe client/szenen/Spiel.js "    for (const d of dekoBerechnen(this.welt)) this.dekoBild.create(d.x, d.y, d.bild);" "" pruefstand/optik.mjs \
+  "keine Deko auf den Wiesen"
+probe client/kanten.js "kanten.push({ x, y, bild: 16 });" "void 0;" pruefstand/optik.mjs \
+  "keine Schatten unter Wänden"
+probe client/szenen/Spiel.js "      this.tweens.add({ targets: bild, angle: { from: -0.8, to: 0.8 }" "      void ({ targets: bild, angle: { from: -0.8, to: 0.8 }" pruefstand/optik.mjs \
+  "Bäume stehen still im Wind"
+probe client/szenen/Spiel.js "const FIGURBILD = { frameWidth: 32, frameHeight: 48 };" "const FIGURBILD = { frameWidth: 32, frameHeight: 32 };" pruefstand/optik.mjs \
+  "Figuren werden mit der alten Höhe geschnitten"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

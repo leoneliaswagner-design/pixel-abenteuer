@@ -1,7 +1,8 @@
 // Malt alle Platzhalter-Grafiken nach inhalte/grafik/. Aufruf: npm run grafik
 //
-// Maßstab: Link's Awakening hat 16er-Kacheln, wir 32er — doppelte Auflösung,
-// aber dieselben Proportionen (großer Kopf, kleiner Körper, dunkler Umriss).
+// Stil: eher Stardew Valley und Necesse als Link's Awakening — weiche
+// Schattierung von links oben, Ränder in dunkler Eigenfarbe statt Schwarz,
+// Texturen, die über den Kachelrand weiterlaufen. Figuren: figuren.mjs.
 import { Bild, zufall } from './pixel.mjs';
 import { blatt as figurenBlatt } from './figuren.mjs';
 import { KACHELN, GROESSE as K, SPALTEN } from './kacheln.mjs';
@@ -23,6 +24,46 @@ const P = {
   haut: '#f2c49b', hautDunkel: '#d39a72', haare: '#e8c15a', auge: '#2a1e2e',
   stiefel: '#6b4426', stiefelHell: '#8c5d37', guertel: '#5a3a1e', gold: '#e8b84a',
 };
+
+// ---------- Helfer für den neuen Stil ----------
+// Blätter in fünf Tönen, Licht von links oben.
+const BL = { tief: '#22492a', dunkel: '#2d6433', mitte: '#3d853d', hell: '#58a548', licht: '#86c862' };
+
+// Ein Blätterklumpen: dunkler Grund, darüber die Mitte, oben links Licht, und
+// kleine Blattbögen als Struktur. Bäume und Büsche sind Haufen davon.
+function klumpen(b, cx, cy, r, z) {
+  b.ellipse(cx, cy, r, r * 0.9, BL.dunkel);
+  b.ellipse(cx - r * 0.12, cy - r * 0.16, r * 0.84, r * 0.74, BL.mitte);
+  b.ellipse(cx - r * 0.32, cy - r * 0.38, r * 0.46, r * 0.36, BL.hell);
+  for (let i = 0; i < r * 2.2; i++) {
+    const w = z() * Math.PI * 2, d = Math.sqrt(z()) * r * 0.85;
+    const x = Math.round(cx + Math.cos(w) * d), y = Math.round(cy + Math.sin(w) * d * 0.88);
+    const oben = y - cy < -r * 0.25 && x - cx < r * 0.3;
+    b.setze(x, y, oben ? BL.licht : y > cy + r * 0.2 ? BL.tief : BL.dunkel);
+    b.setze(x + 1, y + 1, oben ? BL.hell : BL.tief);
+  }
+}
+
+// Ein weicher Schatten am Boden (halbdurchsichtig, ohne Rand).
+function bodenschatten(b, cx, cy, rx, ry, staerke = 60) {
+  for (let y = Math.floor(cy - ry); y <= cy + ry; y++)
+    for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+      const d = ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2;
+      if (d <= 1) b.setze(x, y, [30, 22, 40, Math.round(staerke * (1 - d * d))]);
+    }
+}
+
+// Kachelbares Rauschen: Wert an (x, y), über den Kachelrand fortgesetzt.
+function rauschen(saat, zellen = 4) {
+  const z = zufall(saat), g = Array.from({ length: zellen * zellen }, () => z());
+  const w = (i, j) => g[((j % zellen) + zellen) % zellen * zellen + ((i % zellen) + zellen) % zellen];
+  return (x, y) => {
+    const fx = (x / K) * zellen, fy = (y / K) * zellen, i = Math.floor(fx), j = Math.floor(fy);
+    const tx = fx - i, ty = fy - j, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+    const a = w(i, j) + (w(i + 1, j) - w(i, j)) * sx, c = w(i, j + 1) + (w(i + 1, j + 1) - w(i, j + 1)) * sx;
+    return a + (c - a) * sy;
+  };
+}
 
 // ---------- Kacheln ----------
 
@@ -53,66 +94,79 @@ function blume(b, x, y, bluete) {
 }
 
 function wasser(b, versatz) {
-  b.rechteck(0, 0, K, K, P.wasser);
-  // Schräge Lichtstreifen und ein Glitzerpunkt; sie wandern mit dem
-  // zweiten Bild (versatz), so bewegt sich das Wasser.
-  for (let i = 0; i < 3; i++) {
-    const x0 = (i * 11 + versatz * 2) % K;
-    for (let d = 0; d < 6; d++) b.setze((x0 + d) % K, 6 + i * 9 + Math.floor(d / 2), '#4a92da');
+  // Tiefe Flecken (Rauschen), darauf kleine Wellenbögen und Glitzern; die
+  // Bögen wandern mit dem zweiten Bild (versatz), so bewegt sich das Wasser.
+  const n = rauschen(6, 4), z = zufall(7);
+  for (let y = 0; y < K; y++)
+    for (let x = 0; x < K; x++) {
+      const v = n(x, y);
+      b.setze(x, y, v < 0.35 ? '#3274ba' : v < 0.7 ? '#3a82c6' : '#4590d2');
+    }
+  const um = (x, y, f) => b.setze(((x % K) + K) % K, ((y % K) + K) % K, f);
+  for (let i = 0; i < 6; i++) {
+    const x = Math.floor(z() * K) + versatz * 3, y = Math.floor(z() * K);
+    um(x, y, '#78b8ec');
+    um(x + 1, y - 1, '#a8d4f6');
+    um(x + 2, y - 1, '#a8d4f6');
+    um(x + 3, y, '#78b8ec');
   }
-  b.setze((19 + versatz * 3) % K, 21, '#d8f0ff');
-  const z = zufall(7);
-  for (let i = 0; i < 7; i++) {
-    const x = (Math.floor(z() * K) + versatz) % K, y = Math.floor(z() * (K - 2)) + 1;
-    for (let d = 0; d < 5; d++) b.setze((x + d) % K, y, d === 0 || d === 4 ? P.wasserDunkel : P.wasserHell);
-  }
+  um(9 + versatz * 4, 11, '#e8f6ff');
+  um(24 - versatz * 3, 25, '#e8f6ff');
 }
 
+// Ein Felsbrocken mit Flächen: oben hell, rechts unten dunkel, ein Riss und
+// ein Moosfleck.
 function stein(b) {
   grasGrund(b, 31, 4);
-  b.ellipse(16, 27, 12, 4, [0, 0, 0, 70]);
+  bodenschatten(b, 17, 26, 13, 4.5, 80);
   const s = new Bild(K, K);
-  s.ellipse(16, 18, 12, 10, P.stein);
-  s.ellipse(16, 21, 11, 7, P.steinDunkel, (x, y) => y > 21);
-  s.ellipse(12, 14, 5, 3.5, P.steinHell);
-  s.linie(18, 12, 21, 17, P.steinDunkel);
+  s.ellipse(16, 18, 12, 9.5, '#8e8c9c');
+  s.ellipse(14, 15, 9, 6, '#b2b0be');
+  s.ellipse(12, 13, 5, 3, '#d0ced8');
+  s.ellipse(20, 22, 7, 4, '#706e80', (x, y) => y > 20);
+  s.linie(18, 12, 21, 18, '#6e6c7e');
+  s.linie(21, 18, 20, 22, '#6e6c7e');
+  s.ellipse(9, 20, 3, 2, '#6a9a48');
+  s.setze(8, 19, '#8cc062');
   s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
 function busch(b) {
   grasGrund(b, 41, 4);
-  b.ellipse(16, 27, 13, 4, [0, 0, 0, 70]);
+  bodenschatten(b, 16, 26, 13, 4, 85);
   const s = new Bild(K, K);
-  for (const [x, y, r] of [[10, 17, 7], [22, 17, 7], [16, 12, 8], [16, 21, 8]]) s.ellipse(x, y, r, r, P.blatt);
-  const z = zufall(5);
-  for (let i = 0; i < 18; i++) {
-    const x = 5 + Math.floor(z() * 22), y = 6 + Math.floor(z() * 20);
-    if (s.hole(x, y)[3]) s.setze(x, y, z() < 0.5 ? P.blattHell : P.blattDunkel);
-  }
-  s.ellipse(12, 10, 3, 2, P.blattHell);
-  s.umriss(P.blattUmriss);
+  const z = zufall(43);
+  for (const [x, y, r] of [[9, 19, 7], [23, 19, 7], [16, 21, 8], [12, 13, 7], [20, 13, 7]]) klumpen(s, x, y, r, z);
+  s.umriss(RAND);
   b.einfuegen(s, 0, 0);
 }
 
 function buschRest(b) {
   grasGrund(b, 41, 4);
   for (const [x, y] of [[10, 20], [20, 18], [15, 23]]) {
-    b.rechteck(x, y, 3, 2, P.blattDunkel);
-    b.setze(x + 1, y - 1, P.blattHell);
+    b.rechteck(x, y, 3, 2, BL.dunkel);
+    b.setze(x + 1, y - 1, BL.hell);
+    b.setze(x + 2, y + 1, '#7a5a3a');
   }
 }
 
+// Ruinenmauer: unregelmäßige Quader, oben Moos, das herunterhängt.
 function mauer(b) {
-  b.rechteck(0, 0, K, K, '#9b8b7a');
+  const z = zufall(91), n = rauschen(92, 4);
+  b.rechteck(0, 0, K, K, '#5e5348');
   for (let reihe = 0; reihe < 4; reihe++) {
-    const y = reihe * 8;
-    b.rechteck(0, y + 7, K, 1, '#5e5146');
-    const v = reihe % 2 ? 8 : 0;
-    for (let x = v; x < K + 16; x += 16) {
-      b.rechteck(x % K, y, 1, 7, '#5e5146');
-      b.rechteck((x + 1) % K, y, 13, 1, '#b8a895');
+    const y = reihe * 8, v = reihe % 2 ? 5 : 0;
+    for (let x = -v; x < K; x += 11 + Math.floor(z() * 3)) {
+      const ton = ['#9b8b7a', '#a6968a', '#8e7f70'][Math.floor(z() * 3)];
+      b.rechteck(x + 1, y + 1, 10, 6, ton);
+      b.rechteck(x + 1, y + 1, 10, 1, '#bcae9c');
+      b.rechteck(x + 1, y + 6, 10, 1, '#7a6c5e');
     }
+  }
+  for (let x = 0; x < K; x++) {
+    const l = Math.floor(n(x, 0) * 6) + (x % 5 === 0 ? 3 : 0);
+    for (let y = 0; y < l; y++) b.setze(x, y, y === l - 1 ? '#4f7a36' : '#64983f');
   }
 }
 
@@ -144,14 +198,17 @@ function bruecke(b) {
   b.rechteck(0, 30, K, 2, P.holzDunkel);
 }
 
+// Hohes Gras: dichte Halmbüschel in mehreren Höhen und Tönen.
 function hohesGras(b) {
   grasGrund(b, 51, 2);
-  for (let x = 2; x < K; x += 5)
-    for (const y0 of [12, 24]) {
-      b.linie(x, y0, x - 1, y0 - 7, P.grasDunkel);
-      b.linie(x + 2, y0, x + 3, y0 - 6, P.blattDunkel);
-      b.setze(x + 1, y0 - 4, P.grasHell);
+  const z = zufall(52);
+  for (let i = 0; i < 26; i++) {
+    const x = Math.floor(z() * K), y = 8 + Math.floor(z() * (K - 6)), l = 5 + Math.floor(z() * 6), neig = z() < 0.5 ? -1 : 1;
+    for (let k = 0; k < l; k++) {
+      const f = k > l - 3 ? BL.licht : k > l / 2 ? '#6aae48' : BL.mitte;
+      b.setze(((x + Math.round((neig * k * k) / (l * 3))) % K + K) % K, y - k, f);
     }
+  }
 }
 
 function baumKachel(b) {
@@ -161,29 +218,37 @@ function baumKachel(b) {
   b.rechteck(14, 20, 4, 9, P.holz);
 }
 
+// Höhlenboden: dunkle Erde mit weichen Flecken und Steinchen.
 function hoehlenboden(b) {
-  const z = zufall(71);
-  b.rechteck(0, 0, K, K, '#4a4050');
-  for (let i = 0; i < 16; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.5 ? '#3a3240' : '#5a5062');
-  for (let i = 0; i < 3; i++) {
-    const x = Math.floor(z() * (K - 4)), y = Math.floor(z() * (K - 3));
-    b.rechteck(x, y, 3, 2, '#5a5062');
-    b.rechteck(x + 1, y + 2, 3, 1, '#2e2834');
+  const z = zufall(71), n = rauschen(72, 4);
+  for (let y = 0; y < K; y++)
+    for (let x = 0; x < K; x++) {
+      const v = n(x, y);
+      b.setze(x, y, v < 0.35 ? '#3e3546' : v < 0.7 ? '#4a4054' : '#554a60');
+    }
+  for (let i = 0; i < 5; i++) {
+    const x = Math.floor(z() * (K - 2)), y = Math.floor(z() * (K - 2));
+    b.rechteck(x, y, 2, 2, '#6a6076');
+    b.setze(x, y, '#857a92');
+    b.setze(x + 1, y + 1, '#2e2836');
   }
 }
 
+// Höhlenwand: Gestein in senkrechten Schichten, oben eine helle Kante,
+// unten dunkel — man liest sie sofort als Wand.
 function fels(b) {
-  // Höhlenwand: oben die dunkle Kante, darunter Gestein mit Lichtkante —
-  // wie die Klippen in Link's Awakening, damit man sie als Wand liest.
-  b.rechteck(0, 0, K, K, '#6b5e72');
-  const z = zufall(81);
-  for (const [x, y, w, h] of [[1, 3, 14, 12], [17, 2, 14, 13], [2, 17, 12, 13], [15, 18, 16, 12]]) {
-    b.rechteck(x, y, w, h, '#7d7084');
-    b.rechteck(x, y, w, 1, '#9a8ea2');
-    b.rechteck(x, y + h - 1, w, 1, '#4e4456');
+  const n = rauschen(82, 4), z = zufall(81);
+  for (let y = 0; y < K; y++)
+    for (let x = 0; x < K; x++) {
+      const v = n(x * 2, y * 0.5) + (y / K) * 0.35;
+      b.setze(x, y, v < 0.5 ? '#7a6c84' : v < 0.8 ? '#665a72' : '#52485e');
+    }
+  for (let i = 0; i < 5; i++) {
+    const x = Math.floor(z() * K);
+    b.linie(x, 4 + Math.floor(z() * 8), x + (z() < 0.5 ? -1 : 1), 20 + Math.floor(z() * 10), '#463e52');
   }
-  for (let i = 0; i < 10; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#4e4456');
-  b.rechteck(0, 0, K, 2, '#2a1e2e');
+  b.rechteck(0, 0, K, 2, '#958aa0');
+  b.rechteck(0, 2, K, 1, '#7a6e86');
 }
 
 function treppe(b, runter) {
@@ -265,26 +330,40 @@ function pflaster(b) {
     }
 }
 
+// Sand: feines Korn, sanfte Rippeln, hin und wieder eine Muschel.
 function sand(b) {
-  const z = zufall(121);
-  b.rechteck(0, 0, K, K, '#e6d3a0');
-  for (let i = 0; i < 18; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.5 ? '#d4bf88' : '#f2e4bc');
-  for (let i = 0; i < 2; i++) {
-    const x = 4 + Math.floor(z() * 22), y = 4 + Math.floor(z() * 22);
-    b.rechteck(x, y, 3, 1, '#c8b07a');
-  }
+  const z = zufall(121), n = rauschen(122, 4);
+  for (let y = 0; y < K; y++)
+    for (let x = 0; x < K; x++) {
+      const v = n(x, y);
+      b.setze(x, y, v < 0.4 ? '#e2cd98' : v < 0.75 ? '#e8d5a4' : '#efdeb2');
+    }
+  for (let i = 0; i < 22; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), z() < 0.5 ? '#cfb983' : '#f6e8c4');
+  for (const y of [9, 23]) for (let x = 0; x < K; x++) if ((x + y) % 7 < 4) b.setze(x, y + Math.round(Math.sin(x * 0.4) * 1.2), '#d6c08c');
+  b.ellipse(22, 15, 2, 1.5, '#f4d8d0');
+  b.setze(21, 15, '#d8a8a0');
 }
 
-const DACH = { grund: '#a8483a', dunkel: '#7a3028', hell: '#c8604a' };
+// Dachziegel: Reihen von Schindeln mit runder Unterkante, jede etwas anders
+// getönt, oben Licht — so wirkt das Dach geneigt und nicht wie eine Wand.
+const DACH = { grund: '#a8483a', dunkel: '#6e2a24', hell: '#c8604a' };
 function dach(b) {
-  // Ziegel in Reihen, jede Reihe mit Schatten unten — so liest man Schräge.
-  b.rechteck(0, 0, K, K, DACH.grund);
+  const z = zufall(131);
+  b.rechteck(0, 0, K, K, DACH.dunkel);
   for (let reihe = 0; reihe < 4; reihe++) {
     const y = reihe * 8, v = reihe % 2 ? 4 : 0;
-    b.rechteck(0, y + 6, K, 2, DACH.dunkel);
-    for (let x = -v; x < K; x += 8) {
-      b.rechteck(x, y, 1, 6, DACH.dunkel);
-      b.rechteck(x + 2, y + 1, 4, 1, DACH.hell);
+    for (let x = -v; x < K + 8; x += 8) {
+      const ton = ['#a8483a', '#b0503e', '#9c4236', '#b45a44'][Math.floor(z() * 4)];
+      const s = new Bild(K, K);
+      s.ellipse(x + 4, y + 3, 3.8, 4.5, ton, (xx, yy) => yy >= y);
+      s.rechteck(x + 1, y, 6, 1, DACH.hell);
+      s.setze(x + 1, y + 1, DACH.hell);
+      b.einfuegen(s, 0, 0);
+      if (x < 0 || x + 8 > K) {
+        const t = new Bild(K, K);
+        t.einfuegen(s, x < 0 ? K : -K, 0);
+        b.einfuegen(t, 0, 0);
+      }
     }
   }
 }
@@ -389,17 +468,23 @@ function laterne(b) {
 
 // ---------- Innenräume ----------
 
+// Dielen: breite Bretter, versetzte Stöße, Maserung und Nägel.
 function dielen(b) {
-  b.rechteck(0, 0, K, K, '#b07a48');
+  const z = zufall(141);
   for (let reihe = 0; reihe < 4; reihe++) {
-    const y = reihe * 8;
-    b.rechteck(0, y + 7, K, 1, '#7a5030');
-    b.rechteck(0, y, K, 1, '#c48e5a');
-    const fuge = (reihe * 13) % 24 + 4;
-    b.rechteck(fuge, y, 1, 7, '#7a5030');
+    const y = reihe * 8, stoss = (reihe * 13) % K;
+    const ton = ['#b57e4a', '#ad7744', '#bb8550', '#a87240'][reihe];
+    b.rechteck(0, y, K, 8, ton);
+    b.rechteck(0, y, K, 1, '#c99360');
+    b.rechteck(0, y + 7, K, 1, '#734a2a');
+    b.rechteck(stoss, y, 1, 7, '#734a2a');
+    for (let i = 0; i < 3; i++) {
+      const x = Math.floor(z() * K), l = 4 + Math.floor(z() * 8), yy = y + 2 + Math.floor(z() * 4);
+      for (let k = 0; k < l; k++) b.setze((x + k) % K, yy, '#9a6838');
+    }
+    b.setze((stoss + 2) % K, y + 3, '#5e3c22');
+    b.setze((stoss + K - 3) % K, y + 3, '#5e3c22');
   }
-  const z = zufall(131);
-  for (let i = 0; i < 6; i++) b.setze(Math.floor(z() * K), Math.floor(z() * K), '#966238');
 }
 
 function innenwand(b) {
@@ -525,18 +610,19 @@ satz.speichern(ziel + 'kacheln.png');
 // ---------- Automatische Kanten (s. client/kanten.js) ----------
 // Je ein Bild für „oben" und „Ecke oben-links", die anderen gedreht.
 {
+  // Ufer: ein heller Saum am Land, davor weicher Schaum in Flecken.
   const schaumOben = new Bild(K, K);
   for (let x = 0; x < K; x++) {
-    const welle = Math.round(1.5 + Math.sin(x * 0.55) * 1.2);
-    for (let y = 0; y < 3 + welle; y++) schaumOben.setze(x, y, '#5aa0e0');
-    if ((x + 3) % 9 > 1) schaumOben.setze(x, 3 + welle, '#e0f4ff');
-    if (x % 7 === 2) schaumOben.setze(x, 6 + welle, '#a8d4f4');
+    const welle = Math.round(1.5 + Math.sin(x * 0.45) * 1.2 + Math.sin(x * 1.3) * 0.6);
+    for (let y = 0; y < 2 + welle; y++) schaumOben.setze(x, y, y < 2 ? '#2a6aa8' : '#5a9edc');
+    schaumOben.setze(x, 2 + welle, (x * 5) % 11 > 2 ? '#e4f4ff' : '#b0d8f4');
+    if ((x * 7) % 13 < 3) schaumOben.setze(x, 4 + welle, [228, 244, 255, 150]);
   }
   const schaumEcke = new Bild(K, K);
-  schaumEcke.ellipse(0, 0, 6, 6, '#5aa0e0');
-  for (let w = 0; w <= 90; w += 9) {
+  schaumEcke.ellipse(0, 0, 5.5, 5.5, '#5a9edc');
+  for (let w = 0; w <= 90; w += 8) {
     const r = (w * Math.PI) / 180;
-    schaumEcke.setze(Math.round(Math.cos(r) * 6.5), Math.round(Math.sin(r) * 6.5), '#e0f4ff');
+    schaumEcke.setze(Math.round(Math.cos(r) * 6), Math.round(Math.sin(r) * 6), '#e4f4ff');
   }
 
   // Grasrand über Weg und Pflaster: runde Büschel, darunter ein weicher
@@ -612,31 +698,26 @@ satz.speichern(ziel + 'kacheln.png');
 }
 
 // ---------- Baum (64×80, steht mit dem Stamm auf seiner Kachel) ----------
+// Eine volle Krone aus Klumpen, hinten dunkler, vorn heller; der Stamm mit
+// Wurzeln und Rinde; darunter ein weicher Schatten.
 {
+  const z = zufall(9);
   const b = new Bild(64, 80);
-  b.ellipse(32, 75, 20, 5, [0, 0, 0, 80]);
+  bodenschatten(b, 33, 75, 22, 5, 90);
   const s = new Bild(64, 80);
-  s.rechteck(26, 54, 12, 22, P.holz);
-  s.rechteck(34, 54, 4, 22, P.holzDunkel);
-  s.rechteck(28, 58, 2, 10, P.holzHell);
-  s.rechteck(23, 72, 18, 4, P.holz);
+  s.rechteck(27, 50, 11, 25, '#8a5a32');
+  s.rechteck(34, 50, 4, 25, '#6a4226');
+  s.rechteck(29, 54, 2, 14, '#a8743f');
+  for (const [x, w] of [[22, 6], [37, 6]]) s.rechteck(x, 71, w, 4, '#7a4e2c');
+  s.rechteck(24, 73, 17, 2, '#6a4226');
+  for (let i = 0; i < 6; i++) s.setze(30 + Math.floor(z() * 6), 56 + Math.floor(z() * 14), '#5a3820');
   s.umriss(RAND);
   b.einfuegen(s, 0, 0);
   const k = new Bild(64, 80);
-  for (const [x, y, r] of [[32, 18, 16], [17, 30, 14], [47, 30, 14], [24, 44, 14], [40, 44, 14], [32, 32, 18]])
-    k.ellipse(x, y, r, r * 0.95, P.blatt);
-  k.ellipse(32, 44, 26, 12, P.blattDunkel, (x, y) => y > 44);
-  const z = zufall(9);
-  for (let i = 0; i < 70; i++) {
-    const x = 4 + Math.floor(z() * 56), y = 4 + Math.floor(z() * 52);
-    if (k.hole(x, y)[3]) {
-      const f = y < 30 && z() < 0.7 ? P.blattHell : P.blattDunkel;
-      k.setze(x, y, f);
-      k.setze(x + 1, y, f);
-    }
-  }
-  for (const [x, y, r] of [[25, 14, 5], [13, 26, 4], [36, 24, 4]]) k.ellipse(x, y, r, r * 0.8, P.blattHell);
-  k.umriss(P.blattUmriss);
+  // Hintere Klumpen zuerst (unten, dunkler wirkend), dann die oberen.
+  for (const [x, y, r] of [[18, 42, 13], [46, 42, 13], [32, 46, 14], [12, 30, 12], [52, 30, 12], [24, 26, 14], [42, 26, 14], [32, 34, 15], [32, 14, 14], [20, 16, 10], [44, 16, 10]])
+    klumpen(k, x, y, r, z);
+  k.umriss(RAND);
   b.einfuegen(k, 0, 0);
   b.speichern(ziel + 'baum.png');
 }

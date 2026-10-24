@@ -38,18 +38,18 @@
       /* Rucksack und Laden (client/fenster.js) */
       #fenster { position: fixed; inset: 0; z-index: 3; display: flex; background: rgba(27, 20, 36, 0.6); overflow-y: auto; padding: 16px; box-sizing: border-box; }
       #fenster[hidden] { display: none; }
-      #fenster .kasten { margin: auto; width: 100%; max-width: 560px; box-sizing: border-box; padding: 16px; border: 3px solid #4a3a5c; border-radius: 8px; background: #241b30; font-size: 14px; line-height: 1.45; }
+      #fenster .kasten { margin: auto; width: 100%; max-width: 560px; box-sizing: border-box; padding: 16px; border: 4px solid #5a3820; border-radius: 8px; background: #f4e4c0; color: #3e2a1c; box-shadow: inset 0 0 0 2px #c99560, 0 4px 0 rgba(0,0,0,0.3); font-size: 14px; line-height: 1.45; }
       #fenster .kopf { display: flex; align-items: center; gap: 12px; }
-      #fenster h2 { margin: 0; flex: 1; font: 14px "Press Start 2P", monospace; color: #e8c15a; overflow-wrap: anywhere; }
-      #fenster h3 { margin: 16px 0 6px; font-size: 14px; color: #e8c15a; }
-      #fenster h3 small { color: #b9aec8; font-weight: 400; }
-      #fenster p { margin: 4px 0; color: #b9aec8; }
+      #fenster h2 { margin: 0; flex: 1; font: 14px "Press Start 2P", monospace; color: #6a3e1e; overflow-wrap: anywhere; }
+      #fenster h3 { margin: 16px 0 6px; font-size: 14px; color: #8a4a1e; }
+      #fenster h3 small { color: #7a6450; font-weight: 400; }
+      #fenster p { margin: 4px 0; color: #6a5440; }
       #fenster .gold { display: flex; align-items: center; gap: 4px; font-weight: 700; }
-      #fenster button { font: inherit; color: #f4ecd8; background: #3a2c48; border: 2px solid #5a4870; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
-      #fenster button:focus-visible { outline: 3px solid #f4d24a; outline-offset: 2px; }
+      #fenster button { font: inherit; color: #fbeed0; background: #8a5a32; border: 2px solid #5a3820; border-radius: 6px; padding: 6px 10px; cursor: pointer; box-shadow: inset 0 1px 0 #c99560; }
+      #fenster button:focus-visible { outline: 3px solid #2a6aa8; outline-offset: 2px; }
       #fenster button:disabled { opacity: 0.55; cursor: not-allowed; }
       #fenster .zu { padding: 4px 10px; }
-      #fenster .werte, #fenster .gruppe { display: flex; flex-wrap: wrap; gap: 4px 14px; color: #f4ecd8; }
+      #fenster .werte, #fenster .gruppe { display: flex; flex-wrap: wrap; gap: 4px 14px; color: #3e2a1c; }
       #fenster .gruppe span { display: flex; align-items: center; gap: 6px; }
       .symbol { display: inline-block; flex: none; width: 32px; height: 32px; background-image: url(grafik/gegenstaende.png); image-rendering: pixelated; }
       .symbol.gross { width: 48px; height: 48px; }
@@ -57,30 +57,31 @@
       .symbol { background-repeat: no-repeat; }
       .symbol.leer { background-image: none; }
       #fenster .plaetze { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
-      #fenster .platz { display: flex; align-items: center; gap: 8px; text-align: left; padding: 6px; border: 2px solid #5a4870; border-radius: 6px; min-width: 0; overflow-wrap: anywhere; }
-      #fenster .platz small { display: block; color: #b9aec8; font-size: 12px; }
-      #fenster .platz.leer { border-style: dashed; color: #8a7e9a; }
+      #fenster .platz { display: flex; align-items: center; gap: 8px; text-align: left; padding: 6px; border: 2px solid #b08a5a; border-radius: 6px; min-width: 0; overflow-wrap: anywhere; }
+      #fenster .platz small { display: block; color: #d8c4a0; font-size: 12px; }
+      #fenster .platz.leer { border-style: dashed; color: #8a7460; }
+      #fenster .platz.leer small { color: #8a7460; }
       #fenster .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
-      #fenster .feld { position: relative; display: grid; place-items: center; height: 52px; padding: 0; border: 2px solid #3a2e48; border-radius: 6px; background: #1b1424; }
-      #fenster button.feld { border-color: #5a4870; background: #3a2c48; }
-      #fenster .feld b { position: absolute; right: 4px; bottom: 2px; font-size: 12px; }
-      #fenster .an { border-color: #e8c15a !important; }
-      #fenster .einzeln { display: flex; gap: 12px; margin-top: 14px; padding: 12px; border-radius: 6px; background: #2e2340; overflow-wrap: anywhere; }
+      #fenster .feld { position: relative; display: grid; place-items: center; height: 52px; padding: 0; border: 2px solid #c8ab80; border-radius: 6px; background: #e6d0a4; box-shadow: inset 0 2px 0 rgba(90,56,32,0.18); }
+      #fenster button.feld { border-color: #8a5a32; background: #ead6ac; }
+      #fenster .feld b { position: absolute; right: 4px; bottom: 2px; font-size: 12px; color: #3e2a1c; }
+      #fenster .an { border-color: #2a6aa8 !important; box-shadow: 0 0 0 2px #7ab8f0; }
+      #fenster .einzeln { display: flex; gap: 12px; margin-top: 14px; padding: 12px; border-radius: 6px; background: #ead6ac; overflow-wrap: anywhere; }
       #fenster .einzeln > div { min-width: 0; }
-      #fenster .boni { color: #8fe08a; }
+      #fenster .boni { color: #3f7a2a; font-weight: 600; }
       #fenster .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
       #fenster .knopf { display: grid; gap: 2px; justify-items: start; }
-      #fenster .grund { color: #ffb08a; font-size: 12px; }
+      #fenster .grund { color: #a0402a; font-size: 12px; }
       #fenster .tipp { margin-top: 12px; font-style: italic; }
       #fenster .gruss { font-style: italic; }
       #fenster .liste { display: grid; gap: 6px; }
-      #fenster .ware { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px; border-radius: 6px; background: #2e2340; }
+      #fenster .ware { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px; border-radius: 6px; background: #ead6ac; }
       #fenster .ware > span:nth-child(2) { display: grid; min-width: 0; overflow-wrap: anywhere; }
-      #fenster .ware small { color: #b9aec8; font-size: 12px; }
+      #fenster .ware small { color: #6a5440; font-size: 12px; }
       #fenster .ware .knopf { justify-items: end; text-align: right; }
       @media (max-width: 420px) { #fenster .ware { grid-template-columns: auto 1fr; } #fenster .ware .knopf { grid-column: 1 / -1; justify-items: start; text-align: left; } }
       /* Rucksack-Knopf am Rand: für Maus und Finger (Taste I geht auch) */
-      #rucksack-knopf { position: fixed; right: 12px; bottom: 12px; z-index: 2; width: 48px; height: 48px; padding: 6px; border: 2px solid #5a4870; border-radius: 8px; background: rgba(36, 27, 48, 0.85); cursor: pointer; }
+      #rucksack-knopf { position: fixed; right: 12px; bottom: 12px; z-index: 2; width: 48px; height: 48px; padding: 6px; border: 3px solid #5a3820; border-radius: 8px; background: #f4e4c0; box-shadow: inset 0 0 0 1px #c99560; cursor: pointer; }
       #rucksack-knopf[hidden] { display: none; }
     </style>
   </head>

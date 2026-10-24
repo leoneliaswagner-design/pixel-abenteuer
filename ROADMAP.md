@@ -56,6 +56,12 @@
   fernkampf, anspringen, flattern). Neues Gebiet „tiefer Wald" östlich vom
   Inselwald. Prüfstand `monster.mjs`.
 
+- **Neuer Stil** (eher Stardew Valley / Necesse): Figuren 32×48, Ränder in
+  Eigenfarbe, Gras ohne Raster, Pflaster aus Steinen, runder Grasrand,
+  Schatten unter Wänden, neue Bäume, Büsche, Wasser, Dach, Höhle, Dielen;
+  Tag und Nacht mit Licht; Deko und Wind; Textbox, Rucksack und Laden aus
+  Holz und Pergament. Prüfstand `optik.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -173,3 +179,11 @@
   nicht auf, solange es nur Schleime gab. Jetzt prüft server-regeln die Arten.
 - Phaser rechnet Winkel in −180…180 um: `setAngle(270)` liest sich als −90.
   Ein Prüfstand, der Winkel vergleicht, muss das wissen.
+- `server/spiel.js` läuft im Alleinspiel auch im Browser — dort gibt es kein
+  `process`. Umgebungsvariablen nur über `globalThis.process?.env`.
+- Der erste Tag begann um 0,3 — mitten im Morgenrot. Bildpunkt-Prüfungen
+  (Gras unverändert, Helligkeit der Wiese) schwankten, weil das Licht sich
+  während des Prüfstands änderte. Jetzt beginnt der Tag um 0,4.
+- Größere Figuren verdecken, was über ihnen steht: der alte Mann im Wald
+  trug plötzlich einen Stein als Hut. Beim Bau von Karten eine Kachel Luft
+  über Figuren lassen.
