@@ -19,7 +19,10 @@ alle sollen bespielbar werden, nach und nach.
 | Südwesten | Steppe/Savanne im Westen, Wald im Osten, weit geschwungen | offen |
 | Südosten | lang gestreckt, Wald, kleine Bucht im Norden | offen |
 
-Die kleinen Inseln liegen grob in Ringen um die Mitte.
+Die kleinen Inseln liegen grob in Ringen um die Mitte. Im Spiel stehen alle
+als Regionen in `inhalte/daten/welt.json`; die **Startinsel** ist vorerst
+`insel-047` (östlich-südöstlich des Nordwest-Kontinents, nördlich der
+Sichel) — wenn eine andere gemeint ist, dort umtragen.
 
 ## Der Anfang (Kurzfassung des Spielleiters)
 

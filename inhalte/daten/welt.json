@@ -1,0 +1,2862 @@
+{
+ "bild": "grafik/weltkarte.webp",
+ "breite": 1024,
+ "hoehe": 1024,
+ "_hinweis": "Regionen schreibt werkzeuge/inseln.py aus dem Kartenbild (Namen bleiben erhalten). Gebiete: wo ein Gebiet auf der Weltkarte liegt — region und punkt (Bildpunkte im Kartenbild), oder riss: true für Orte hinter einem Dimensionsriss.",
+ "gebiete": {
+  "riftside": {
+   "region": "insel-047",
+   "punkt": [
+    437,
+    381
+   ]
+  },
+  "rathaus": {
+   "region": "insel-047",
+   "punkt": [
+    437,
+    381
+   ]
+  },
+  "hafenmeisterei": {
+   "region": "insel-047",
+   "punkt": [
+    437,
+    381
+   ]
+  },
+  "haus_pip": {
+   "region": "insel-047",
+   "punkt": [
+    437,
+    381
+   ]
+  },
+  "wald": {
+   "region": "insel-047",
+   "punkt": [
+    436,
+    373
+   ]
+  },
+  "hoehle": {
+   "region": "insel-047",
+   "punkt": [
+    439,
+    374
+   ]
+  },
+  "tiefwald": {
+   "region": "insel-047",
+   "punkt": [
+    443,
+    372
+   ]
+  },
+  "tempel": {
+   "riss": true
+  }
+ },
+ "regionen": {
+  "nordwesten": {
+   "name": "Nordwest-Kontinent",
+   "art": "kontinent",
+   "mitte": [
+    214,
+    240
+   ],
+   "box": [
+    72,
+    72,
+    372,
+    464
+   ]
+  },
+  "suedwesten": {
+   "name": "Südwest-Kontinent",
+   "art": "kontinent",
+   "mitte": [
+    263,
+    756
+   ],
+   "box": [
+    86,
+    582,
+    466,
+    924
+   ]
+  },
+  "nordosten": {
+   "name": "Nordost-Kontinent",
+   "art": "kontinent",
+   "mitte": [
+    750,
+    235
+   ],
+   "box": [
+    598,
+    86,
+    952,
+    414
+   ]
+  },
+  "suedosten": {
+   "name": "Südost-Kontinent",
+   "art": "kontinent",
+   "mitte": [
+    803,
+    673
+   ],
+   "box": [
+    640,
+    528,
+    926,
+    836
+   ]
+  },
+  "mitte": {
+   "name": "Sichel-Insel in der Mitte",
+   "art": "kontinent",
+   "mitte": [
+    490,
+    471
+   ],
+   "box": [
+    422,
+    410,
+    580,
+    542
+   ]
+  },
+  "insel-001": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    117,
+    99
+   ],
+   "box": [
+    108,
+    90,
+    128,
+    110
+   ]
+  },
+  "insel-002": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    392,
+    114
+   ],
+   "box": [
+    384,
+    104,
+    404,
+    124
+   ]
+  },
+  "insel-003": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    503,
+    111
+   ],
+   "box": [
+    500,
+    108,
+    508,
+    116
+   ]
+  },
+  "insel-004": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    516,
+    119
+   ],
+   "box": [
+    508,
+    112,
+    526,
+    126
+   ]
+  },
+  "insel-005": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    532,
+    101
+   ],
+   "box": [
+    528,
+    96,
+    538,
+    108
+   ]
+  },
+  "insel-006": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    555,
+    103
+   ],
+   "box": [
+    548,
+    96,
+    562,
+    112
+   ]
+  },
+  "insel-007": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    90,
+    167
+   ],
+   "box": [
+    88,
+    164,
+    94,
+    172
+   ]
+  },
+  "insel-008": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    387,
+    176
+   ],
+   "box": [
+    378,
+    166,
+    400,
+    188
+   ]
+  },
+  "insel-009": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    421,
+    177
+   ],
+   "box": [
+    416,
+    172,
+    428,
+    184
+   ]
+  },
+  "insel-010": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    451,
+    188
+   ],
+   "box": [
+    448,
+    184,
+    456,
+    194
+   ]
+  },
+  "insel-011": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    468,
+    174
+   ],
+   "box": [
+    464,
+    168,
+    476,
+    182
+   ]
+  },
+  "insel-012": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    494,
+    154
+   ],
+   "box": [
+    478,
+    140,
+    508,
+    170
+   ]
+  },
+  "insel-013": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    361,
+    195
+   ],
+   "box": [
+    354,
+    186,
+    370,
+    206
+   ]
+  },
+  "insel-014": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    388,
+    223
+   ],
+   "box": [
+    384,
+    220,
+    394,
+    228
+   ]
+  },
+  "insel-015": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    399,
+    236
+   ],
+   "box": [
+    396,
+    232,
+    404,
+    240
+   ]
+  },
+  "insel-016": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    402,
+    212
+   ],
+   "box": [
+    398,
+    208,
+    408,
+    218
+   ]
+  },
+  "insel-017": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    417,
+    214
+   ],
+   "box": [
+    408,
+    194,
+    432,
+    240
+   ]
+  },
+  "insel-018": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    455,
+    207
+   ],
+   "box": [
+    450,
+    202,
+    462,
+    212
+   ]
+  },
+  "insel-019": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    468,
+    241
+   ],
+   "box": [
+    464,
+    238,
+    474,
+    246
+   ]
+  },
+  "insel-020": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    482,
+    202
+   ],
+   "box": [
+    474,
+    190,
+    492,
+    216
+   ]
+  },
+  "insel-021": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    496,
+    237
+   ],
+   "box": [
+    490,
+    230,
+    504,
+    246
+   ]
+  },
+  "insel-022": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    504,
+    197
+   ],
+   "box": [
+    500,
+    192,
+    510,
+    204
+   ]
+  },
+  "insel-023": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    532,
+    239
+   ],
+   "box": [
+    524,
+    230,
+    540,
+    252
+   ]
+  },
+  "insel-024": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    564,
+    245
+   ],
+   "box": [
+    562,
+    242,
+    570,
+    250
+   ]
+  },
+  "insel-025": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    589,
+    218
+   ],
+   "box": [
+    584,
+    212,
+    598,
+    226
+   ]
+  },
+  "insel-026": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    458,
+    280
+   ],
+   "box": [
+    456,
+    276,
+    464,
+    286
+   ]
+  },
+  "insel-027": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    474,
+    263
+   ],
+   "box": [
+    470,
+    260,
+    478,
+    268
+   ]
+  },
+  "insel-028": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    474,
+    294
+   ],
+   "box": [
+    472,
+    290,
+    478,
+    300
+   ]
+  },
+  "insel-029": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    497,
+    266
+   ],
+   "box": [
+    488,
+    250,
+    510,
+    282
+   ]
+  },
+  "insel-030": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    499,
+    306
+   ],
+   "box": [
+    496,
+    302,
+    506,
+    312
+   ]
+  },
+  "insel-031": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    526,
+    265
+   ],
+   "box": [
+    522,
+    262,
+    532,
+    270
+   ]
+  },
+  "insel-032": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    561,
+    315
+   ],
+   "box": [
+    556,
+    310,
+    568,
+    324
+   ]
+  },
+  "insel-033": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    573,
+    292
+   ],
+   "box": [
+    568,
+    286,
+    580,
+    300
+   ]
+  },
+  "insel-034": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    580,
+    266
+   ],
+   "box": [
+    578,
+    262,
+    584,
+    272
+   ]
+  },
+  "insel-035": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    596,
+    259
+   ],
+   "box": [
+    594,
+    256,
+    600,
+    264
+   ]
+  },
+  "insel-036": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    603,
+    307
+   ],
+   "box": [
+    600,
+    304,
+    610,
+    312
+   ]
+  },
+  "insel-037": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    855,
+    313
+   ],
+   "box": [
+    844,
+    296,
+    866,
+    332
+   ]
+  },
+  "insel-038": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    905,
+    317
+   ],
+   "box": [
+    898,
+    308,
+    914,
+    328
+   ]
+  },
+  "insel-039": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    277,
+    361
+   ],
+   "box": [
+    274,
+    358,
+    282,
+    366
+   ]
+  },
+  "insel-040": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    291,
+    339
+   ],
+   "box": [
+    280,
+    332,
+    302,
+    348
+   ]
+  },
+  "insel-041": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    314,
+    357
+   ],
+   "box": [
+    308,
+    352,
+    320,
+    364
+   ]
+  },
+  "insel-042": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    316,
+    374
+   ],
+   "box": [
+    306,
+    368,
+    332,
+    384
+   ]
+  },
+  "insel-043": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    347,
+    370
+   ],
+   "box": [
+    344,
+    368,
+    352,
+    374
+   ]
+  },
+  "insel-044": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    394,
+    380
+   ],
+   "box": [
+    392,
+    378,
+    398,
+    384
+   ]
+  },
+  "insel-045": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    404,
+    373
+   ],
+   "box": [
+    400,
+    370,
+    410,
+    380
+   ]
+  },
+  "insel-046": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    416,
+    350
+   ],
+   "box": [
+    410,
+    344,
+    424,
+    356
+   ]
+  },
+  "insel-047": {
+   "name": "Startinsel",
+   "art": "insel",
+   "mitte": [
+    438,
+    376
+   ],
+   "box": [
+    428,
+    368,
+    448,
+    384
+   ]
+  },
+  "insel-048": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    523,
+    351
+   ],
+   "box": [
+    518,
+    348,
+    532,
+    358
+   ]
+  },
+  "insel-049": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    573,
+    338
+   ],
+   "box": [
+    570,
+    334,
+    578,
+    344
+   ]
+  },
+  "insel-050": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    588,
+    326
+   ],
+   "box": [
+    584,
+    320,
+    594,
+    332
+   ]
+  },
+  "insel-051": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    645,
+    377
+   ],
+   "box": [
+    634,
+    368,
+    656,
+    390
+   ]
+  },
+  "insel-052": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    727,
+    365
+   ],
+   "box": [
+    724,
+    362,
+    732,
+    370
+   ]
+  },
+  "insel-053": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    827,
+    326
+   ],
+   "box": [
+    824,
+    322,
+    832,
+    332
+   ]
+  },
+  "insel-054": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    865,
+    363
+   ],
+   "box": [
+    862,
+    358,
+    870,
+    370
+   ]
+  },
+  "insel-055": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    914,
+    349
+   ],
+   "box": [
+    908,
+    342,
+    924,
+    360
+   ]
+  },
+  "insel-056": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    924,
+    328
+   ],
+   "box": [
+    920,
+    324,
+    930,
+    334
+   ]
+  },
+  "insel-057": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    223,
+    442
+   ],
+   "box": [
+    216,
+    432,
+    230,
+    454
+   ]
+  },
+  "insel-058": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    243,
+    437
+   ],
+   "box": [
+    240,
+    436,
+    248,
+    440
+   ]
+  },
+  "insel-059": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    333,
+    393
+   ],
+   "box": [
+    330,
+    390,
+    340,
+    398
+   ]
+  },
+  "insel-060": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    357,
+    391
+   ],
+   "box": [
+    354,
+    386,
+    362,
+    398
+   ]
+  },
+  "insel-061": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    363,
+    413
+   ],
+   "box": [
+    360,
+    410,
+    368,
+    418
+   ]
+  },
+  "insel-062": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    366,
+    384
+   ],
+   "box": [
+    364,
+    382,
+    370,
+    388
+   ]
+  },
+  "insel-063": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    376,
+    399
+   ],
+   "box": [
+    374,
+    396,
+    380,
+    404
+   ]
+  },
+  "insel-064": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    404,
+    401
+   ],
+   "box": [
+    402,
+    394,
+    410,
+    408
+   ]
+  },
+  "insel-065": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    409,
+    446
+   ],
+   "box": [
+    406,
+    444,
+    414,
+    450
+   ]
+  },
+  "insel-066": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    475,
+    397
+   ],
+   "box": [
+    470,
+    394,
+    482,
+    400
+   ]
+  },
+  "insel-067": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    544,
+    410
+   ],
+   "box": [
+    522,
+    396,
+    572,
+    426
+   ]
+  },
+  "insel-068": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    579,
+    437
+   ],
+   "box": [
+    576,
+    434,
+    584,
+    442
+   ]
+  },
+  "insel-069": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    583,
+    404
+   ],
+   "box": [
+    580,
+    400,
+    588,
+    410
+   ]
+  },
+  "insel-070": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    665,
+    402
+   ],
+   "box": [
+    662,
+    398,
+    670,
+    406
+   ]
+  },
+  "insel-071": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    740,
+    401
+   ],
+   "box": [
+    738,
+    400,
+    744,
+    404
+   ]
+  },
+  "insel-072": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    746,
+    422
+   ],
+   "box": [
+    736,
+    406,
+    758,
+    436
+   ]
+  },
+  "insel-073": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    751,
+    390
+   ],
+   "box": [
+    748,
+    386,
+    756,
+    394
+   ]
+  },
+  "insel-074": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    890,
+    430
+   ],
+   "box": [
+    878,
+    416,
+    904,
+    444
+   ]
+  },
+  "insel-075": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    900,
+    387
+   ],
+   "box": [
+    890,
+    376,
+    912,
+    398
+   ]
+  },
+  "insel-076": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    915,
+    439
+   ],
+   "box": [
+    910,
+    434,
+    924,
+    446
+   ]
+  },
+  "insel-077": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    919,
+    385
+   ],
+   "box": [
+    916,
+    382,
+    924,
+    390
+   ]
+  },
+  "insel-078": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    931,
+    410
+   ],
+   "box": [
+    926,
+    406,
+    936,
+    416
+   ]
+  },
+  "insel-079": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    215,
+    467
+   ],
+   "box": [
+    206,
+    460,
+    224,
+    476
+   ]
+  },
+  "insel-080": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    264,
+    504
+   ],
+   "box": [
+    260,
+    498,
+    270,
+    512
+   ]
+  },
+  "insel-081": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    390,
+    482
+   ],
+   "box": [
+    384,
+    472,
+    398,
+    494
+   ]
+  },
+  "insel-082": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    404,
+    494
+   ],
+   "box": [
+    400,
+    490,
+    410,
+    500
+   ]
+  },
+  "insel-083": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    407,
+    460
+   ],
+   "box": [
+    404,
+    454,
+    412,
+    468
+   ]
+  },
+  "insel-084": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    607,
+    498
+   ],
+   "box": [
+    598,
+    490,
+    616,
+    506
+   ]
+  },
+  "insel-085": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    609,
+    465
+   ],
+   "box": [
+    596,
+    456,
+    624,
+    474
+   ]
+  },
+  "insel-086": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    654,
+    511
+   ],
+   "box": [
+    652,
+    508,
+    658,
+    516
+   ]
+  },
+  "insel-087": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    667,
+    492
+   ],
+   "box": [
+    660,
+    482,
+    676,
+    506
+   ]
+  },
+  "insel-088": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    721,
+    448
+   ],
+   "box": [
+    718,
+    444,
+    726,
+    454
+   ]
+  },
+  "insel-089": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    866,
+    452
+   ],
+   "box": [
+    862,
+    448,
+    872,
+    458
+   ]
+  },
+  "insel-090": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    887,
+    464
+   ],
+   "box": [
+    880,
+    456,
+    896,
+    474
+   ]
+  },
+  "insel-091": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    907,
+    461
+   ],
+   "box": [
+    902,
+    454,
+    914,
+    468
+   ]
+  },
+  "insel-092": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    98,
+    569
+   ],
+   "box": [
+    90,
+    556,
+    108,
+    584
+   ]
+  },
+  "insel-093": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    103,
+    529
+   ],
+   "box": [
+    100,
+    526,
+    108,
+    534
+   ]
+  },
+  "insel-094": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    115,
+    550
+   ],
+   "box": [
+    112,
+    546,
+    120,
+    556
+   ]
+  },
+  "insel-095": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    146,
+    563
+   ],
+   "box": [
+    136,
+    552,
+    156,
+    576
+   ]
+  },
+  "insel-096": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    162,
+    540
+   ],
+   "box": [
+    158,
+    538,
+    166,
+    544
+   ]
+  },
+  "insel-097": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    171,
+    560
+   ],
+   "box": [
+    168,
+    558,
+    176,
+    564
+   ]
+  },
+  "insel-098": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    181,
+    545
+   ],
+   "box": [
+    176,
+    540,
+    188,
+    552
+   ]
+  },
+  "insel-099": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    192,
+    553
+   ],
+   "box": [
+    188,
+    548,
+    198,
+    558
+   ]
+  },
+  "insel-100": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    195,
+    566
+   ],
+   "box": [
+    192,
+    562,
+    202,
+    572
+   ]
+  },
+  "insel-101": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    245,
+    517
+   ],
+   "box": [
+    242,
+    514,
+    250,
+    522
+   ]
+  },
+  "insel-102": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    246,
+    544
+   ],
+   "box": [
+    244,
+    542,
+    250,
+    548
+   ]
+  },
+  "insel-103": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    250,
+    528
+   ],
+   "box": [
+    240,
+    524,
+    264,
+    534
+   ]
+  },
+  "insel-104": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    255,
+    559
+   ],
+   "box": [
+    252,
+    556,
+    262,
+    564
+   ]
+  },
+  "insel-105": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    272,
+    529
+   ],
+   "box": [
+    268,
+    526,
+    278,
+    534
+   ]
+  },
+  "insel-106": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    309,
+    546
+   ],
+   "box": [
+    302,
+    538,
+    318,
+    554
+   ]
+  },
+  "insel-107": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    316,
+    528
+   ],
+   "box": [
+    314,
+    526,
+    320,
+    532
+   ]
+  },
+  "insel-108": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    382,
+    516
+   ],
+   "box": [
+    378,
+    514,
+    386,
+    520
+   ]
+  },
+  "insel-109": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    397,
+    521
+   ],
+   "box": [
+    392,
+    512,
+    404,
+    530
+   ]
+  },
+  "insel-110": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    419,
+    554
+   ],
+   "box": [
+    410,
+    542,
+    432,
+    566
+   ]
+  },
+  "insel-111": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    421,
+    523
+   ],
+   "box": [
+    418,
+    522,
+    426,
+    528
+   ]
+  },
+  "insel-112": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    460,
+    551
+   ],
+   "box": [
+    458,
+    548,
+    464,
+    556
+   ]
+  },
+  "insel-113": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    473,
+    561
+   ],
+   "box": [
+    466,
+    554,
+    480,
+    568
+   ]
+  },
+  "insel-114": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    507,
+    560
+   ],
+   "box": [
+    502,
+    556,
+    514,
+    566
+   ]
+  },
+  "insel-115": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    530,
+    573
+   ],
+   "box": [
+    518,
+    566,
+    542,
+    582
+   ]
+  },
+  "insel-116": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    530,
+    544
+   ],
+   "box": [
+    526,
+    538,
+    536,
+    550
+   ]
+  },
+  "insel-117": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    547,
+    516
+   ],
+   "box": [
+    542,
+    508,
+    554,
+    524
+   ]
+  },
+  "insel-118": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    564,
+    534
+   ],
+   "box": [
+    562,
+    532,
+    568,
+    538
+   ]
+  },
+  "insel-119": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    575,
+    554
+   ],
+   "box": [
+    570,
+    546,
+    582,
+    564
+   ]
+  },
+  "insel-120": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    579,
+    513
+   ],
+   "box": [
+    576,
+    510,
+    584,
+    518
+   ]
+  },
+  "insel-121": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    592,
+    531
+   ],
+   "box": [
+    586,
+    524,
+    598,
+    540
+   ]
+  },
+  "insel-122": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    627,
+    528
+   ],
+   "box": [
+    618,
+    512,
+    640,
+    548
+   ]
+  },
+  "insel-123": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    662,
+    520
+   ],
+   "box": [
+    660,
+    516,
+    666,
+    526
+   ]
+  },
+  "insel-124": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    745,
+    571
+   ],
+   "box": [
+    738,
+    564,
+    756,
+    580
+   ]
+  },
+  "insel-125": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    807,
+    519
+   ],
+   "box": [
+    786,
+    502,
+    828,
+    542
+   ]
+  },
+  "insel-126": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    92,
+    605
+   ],
+   "box": [
+    90,
+    602,
+    96,
+    610
+   ]
+  },
+  "insel-127": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    353,
+    612
+   ],
+   "box": [
+    348,
+    604,
+    362,
+    620
+   ]
+  },
+  "insel-128": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    371,
+    593
+   ],
+   "box": [
+    368,
+    592,
+    376,
+    596
+   ]
+  },
+  "insel-129": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    381,
+    602
+   ],
+   "box": [
+    378,
+    598,
+    386,
+    608
+   ]
+  },
+  "insel-130": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    389,
+    624
+   ],
+   "box": [
+    384,
+    616,
+    396,
+    632
+   ]
+  },
+  "insel-131": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    405,
+    624
+   ],
+   "box": [
+    402,
+    622,
+    410,
+    628
+   ]
+  },
+  "insel-132": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    454,
+    576
+   ],
+   "box": [
+    446,
+    568,
+    464,
+    584
+   ]
+  },
+  "insel-133": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    502,
+    591
+   ],
+   "box": [
+    498,
+    588,
+    508,
+    596
+   ]
+  },
+  "insel-134": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    572,
+    577
+   ],
+   "box": [
+    570,
+    574,
+    576,
+    582
+   ]
+  },
+  "insel-135": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    717,
+    624
+   ],
+   "box": [
+    714,
+    622,
+    722,
+    628
+   ]
+  },
+  "insel-136": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    730,
+    597
+   ],
+   "box": [
+    722,
+    590,
+    740,
+    606
+   ]
+  },
+  "insel-137": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    764,
+    608
+   ],
+   "box": [
+    762,
+    606,
+    768,
+    612
+   ]
+  },
+  "insel-138": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    770,
+    631
+   ],
+   "box": [
+    764,
+    624,
+    778,
+    640
+   ]
+  },
+  "insel-139": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    379,
+    643
+   ],
+   "box": [
+    376,
+    640,
+    384,
+    648
+   ]
+  },
+  "insel-140": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    398,
+    644
+   ],
+   "box": [
+    390,
+    636,
+    408,
+    654
+   ]
+  },
+  "insel-141": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    408,
+    703
+   ],
+   "box": [
+    404,
+    700,
+    414,
+    708
+   ]
+  },
+  "insel-142": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    422,
+    647
+   ],
+   "box": [
+    420,
+    646,
+    426,
+    650
+   ]
+  },
+  "insel-143": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    431,
+    650
+   ],
+   "box": [
+    428,
+    648,
+    436,
+    654
+   ]
+  },
+  "insel-144": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    470,
+    658
+   ],
+   "box": [
+    466,
+    654,
+    476,
+    664
+   ]
+  },
+  "insel-145": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    473,
+    679
+   ],
+   "box": [
+    464,
+    672,
+    482,
+    688
+   ]
+  },
+  "insel-146": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    487,
+    643
+   ],
+   "box": [
+    484,
+    640,
+    492,
+    648
+   ]
+  },
+  "insel-147": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    500,
+    693
+   ],
+   "box": [
+    498,
+    690,
+    506,
+    698
+   ]
+  },
+  "insel-148": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    501,
+    661
+   ],
+   "box": [
+    498,
+    658,
+    506,
+    666
+   ]
+  },
+  "insel-149": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    510,
+    653
+   ],
+   "box": [
+    508,
+    650,
+    514,
+    656
+   ]
+  },
+  "insel-150": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    524,
+    668
+   ],
+   "box": [
+    518,
+    660,
+    532,
+    676
+   ]
+  },
+  "insel-151": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    532,
+    650
+   ],
+   "box": [
+    530,
+    648,
+    536,
+    656
+   ]
+  },
+  "insel-152": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    539,
+    666
+   ],
+   "box": [
+    536,
+    664,
+    544,
+    670
+   ]
+  },
+  "insel-153": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    560,
+    694
+   ],
+   "box": [
+    556,
+    690,
+    566,
+    700
+   ]
+  },
+  "insel-154": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    609,
+    677
+   ],
+   "box": [
+    604,
+    674,
+    616,
+    682
+   ]
+  },
+  "insel-155": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    612,
+    659
+   ],
+   "box": [
+    610,
+    656,
+    616,
+    664
+   ]
+  },
+  "insel-156": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    633,
+    661
+   ],
+   "box": [
+    626,
+    654,
+    642,
+    670
+   ]
+  },
+  "insel-157": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    635,
+    694
+   ],
+   "box": [
+    628,
+    682,
+    644,
+    708
+   ]
+  },
+  "insel-158": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    673,
+    663
+   ],
+   "box": [
+    670,
+    658,
+    678,
+    670
+   ]
+  },
+  "insel-159": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    684,
+    645
+   ],
+   "box": [
+    680,
+    642,
+    690,
+    650
+   ]
+  },
+  "insel-160": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    729,
+    646
+   ],
+   "box": [
+    726,
+    642,
+    734,
+    652
+   ]
+  },
+  "insel-161": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    752,
+    687
+   ],
+   "box": [
+    750,
+    684,
+    756,
+    692
+   ]
+  },
+  "insel-162": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    508,
+    709
+   ],
+   "box": [
+    506,
+    706,
+    512,
+    714
+   ]
+  },
+  "insel-163": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    538,
+    708
+   ],
+   "box": [
+    532,
+    704,
+    544,
+    714
+   ]
+  },
+  "insel-164": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    559,
+    761
+   ],
+   "box": [
+    556,
+    758,
+    564,
+    766
+   ]
+  },
+  "insel-165": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    569,
+    741
+   ],
+   "box": [
+    566,
+    738,
+    574,
+    746
+   ]
+  },
+  "insel-166": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    606,
+    740
+   ],
+   "box": [
+    602,
+    736,
+    612,
+    746
+   ]
+  },
+  "insel-167": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    448,
+    820
+   ],
+   "box": [
+    444,
+    810,
+    456,
+    830
+   ]
+  },
+  "insel-168": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    471,
+    784
+   ],
+   "box": [
+    466,
+    778,
+    480,
+    792
+   ]
+  },
+  "insel-169": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    566,
+    831
+   ],
+   "box": [
+    560,
+    826,
+    572,
+    836
+   ]
+  },
+  "insel-170": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    574,
+    787
+   ],
+   "box": [
+    568,
+    780,
+    582,
+    796
+   ]
+  },
+  "insel-171": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    582,
+    816
+   ],
+   "box": [
+    576,
+    810,
+    590,
+    824
+   ]
+  },
+  "insel-172": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    723,
+    794
+   ],
+   "box": [
+    716,
+    786,
+    732,
+    806
+   ]
+  },
+  "insel-173": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    746,
+    787
+   ],
+   "box": [
+    744,
+    784,
+    750,
+    792
+   ]
+  },
+  "insel-174": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    114,
+    853
+   ],
+   "box": [
+    108,
+    846,
+    122,
+    864
+   ]
+  },
+  "insel-175": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    140,
+    879
+   ],
+   "box": [
+    134,
+    872,
+    148,
+    888
+   ]
+  },
+  "insel-176": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    153,
+    839
+   ],
+   "box": [
+    140,
+    824,
+    168,
+    852
+   ]
+  },
+  "insel-177": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    163,
+    868
+   ],
+   "box": [
+    158,
+    864,
+    170,
+    874
+   ]
+  },
+  "insel-178": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    184,
+    890
+   ],
+   "box": [
+    176,
+    882,
+    194,
+    898
+   ]
+  },
+  "insel-179": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    436,
+    864
+   ],
+   "box": [
+    430,
+    860,
+    444,
+    870
+   ]
+  },
+  "insel-180": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    472,
+    842
+   ],
+   "box": [
+    448,
+    816,
+    494,
+    868
+   ]
+  },
+  "insel-181": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    570,
+    849
+   ],
+   "box": [
+    566,
+    844,
+    576,
+    856
+   ]
+  },
+  "insel-182": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    588,
+    860
+   ],
+   "box": [
+    586,
+    858,
+    594,
+    864
+   ]
+  },
+  "insel-183": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    591,
+    886
+   ],
+   "box": [
+    580,
+    878,
+    606,
+    896
+   ]
+  },
+  "insel-184": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    594,
+    841
+   ],
+   "box": [
+    592,
+    838,
+    598,
+    846
+   ]
+  },
+  "insel-185": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    620,
+    878
+   ],
+   "box": [
+    618,
+    876,
+    624,
+    882
+   ]
+  },
+  "insel-186": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    642,
+    872
+   ],
+   "box": [
+    632,
+    860,
+    654,
+    884
+   ]
+  },
+  "insel-187": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    763,
+    869
+   ],
+   "box": [
+    760,
+    862,
+    768,
+    876
+   ]
+  },
+  "insel-188": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    773,
+    869
+   ],
+   "box": [
+    770,
+    864,
+    778,
+    876
+   ]
+  },
+  "insel-189": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    212,
+    918
+   ],
+   "box": [
+    208,
+    914,
+    218,
+    924
+   ]
+  },
+  "insel-190": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    353,
+    918
+   ],
+   "box": [
+    344,
+    912,
+    362,
+    928
+   ]
+  },
+  "insel-191": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    546,
+    903
+   ],
+   "box": [
+    542,
+    900,
+    552,
+    908
+   ]
+  },
+  "insel-192": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    565,
+    905
+   ],
+   "box": [
+    562,
+    902,
+    570,
+    910
+   ]
+  },
+  "insel-193": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    609,
+    916
+   ],
+   "box": [
+    606,
+    914,
+    614,
+    920
+   ]
+  },
+  "insel-194": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    633,
+    910
+   ],
+   "box": [
+    628,
+    904,
+    640,
+    918
+   ]
+  },
+  "insel-195": {
+   "name": "Kleine Insel",
+   "art": "insel",
+   "mitte": [
+    674,
+    896
+   ],
+   "box": [
+    672,
+    894,
+    678,
+    900
+   ]
+  }
+ }
+}

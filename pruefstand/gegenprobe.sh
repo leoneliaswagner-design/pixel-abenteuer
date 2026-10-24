@@ -203,6 +203,22 @@ probe client/szenen/Spiel.js "      this.tweens.add({ targets: bild, angle: { fr
 probe client/szenen/Spiel.js "const FIGURBILD = { frameWidth: 32, frameHeight: 48 };" "const FIGURBILD = { frameWidth: 32, frameHeight: 32 };" pruefstand/optik.mjs \
   "Figuren werden mit der alten Höhe geschnitten"
 
+# Weltkarte und Gebiets-Werkzeug
+probe server/spiel.js "    this.entdecken(zielName);" "" pruefstand/server-regeln.mjs \
+  "neue Gebiete decken die Weltkarte nicht auf"
+probe server/spiel.js "if (!o || (!o.riss && !this.welt.regionen?.[o.region]))" "if (false)" pruefstand/server-regeln.mjs \
+  "Gebiet ohne Platz auf der Weltkarte fällt nicht auf"
+probe client/fenster.js "    g.globalCompositeOperation = 'destination-out';" "" pruefstand/weltkarte.mjs \
+  "Nebel liegt auch über Entdecktem"
+probe client/fenster.js "    const z = this.nah && hier.punkt ? 5 : 1;" "    const z = 1;" pruefstand/weltkarte.mjs \
+  "Umgebungsansicht zeigt die ganze Welt"
+probe client/fenster.js "const wo = o.riss ? 'hinter einem Dimensionsriss' : w.regionen[o.region]?.name ?? '?';" "const wo = w.regionen[o.region]?.name ?? '?';" pruefstand/weltkarte.mjs \
+  "wer hinter einem Riss ist, steht nirgends"
+probe werkzeuge/gebiet.mjs "  welt.gebiete[name] = region === 'riss' ? { riss: true } : { region, punkt: welt.regionen[region].mitte };" "" pruefstand/karten.mjs \
+  "neues Gebiet fehlt auf der Weltkarte"
+probe werkzeuge/gebiet.mjs "    karte.tilesets = [{ ...kachelsatz(), firstgid: karte.tilesets?.[0]?.firstgid ?? 1 }];" "" pruefstand/karten.mjs \
+  "kacheln erneuert nichts"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

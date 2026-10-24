@@ -32,6 +32,15 @@ export class Spiel {
         if (!this.gebiete.get(u.eig.ziel)?.ankuenfte.has(u.eig.ankunft))
           throw new Error(`Übergang in „${g.name}" führt ins Leere: ${u.eig.ziel} / ${u.eig.ankunft}`);
     this.zuletztGespeichert = jetzt();
+    // Weltkarte (welt.json): jedes Gebiet muss dort stehen — sonst fällt
+    // ein neues Gebiet erst auf, wenn jemand die Karte öffnet.
+    this.welt = werte.welt ?? null;
+    if (this.welt)
+      for (const name of this.gebiete.keys()) {
+        const o = this.welt.gebiete?.[name];
+        if (!o || (!o.riss && !this.welt.regionen?.[o.region]))
+          throw new Error(`Gebiet „${name}" fehlt auf der Weltkarte (inhalte/daten/welt.json → gebiete) oder hat eine unbekannte Region`);
+      }
     // Tageszeit 0…1 (0 Mitternacht, 0,5 Mittag): für alle gleich, der
     // Browser malt danach Tag und Nacht. TAGESZEIT=0.8 beim Start für
     // Prüfstände und Bilder vom Abend. (globalThis.process: dieselbe Datei
@@ -116,6 +125,7 @@ export class Spiel {
       auswahl: { klassen: this.klassen, spezies: this.spezies, grund: { leben: this.w.spieler.leben, geschwindigkeit: this.w.spieler.geschwindigkeit } },
     });
     if (!s.waehlt) this.anAlle({ t: 'nachricht', text: alt ? `${name} ist zurück.` : `${name} ist da.` });
+    this.entdecken(s.gebiet);
     this.merken(s);
     return s;
   }
@@ -151,8 +161,31 @@ export class Spiel {
     return {
       gebiet: s.gebiet, x: s.x, y: s.y, r: s.richtung, k: s.korrektur, leben: s.leben, inventar: s.inventar, ausruestung: s.ausruestung,
       geschnitten: [...g.welt.geschnitten], offen: g.offeneTruhen(), tueren: [...g.welt.geoeffnet],
-      blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(), zeit: this.tageszeit(),
+      blicke: Object.fromEntries(g.blicke), zustaende: this.zustaende(), gruppe: this.gruppe(), zeit: this.tageszeit(), entdeckt: this.entdeckt(),
     };
+  }
+
+  // ---------- Weltkarte ----------
+  // Was die Gruppe gesehen hat, deckt sich auf der Karte auf — für alle,
+  // wie Schlüssel und Weltzustände.
+  entdeckt() {
+    return (this.spielstand.daten.welt.entdeckt ??= []);
+  }
+
+  entdecken(gebiet) {
+    const region = this.welt?.gebiete?.[gebiet]?.region;
+    if (!region || this.entdeckt().includes(region)) return;
+    this.entdeckt().push(region);
+    this.geaendert = true;
+    this.anAlle({ t: 'entdeckt', region });
+    this.anAlle({ t: 'nachricht', text: `Neu auf der Weltkarte: ${this.welt.regionen[region].name}` });
+  }
+
+  weltkarte(s) {
+    s.senden({
+      t: 'weltkarte', entdeckt: this.entdeckt(),
+      spieler: [...this.spieler.values()].filter((p) => !p.waehlt).map((p) => ({ id: p.id, name: p.name, farbe: p.farbe, gebiet: p.gebiet })),
+    });
   }
 
   tageszeit(jetzt = this.jetzt()) {
@@ -216,6 +249,7 @@ export class Spiel {
     else if (m.t === 'benutzen') this.benutzen(s, m.art);
     else if (m.t === 'kaufen') this.kaufen(s, m.art);
     else if (m.t === 'verkaufen') this.verkaufen(s, m.art);
+    else if (m.t === 'weltkarte') this.weltkarte(s);
     else if (m.t === 'bereit') s.unverwundbarBis = Math.min(s.unverwundbarBis, this.jetzt() + this.w.spieler.schonfrist);
   }
 
@@ -267,6 +301,7 @@ export class Spiel {
     s.ankunft = { gebiet: zielName, x: s.x, y: s.y };
     // Bis die neue Karte steht, kann niemand ausweichen — s. beitreten.
     s.unverwundbarBis = Math.max(s.unverwundbarBis, this.jetzt() + 15000);
+    this.entdecken(zielName);
     s.senden({ t: 'gebiet', ...this.ortsangabe(s) });
     alt.anAlle({ t: 'nachricht', text: `${s.name} geht nach ${ziel.titel}.` });
     ziel.anAlle({ t: 'nachricht', text: `${s.name} kommt dazu.` }, s.id);

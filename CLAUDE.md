@@ -59,6 +59,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - **Grafik**: Figuren aus `werkzeuge/figuren.mjs` (32×48), alles andere aus
   `grafik.mjs`; Umriss mit `umriss('weich')` statt Schwarz. Deko
   (`client/deko.js`) und Kanten werden aus der Karte berechnet.
+- **Weltkarte**: `welt.json` — `regionen` (aus dem Kartenbild, `werkzeuge/inseln.py`)
+  und `gebiete` (Region + Punkt, oder `riss`). Jedes Gebiet muss dort stehen,
+  sonst startet der Server nicht. Entdeckte Regionen (`welt.entdeckt` im
+  Spielstand) gehören der Gruppe. Neue Gebiete: `npm run gebiet -- neu …`
+  (werkzeuge/gebiet.mjs), Kartenbau-Bibliothek: `werkzeuge/kartenbau.mjs`.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -100,10 +105,13 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/optik.mjs` — Nacht/Tag am Bildpunkt (Laterne hell, abseits
   dunkel), Höhle mittags dunkel, Rathaus nachts hell, Deko, Wind, Hausschatten,
   Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.
+- `node pruefstand/weltkarte.mjs` — Kartenknopf und M, Nebel über dem
+  Nordwest-Kontinent, Startinsel klar (Bildpunkte), Umgebung mittig, Riss.
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner
-  (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge.
+  (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge; dazu das
+  Gebiets-Werkzeug (`DATEN_ZIEL`, die echten Dateien bleiben unberührt).
 - Nach `gegenprobe.sh` ist `dist/` mit absichtlich kaputtem Code gebaut —
   vor dem nächsten `OHNE_BAU=1` neu bauen.
 - `UEBER_HTTPS=1` vor `zwei-spieler.mjs` setzt einen https-Weiterleiter

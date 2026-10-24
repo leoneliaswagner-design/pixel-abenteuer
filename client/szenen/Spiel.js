@@ -32,6 +32,7 @@ export class SpielSzene extends Phaser.Scene {
       this.load.tilemapTiledJSON(this.kartenSchluessel, `karten/${this.willkommen.gebiet}.json`);
     this.load.json('werte', 'daten/werte.json');
     this.load.json('gegenstaende', 'daten/gegenstaende.json');
+    this.load.json('welt', 'daten/welt.json');
     this.load.spritesheet('gegenstaende', 'grafik/gegenstaende.png', { frameWidth: 16, frameHeight: 16 });
     this.load.image('kacheln', 'grafik/kacheln.png');
     for (const n of ['baum', 'schatten', 'schwert', 'schild']) this.load.image(n, `grafik/${n}.png`);
@@ -118,10 +119,11 @@ export class SpielSzene extends Phaser.Scene {
     this.fenster ??= new Fenster(() => this.fensterDaten(), (m) => this.netz.senden(m), () => (this.fensterZu = this.time.now));
     this.fenster.schliessen();
     this.fensterZu = 0;
-    const knopf = document.getElementById('rucksack-knopf');
-    if (knopf) {
+    for (const [id, fn] of [['rucksack-knopf', () => this.rucksackUmschalten()], ['karte-knopf', () => this.karteUmschalten()]]) {
+      const knopf = document.getElementById(id);
+      if (!knopf) continue;
       knopf.hidden = false;
-      knopf.onclick = () => this.rucksackUmschalten();
+      knopf.onclick = fn;
     }
     this.dialogOffen = false;
     this.oberflaeche()?.dialogSchliessen?.();
@@ -154,6 +156,7 @@ export class SpielSzene extends Phaser.Scene {
     this.faehigkeitGewuenscht = false;
     for (const taste of ['Q', 'K']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.faehigkeitGewuenscht = true));
     this.input.keyboard.on('keydown-I', (e) => !e.repeat && this.rucksackUmschalten());
+    this.input.keyboard.on('keydown-M', (e) => !e.repeat && this.karteUmschalten());
     this.input.keyboard.on('keydown-ESC', () => this.fenster.schliessen());
     // Schnelltaste 1: der erste Trank im Rucksack.
     this.input.keyboard.on('keydown-ONE', (e) => {
@@ -273,8 +276,16 @@ export class SpielSzene extends Phaser.Scene {
       gegenstaende: this.cache.json.get('gegenstaende'), inventar: this.inventar, ausruestung: this.ausruestung,
       gruppe: this.gruppe, charakter: c, leben: this.leben, plaetze: this.w.inventar?.plaetze ?? 12,
       klassen: wk.auswahl?.klassen ?? {}, name: wk.name ?? '',
+      welt: this.cache.json.get('welt'), meineId: this.meineId, gebiet: this.gebiet,
       klassenName: wk.auswahl?.klassen?.[c?.klasse]?.name ?? '', speziesName: wk.auswahl?.spezies?.[c?.spezies]?.name ?? '',
     };
+  }
+
+  // Die Karte fragt den Server, wo alle sind — die anderen können in
+  // Gebieten stehen, von denen dieser Browser nichts weiß.
+  karteUmschalten() {
+    if (this.fenster.art === 'weltkarte') this.fenster.schliessen();
+    else if (!this.dialogOffen && !this.wechselt) this.netz.senden({ t: 'weltkarte' });
   }
 
   rucksackUmschalten() {
@@ -489,6 +500,13 @@ export class SpielSzene extends Phaser.Scene {
       this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
       this.fenster.aktualisieren();
     });
+    n.bei('weltkarte', (m) => {
+      if (this.dialogOffen) return;
+      this.ich.laeuft = false;
+      this.fenster.weltkarte(m);
+    });
+    // Neu entdeckt, während die Karte offen ist: frisch fragen.
+    n.bei('entdeckt', () => this.fenster.art === 'weltkarte' && this.netz.senden({ t: 'weltkarte' }));
     n.bei('laden', (m) => {
       this.ich.laeuft = false;
       this.fenster.laden(m);

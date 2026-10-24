@@ -62,6 +62,11 @@
   Tag und Nacht mit Licht; Deko und Wind; Textbox, Rucksack und Laden aus
   Holz und Pergament. Prüfstand `optik.mjs`.
 
+- **Weltkarte**: `welt.json` mit 5 Kontinenten und 195 Inseln aus dem
+  Kartenbild; Karte im Spiel (M) mit Nebel, Spielerpunkten, Umgebung/ganze
+  Welt; Entdecken gehört der Gruppe. Werkzeug `npm run gebiet -- neu/kacheln`
+  für eigene Gebiete in Tiled. Prüfstand `weltkarte.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -78,7 +83,10 @@
    hängen); Bosse.
 5. **Töne.**
 6. **Handy-Steuerung.**
-7. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
+7. ~~Weltkarte~~ — offen: **Reisen zwischen den Inseln** (Schiff am Hafen
+   von Riftside? Fährmann? Teleport-Risse?) — Entscheidung des Spielleiters;
+   Namen der Kontinente und Inseln (welt.json); die Startinsel als Ganzes
+   (Strände, Leuchtturm …), sobald die Kampagne dazu etwas sagt.
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 
@@ -187,3 +195,9 @@
 - Größere Figuren verdecken, was über ihnen steht: der alte Mann im Wald
   trug plötzlich einen Stein als Hut. Beim Bau von Karten eine Kachel Luft
   über Figuren lassen.
+- Phaser kennt nur eingebettete Kachelsätze. Damit Tiled-Karten neue
+  Kacheln bekommen, erneuert `npm run gebiet -- kacheln` den Satz in allen
+  Karten — sonst fehlten in alten Karten die Eigenschaften neuer Kacheln.
+- „Dimensionsriss" enthält „riss", nicht „Riss": ein Prüfstand suchte groß
+  und schlug an, obwohl das Spiel richtig war. Erst die Prüfung prüfen.
+- Ein Messpunkt im Prüfstand lag plötzlich unter dem neuen Kartenknopf (HTML über dem Spiel) — die „Nacht" dort war hell. Messstellen nicht in die Ecken legen, wo Knöpfe sitzen.

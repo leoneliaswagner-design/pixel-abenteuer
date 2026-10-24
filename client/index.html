@@ -80,16 +80,30 @@
       #fenster .ware small { color: #6a5440; font-size: 12px; }
       #fenster .ware .knopf { justify-items: end; text-align: right; }
       @media (max-width: 420px) { #fenster .ware { grid-template-columns: auto 1fr; } #fenster .ware .knopf { grid-column: 1 / -1; justify-items: start; text-align: left; } }
+      /* Weltkarte */
+      #fenster .kasten.breit { max-width: 720px; }
+      #fenster .kopf button[data-tun=zoom] { white-space: nowrap; }
+      .weltkarte { position: relative; width: min(100%, calc(100vh - 190px)); min-width: 240px; aspect-ratio: 1; overflow: hidden; margin: 10px auto 0; border: 3px solid #5a3820; border-radius: 6px; background: #2a5a6a; }
+      .weltinhalt { position: absolute; inset: 0; transform-origin: 0 0; }
+      .weltinhalt img, .weltinhalt canvas { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+      .marke { position: absolute; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fbeed0; box-shadow: 0 0 0 1px #3e2a1c; }
+      .marke.ich { width: 16px; height: 16px; border-color: #ffffff; box-shadow: 0 0 0 2px #3e2a1c, 0 0 10px 3px rgba(255,240,180,0.9); }
+      .gruen { background: #6fd16a; } .rot { background: #ef7a6a; } .blau { background: #6fa0f0; } .lila { background: #c07fe6; }
+      #fenster .legende { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 4px; }
+      #fenster .legende li { display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
+      #fenster .legende .punkt { flex: none; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #3e2a1c; }
       /* Rucksack-Knopf am Rand: für Maus und Finger (Taste I geht auch) */
       #rucksack-knopf { position: fixed; right: 12px; bottom: 12px; z-index: 2; width: 48px; height: 48px; padding: 6px; border: 3px solid #5a3820; border-radius: 8px; background: #f4e4c0; box-shadow: inset 0 0 0 1px #c99560; cursor: pointer; }
       #rucksack-knopf[hidden] { display: none; }
+      #karte-knopf { position: fixed; right: 68px; bottom: 12px; z-index: 2; width: 48px; height: 48px; padding: 6px; border: 3px solid #5a3820; border-radius: 8px; background: #f4e4c0; box-shadow: inset 0 0 0 1px #c99560; cursor: pointer; }
+      #karte-knopf[hidden] { display: none; }
     </style>
   </head>
   <body>
     <div id="start">
       <form id="anmelden">
         <h1>Pixel-Abenteuer</h1>
-        <p id="hinweis">Bis zu vier Leute spielen zusammen. Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q, Rucksack mit I, Trank mit 1.</p>
+        <p id="hinweis">Bis zu vier Leute spielen zusammen. Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q, Rucksack mit I, Weltkarte mit M, Trank mit 1.</p>
         <input id="name" maxlength="14" placeholder="Dein Name" autocomplete="nickname" required />
         <button type="submit">Losspielen</button>
         <p class="fehler" id="fehler"></p>
@@ -99,7 +113,8 @@
     </div>
     <div id="spiel"></div>
     <div id="fenster" hidden></div>
-    <button id="rucksack-knopf" hidden aria-label="Rucksack (I)" title="Rucksack (I)"><span class="symbol" style="background-position:-160px 0;background-size:288px 32px"></span></button>
+    <button id="rucksack-knopf" hidden aria-label="Rucksack (I)" title="Rucksack (I)"><span class="symbol" style="background-position:-160px 0;background-size:320px 32px"></span></button>
+    <button id="karte-knopf" hidden aria-label="Weltkarte (M)" title="Weltkarte (M)"><span class="symbol" style="background-position:-288px 0;background-size:320px 32px"></span></button>
     <script type="module" src="./main.js"></script>
   </body>
 </html>

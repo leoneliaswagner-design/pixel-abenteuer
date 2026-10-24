@@ -10,7 +10,8 @@
     "online": "node werkzeuge/online.mjs",
     "grafik": "node werkzeuge/grafik.mjs",
     "karte": "node werkzeuge/karte.mjs",
-    "pruefen": "node pruefstand/zwei-spieler.mjs"
+    "pruefen": "node pruefstand/zwei-spieler.mjs",
+    "gebiet": "node werkzeuge/gebiet.mjs"
   },
   "dependencies": {
     "cloudflared": "0.7.3",

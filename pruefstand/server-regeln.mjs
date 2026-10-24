@@ -660,6 +660,43 @@ const arena = (art, abstand) => {
   pruefe(f.includes('drache'), `unbekanntes Monster wird gemeldet („${f}")`);
 }
 
+// ---------- Weltkarte (welt.json) ----------
+{
+  const wk = new Spiel(karten, werte, { jetzt: () => uhr });
+  const pw = [];
+  const a = mitCharakter(wk, 'Karla', (m) => pw.push(m));
+  const b = mitCharakter(wk, 'Bodo', () => {});
+  const start = werte.welt.gebiete.riftside.region;
+  pruefe(wk.entdeckt().length === 1 && wk.entdeckt()[0] === start && werte.welt.regionen[start].name === 'Startinsel',
+    `beim ersten Beitreten entdeckt: ${wk.entdeckt().map((r) => werte.welt.regionen[r].name).join(', ')}`);
+  wk.wechseln(b, 'tempel', 'von_riftside');
+  pruefe(wk.entdeckt().length === 1, 'ein Riss deckt nichts auf der Weltkarte auf');
+  pw.length = 0;
+  wk.nachricht(a.id, { t: 'weltkarte' });
+  const antwort = pw.find((m) => m.t === 'weltkarte');
+  pruefe(antwort?.spieler.length === 2 && antwort.spieler.find((x) => x.name === 'Bodo')?.gebiet === 'tempel',
+    `Weltkarte: alle Spieler mit Gebiet (${antwort?.spieler.map((x) => `${x.name}@${x.gebiet}`).join(', ')})`);
+  // Ein Gebiet, das auf der Weltkarte fehlt, fällt beim Start auf.
+  const ohne = { ...werte, welt: { ...werte.welt, gebiete: { ...werte.welt.gebiete } } };
+  delete ohne.welt.gebiete.tiefwald;
+  let f = '';
+  try {
+    new Spiel(karten, ohne);
+  } catch (e) {
+    f = e.message;
+  }
+  pruefe(f.includes('tiefwald') && f.includes('Weltkarte'), `fehlendes Gebiet wird gemeldet („${f.slice(0, 60)}…")`);
+  // Eine neue Region wird für alle aufgedeckt und gemeldet.
+  const pb = [];
+  const c = mitCharakter(wk, 'Cleo', (m) => pb.push(m));
+  const welt2 = { ...werte.welt.gebiete.tiefwald };
+  werte.welt.gebiete.tiefwald = { region: 'nordwesten', punkt: [200, 200] };
+  wk.wechseln(c, 'tiefwald', 'vom_inselwald');
+  werte.welt.gebiete.tiefwald = welt2;
+  pruefe(wk.entdeckt().includes('nordwesten') && pb.some((m) => m.t === 'entdeckt' && m.region === 'nordwesten') && pw.some((m) => m.t === 'nachricht' && m.text.includes('Nordwest')),
+    'neue Region: aufgedeckt, alle bekommen es mit');
+}
+
 // ---------- Tageszeit ----------
 {
   const tag = new Spiel(karten, werte, { jetzt: () => uhr });

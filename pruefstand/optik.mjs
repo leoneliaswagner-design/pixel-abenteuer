@@ -91,7 +91,9 @@ try {
     const s = await zustand(nora), t = await zustand(olaf);
     pruefe(s.licht.art === 'draussen' && s.licht.dunkelheit > 0.6, `Nacht: Dunkelheit ${s.licht.dunkelheit.toFixed(2)} (Uhr ${s.licht.zeit.toFixed(2)})`);
     pruefe(Math.abs(s.licht.zeit - t.licht.zeit) < 0.003, `beide Spieler haben dieselbe Uhrzeit (${s.licht.zeit.toFixed(3)} / ${t.licht.zeit.toFixed(3)})`);
-    const laterne = await helligkeit(nora, 20, 7), abseits = await helligkeit(nora, 28, 12);
+    // Abseits: (27,11) — eine Kachel weiter unten lag der Kartenknopf über dem
+    // Bild und machte die Nacht dort hell.
+    const laterne = await helligkeit(nora, 20, 7), abseits = await helligkeit(nora, 27, 11);
     pruefe(abseits < 70 && laterne > abseits + 30, `an der Laterne hell (${laterne.toFixed(0)}), abseits dunkel (${abseits.toFixed(0)})`);
     await nora.screenshot({ path: `${wurzel}pruefstand/bilder/nacht.png` });
   });
@@ -99,7 +101,7 @@ try {
   // --- Tag: dieselbe Stelle hell, keine Verdunklung; Wind und Figuren ---
   await mitServer(0.5, [['Pia', 'riftside', 22, 9]], async (p) => {
     const s = await zustand(p);
-    const abseits = await helligkeit(p, 28, 12);
+    const abseits = await helligkeit(p, 27, 11);
     pruefe(s.licht.dunkelheit < 0.01 && abseits > 110, `Tag: Dunkelheit ${s.licht.dunkelheit.toFixed(2)}, dieselbe Stelle hell (${abseits.toFixed(0)})`);
     const hoehe = await p.evaluate(() => {
       const sz = window.__spiel.szene;

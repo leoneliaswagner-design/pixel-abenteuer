@@ -25,6 +25,45 @@ E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern),
 Q oder K für die Fähigkeit der Klasse, I für den Rucksack (oder der Knopf
 unten rechts), 1 trinkt einen Heiltrank, Esc schließt Fenster.
 
+## Weltkarte
+
+Mit **M** (oder dem Kartenknopf unten rechts) öffnet sich die Karte der
+Welt: das Bild aus `konzept/weltkarte.webp`, darüber Nebel, wo die Gruppe
+noch nicht war. Jeder Spieler ist ein Punkt in seiner Farbe; wer hinter
+einem Dimensionsriss steckt, steht in der Liste darunter. „Umgebung"
+vergrößert um einen herum, „Ganze Welt" zeigt alles.
+
+`inhalte/daten/welt.json` sagt, wo was liegt:
+- `regionen`: die fünf Kontinente und 195 Inseln — erkannt aus dem
+  Kartenbild (`python werkzeuge/inseln.py`, braucht Python und Pillow, nur
+  nötig, wenn sich das Bild ändert). Namen darf man hier ändern, sie bleiben
+  beim nächsten Lauf erhalten. Die Startinsel ist `insel-047`.
+- `gebiete`: zu jedem Gebiet die Region und der Punkt im Kartenbild, oder
+  `riss: true`. Ein Gebiet, das hier fehlt, meldet der Server beim Start.
+
+## Eigene Gebiete bauen
+
+```sh
+npm run gebiet -- neu leuchtturm 30 20 insel-047 "den Leuchtturm"
+```
+
+legt `inhalte/karten/leuchtturm.json` an (Wiese mit Baumrand, Ankunft
+`start` in der Mitte), trägt das Gebiet in `werte.json` ein und setzt es
+auf die Weltkarte. Dann die Datei in [Tiled](https://www.mapeditor.org)
+öffnen und malen:
+
+| Ebene | Was hinein kommt |
+|---|---|
+| `boden` | Gras, Wege, Wasser, Sand, Pflaster, Dielen … |
+| `hindernisse` | Bäume, Büsche, Steine, Mauern, Häuser (alles mit `fest`) |
+| `orte` | Punkte `ankunft` (`id`), `gegner` (`art`), `schild` (`text`), `figur` (`name`, `text`, `aussehen`), `truhe` (`inhalt`, `id`), `spieler_start`; Rechtecke `uebergang` (`ziel`, `ankunft`, optional `bedingung`, `art: riss`) |
+
+Damit man hineinkommt, braucht ein anderes Gebiet einen `uebergang` mit
+`ziel` = dem neuen Gebiet und `ankunft` = `start`. Nach neuen Kacheln:
+`npm run gebiet -- kacheln` erneuert den Kachelsatz in allen Karten.
+Karten, die man in Tiled bearbeitet hat, nicht mehr mit `npm run karte`
+erzeugen — die Textkarten in `werkzeuge/karte.mjs` sind nur der Anfang.
+
 ## Tag und Nacht
 
 Ein Tag dauert 24 Minuten (`werte.json` → `tag.dauer`) und ist für alle
@@ -215,6 +254,7 @@ node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, F
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
 node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48
+node pruefstand/weltkarte.mjs       # Weltkarte: Nebel am Bildpunkt, eigener Punkt, Mitspieler hinter dem Riss
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen

@@ -15,7 +15,7 @@ export const HOEHE = 270;
 const ALLEIN = import.meta.env.VITE_ALLEIN === '1' || new URLSearchParams(location.search).has('allein');
 if (ALLEIN) {
   document.getElementById('hinweis').textContent =
-    'Vorschau zum Alleinspielen — ein Tag dauert hier 4 Minuten. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q, Rucksack mit I, Trank mit 1.';
+    'Vorschau zum Alleinspielen — ein Tag dauert hier 4 Minuten. Mit Freunden geht es über „npm run online". Laufen mit Pfeiltasten oder WASD, Schwert mit Leertaste oder J, ansprechen und öffnen mit E, Klassen-Fähigkeit mit Q, Rucksack mit I, Weltkarte mit M, Trank mit 1.';
 }
 
 const form = document.getElementById('anmelden');

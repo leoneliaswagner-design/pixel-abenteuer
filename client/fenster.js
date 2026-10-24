@@ -1,6 +1,6 @@
 import { PLAETZE, PLATZ_NAME, darfTragen, passtHinein } from '../gemeinsam/regeln.js';
 
-// Rucksack und Laden: HTML über dem Spiel, nicht in Phaser — Beschreibungen
+// Rucksack, Laden und Weltkarte: HTML über dem Spiel, nicht in Phaser — Beschreibungen
 // brechen von selbst um, Knöpfe gehen mit Maus, Finger und Enter, und am
 // Handy lässt sich das Fenster scrollen.
 //
@@ -19,7 +19,8 @@ export class Fenster {
     this.senden = senden;
     this.beimSchliessen = schliessen;
     this.wurzel = document.getElementById('fenster');
-    this.art = null; // 'rucksack' | 'laden'
+    this.art = null; // 'rucksack' | 'laden' | 'weltkarte'
+    this.nah = true; // Weltkarte: Umgebung (vergrößert) oder ganze Welt
     this.gewaehlt = null;
     this.angebot = null;
     this.wurzel.addEventListener('click', (e) => this.klick(e));
@@ -38,6 +39,13 @@ export class Fenster {
     this.art = 'laden';
     this.angebot = angebot;
     this.gewaehlt = null;
+    this.zeichnen();
+  }
+
+  // stand: { entdeckt: [Region…], spieler: [{ id, name, farbe, gebiet }] }
+  weltkarte(stand) {
+    this.art = 'weltkarte';
+    this.karte = stand;
     this.zeichnen();
   }
 
@@ -61,6 +69,10 @@ export class Fenster {
     if (!k || k.disabled) return;
     const { tun, art, platz } = k.dataset;
     if (tun === 'schliessen') this.schliessen();
+    else if (tun === 'zoom') {
+      this.nah = !this.nah;
+      this.zeichnen();
+    }
     else if (tun === 'waehlen') {
       this.gewaehlt = art;
       this.zeichnen();
@@ -78,8 +90,10 @@ export class Fenster {
     const d = this.daten();
     this.wurzel.hidden = false;
     if (this.gewaehlt && !(d.inventar[this.gewaehlt] > 0) && !Object.values(d.ausruestung).includes(this.gewaehlt)) this.gewaehlt = null;
-    this.wurzel.innerHTML = `<div class="kasten" role="dialog" aria-label="${this.art === 'laden' ? 'Laden' : 'Rucksack'}">
-      ${this.art === 'laden' ? this.ladenHtml(d) : this.rucksackHtml(d)}</div>`;
+    const inhalt = { laden: () => this.ladenHtml(d), weltkarte: () => this.weltkarteHtml(d), rucksack: () => this.rucksackHtml(d) }[this.art]();
+    const titel = { laden: 'Laden', weltkarte: 'Weltkarte', rucksack: 'Rucksack' }[this.art];
+    this.wurzel.innerHTML = `<div class="kasten${this.art === 'weltkarte' ? ' breit' : ''}" role="dialog" aria-label="${titel}">${inhalt}</div>`;
+    if (this.art === 'weltkarte') this.nebelMalen(d);
     // Fokus in das Fenster, damit Enter die Knöpfe trifft und nicht das Spiel.
     (this.wurzel.querySelector('[data-fokus]') ?? this.wurzel.querySelector('button'))?.focus({ preventScroll: true });
   }
@@ -168,5 +182,69 @@ export class Fenster {
         ${this.knopf(`${a.ankauf[art]} Gold`, { tun: 'verkaufen', art }, null)}</div>`);
     zeilen.push('</div>');
     return zeilen.join('');
+  }
+
+  // ---------- Weltkarte ----------
+  // Das Kartenbild des Spielleiters, darüber Nebel, wo die Gruppe noch nicht
+  // war. Die Punkte stehen in Bildpunkten des Kartenbilds (welt.json).
+
+  weltkarteHtml(d) {
+    const w = d.welt, k = this.karte;
+    const ort = (g) => w.gebiete[g] ?? {};
+    const ich = k.spieler.find((p) => p.id === d.meineId);
+    const hier = ort(ich?.gebiet ?? d.gebiet);
+    const z = this.nah && hier.punkt ? 5 : 1;
+    this.zoom = z;
+    // Ausschnitt um den eigenen Punkt, aber nie über den Kartenrand hinaus.
+    const [fx, fy] = z > 1 ? [hier.punkt[0] / w.breite, hier.punkt[1] / w.hoehe] : [0.5, 0.5];
+    const rand = (v) => Math.min(0, Math.max((1 - z) * 100, (0.5 - v * z) * 100));
+    const nachGebiet = {};
+    for (const p of k.spieler) (nachGebiet[p.gebiet] ??= []).push(p);
+    const marken = [], legende = [];
+    for (const [gebiet, leute] of Object.entries(nachGebiet)) {
+      const o = ort(gebiet);
+      leute.forEach((p, i) => {
+        const wo = o.riss ? 'hinter einem Dimensionsriss' : w.regionen[o.region]?.name ?? '?';
+        legende.push(`<li><span class="punkt ${html(p.farbe)}"></span>${html(p.name)}${p.id === d.meineId ? ' (du)' : ''} — ${html(wo)}</li>`);
+        if (!o.punkt) return;
+        // Mehrere im selben Gebiet nebeneinander, nicht übereinander.
+        const x = o.punkt[0] + (i - (leute.length - 1) / 2) * (6 / z), y = o.punkt[1];
+        marken.push(`<span class="marke ${html(p.farbe)}${p.id === d.meineId ? ' ich' : ''}" data-name="${html(p.name)}" style="left:${(x / w.breite) * 100}%;top:${(y / w.hoehe) * 100}%;transform:translate(-50%,-50%) scale(${1 / z})"></span>`);
+      });
+    }
+    return `<div class="kopf"><h2>Weltkarte</h2>
+      <button data-tun="zoom">${z > 1 ? 'Ganze Welt' : 'Umgebung'}</button>
+      <button data-tun="schliessen" class="zu" aria-label="Schließen">✕</button></div>
+      <div class="weltkarte"><div class="weltinhalt" style="transform:translate(${rand(fx)}%,${rand(fy)}%) scale(${z})">
+        <img src="${html(w.bild)}" alt="Karte der Welt" draggable="false" />
+        <canvas class="nebel" width="${w.breite}" height="${w.hoehe}"></canvas>
+        ${marken.join('')}
+      </div></div>
+      <ul class="legende">${legende.join('')}</ul>
+      <p class="tipp">Wo ihr gewesen seid, lichtet sich der Nebel — für die ganze Gruppe.</p>`;
+  }
+
+  nebelMalen(d) {
+    const w = d.welt, c = this.wurzel.querySelector('canvas.nebel');
+    if (!c) return;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(58, 40, 24, 0.82)';
+    g.fillRect(0, 0, c.width, c.height);
+    // Entdeckt: ein weiches Loch um die Region (Mitte der Box, etwas größer).
+    g.globalCompositeOperation = 'destination-out';
+    for (const id of this.karte.entdeckt) {
+      const r = w.regionen[id];
+      if (!r) continue;
+      const [x0, y0, x1, y1] = r.box;
+      const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, rad = Math.max(x1 - x0, y1 - y0) / 2 + 22;
+      const v = g.createRadialGradient(cx, cy, rad * 0.55, cx, cy, rad);
+      v.addColorStop(0, 'rgba(0,0,0,1)');
+      v.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = v;
+      g.beginPath();
+      g.arc(cx, cy, rad, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
   }
 }

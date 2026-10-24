@@ -5,7 +5,7 @@
 
 // Daten neben werte.json, die Server und Browser beide laden und unter
 // diesem Namen an die Werte hängen — eine neue Datei: hier eintragen.
-export const ZUSATZDATEN = ['klassen', 'spezies', 'gegenstaende', 'laeden', 'monster'];
+export const ZUSATZDATEN = ['klassen', 'spezies', 'gegenstaende', 'laeden', 'monster', 'welt'];
 
 export const ATTRIBUTE = ['staerke', 'geschick', 'konstitution', 'intelligenz', 'weisheit', 'charisma'];
 export const KURZ = { staerke: 'STÄ', geschick: 'GES', konstitution: 'KON', intelligenz: 'INT', weisheit: 'WEI', charisma: 'CHA' };

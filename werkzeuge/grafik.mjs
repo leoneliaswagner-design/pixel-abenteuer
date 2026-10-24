@@ -799,7 +799,7 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
 // ---------- Gegenstände (16×16, für Inventar und Laden) ----------
 // Reihenfolge = „bild" in gegenstaende.json: 0 Gold, 1 Schlüssel,
 // 2 Rissstein, 3 Heiltrank, 4 Langschwert, 5 Lederrüstung, 6 Kettenhemd,
-// 7 Zauberstab, 8 Ring.
+// 7 Zauberstab, 8 Ring, 9 Karte (nur für den Knopf).
 {
   const symbol = [];
   const neu = () => new Bild(16, 16);
@@ -861,6 +861,15 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
       if (d <= 4.6 && d > 2.6) b.setze(x, y, y < 9 ? '#ffffff' : '#c8c8d8');
     }
   b.ellipse(8, 4.5, 2, 2, '#6fe0a0');
+  symbol.push(b);
+  b = neu(); // Karte (Knopf der Weltkarte): Pergament, halb aufgerollt
+  b.rechteck(2, 3, 12, 10, '#f0dca8');
+  b.rechteck(2, 3, 2, 10, '#c8a870');
+  b.rechteck(12, 3, 2, 10, '#c8a870');
+  b.ellipse(7, 7, 2.5, 2, '#6aa848');
+  b.ellipse(10, 9, 1.5, 1.2, '#6aa848');
+  b.linie(5, 10, 9, 6, '#a04030');
+  b.setze(9, 6, '#d04030');
   symbol.push(b);
   const blatt = new Bild(16 * symbol.length, 16);
   symbol.forEach((sy, i) => {
