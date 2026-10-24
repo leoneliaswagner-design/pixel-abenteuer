@@ -288,7 +288,7 @@ const inRiss = 15 * 32 + 30;
 spiel4.wechseln(bo, 'riftside', 'aus_tempel');
 // Erst ein Treffer: im Rückstoß geht niemand hindurch.
 Object.assign(bo, { ...vorRiss, unverwundbarBis: 0 });
-const schleim = { x: bo.x, y: bo.y - 20, w: werte.gegner.schleim };
+const schleim = { x: bo.x, y: bo.y - 20, w: werte.monster.schleim };
 spiel4.spielerTreffen(bo, schleim, uhr);
 uhr += 100;
 spiel4.nachricht(bo.id, { t: 'pos', x: bo.x, y: inRiss, r: 'oben', k: bo.korrektur });
@@ -548,6 +548,117 @@ spiel11.verlassen(ritter.id);
 const spiel12 = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei11) });
 const ritter2 = spiel12.beitreten('Ritter', () => {});
 pruefe(ritter2.ausruestung.waffe === 'langschwert' && ritter2.werte.schaden === schaden11, `nach dem Neustart: Langschwert angelegt, Schaden ${ritter2.werte.schaden}`);
+
+// ---------- Monster (monster.json) im tiefen Wald ----------
+const tief = karten.tiefwald;
+const tiefSpiel = new Spiel(karten, werteWald, { jetzt: () => uhr });
+const tiefwald = tiefSpiel.gebiete.get('tiefwald');
+const arten = tiefwald.gegner.map((g) => g.art);
+pruefe(['riesenratte', 'wolf', 'goblin', 'skelett', 'riesenfledermaus'].every((a) => arten.includes(a)) && !arten.includes('schleim'),
+  `tiefer Wald: ${arten.length} Monster (${[...new Set(arten)].join(', ')})`);
+pruefe(tiefwald.gegner.find((g) => g.art === 'skelett').leben === 4, 'Monster bekommen ihre Werte aus monster.json (Skelett: 4 Leben)');
+
+// Eine Arena: ein Spieler links in Zeile 9, alle Monster weg bis auf eins.
+const K = 32, zeile9 = 9 * K + 24;
+const arena = (art, abstand) => {
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr });
+  const p = [];
+  const s = mitCharakter(sp, 'Held', (m) => p.push(m), 'magier', 'mensch');
+  sp.wechseln(s, 'tiefwald', 'vom_inselwald');
+  Object.assign(s, { x: 2 * K + 16, y: zeile9, unverwundbarBis: 0 });
+  const gebiet = sp.gebiete.get('tiefwald');
+  for (const g of gebiet.gegner) Object.assign(g, { tot: true, wiederBei: uhr + 1e9 });
+  const m = gebiet.gegner.find((g) => g.art === art);
+  Object.assign(m, { tot: false, x: s.x + abstand, y: zeile9, stossBis: 0, phase: null });
+  const lauf = (ms, nachJedem) => {
+    for (let t = 0; t < ms; t += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+      nachJedem?.();
+    }
+  };
+  return { sp, s, m, p, gebiet, lauf };
+};
+
+// Ratte: schneller als ein Schleim.
+{
+  const { s, m, lauf } = arena('riesenratte', 110);
+  s.unverwundbarBis = uhr + 1e6;
+  const x0 = m.x;
+  lauf(500);
+  const tempo = (x0 - m.x) / 0.5;
+  pruefe(tempo > werte.monster.schleim.jagdGeschwindigkeit + 10, `Riesenratte jagt mit ${tempo.toFixed(0)} px/s (Schleim ${werte.monster.schleim.jagdGeschwindigkeit})`);
+}
+// Goblin: hält Abstand, schießt, und der Pfeil trifft.
+{
+  const { s, m, p, gebiet, lauf } = arena('goblin', 120);
+  let naechster = Infinity, pfeile = 0;
+  const leben0 = s.leben;
+  lauf(400, () => (naechster = Math.min(naechster, Math.hypot(m.x - s.x, m.y - s.y))));
+  const frueh = gebiet.geschosse.size;
+  lauf(2600, () => {
+    naechster = Math.min(naechster, Math.hypot(m.x - s.x, m.y - s.y));
+    pfeile = Math.max(pfeile, [...gebiet.geschosse.values()].filter((g) => g.feind).length);
+  });
+  pruefe(frueh === 0, 'Goblin schießt nicht im ersten Augenblick');
+  pruefe(pfeile >= 1 && s.leben < leben0 && p.some((x) => x.t === 'getroffen'), `Goblin-Pfeil trifft: ${leben0} → ${s.leben} Leben`);
+  pruefe(naechster > 80, `Goblin bleibt auf Abstand (nie näher als ${naechster.toFixed(0)} px)`);
+  Object.assign(m, { x: s.x + 40, stossBis: 0 });
+  const d0 = Math.hypot(m.x - s.x, m.y - s.y);
+  s.unverwundbarBis = uhr + 1e6;
+  lauf(500);
+  pruefe(Math.hypot(m.x - s.x, m.y - s.y) > d0 + 10, `zu nah: der Goblin weicht zurück (${d0.toFixed(0)} → ${Math.hypot(m.x - s.x, m.y - s.y).toFixed(0)} px)`);
+}
+// Wolf: duckt sich erst (steht still), dann springt er schnell.
+{
+  const { s, m, lauf } = arena('wolf', 80);
+  s.unverwundbarBis = uhr + 1e6;
+  const x0 = m.x;
+  lauf(50);
+  const geduckt = m.phase === 'laden';
+  lauf(350);
+  const still = Math.abs(m.x - x0);
+  const x1 = m.x;
+  lauf(250);
+  pruefe(geduckt && still < 1 && x1 - m.x > 40, `Wolf: duckt sich (${still.toFixed(1)} px bewegt), springt dann ${(x1 - m.x).toFixed(0)} px in 0,25 s`);
+}
+// Skelett: zäh (4 Treffer mit Schaden 1) und haut doppelt zu.
+{
+  const { s, m, sp, lauf } = arena('skelett', 22);
+  const leben0 = s.leben;
+  lauf(300);
+  pruefe(leben0 - s.leben === 2, `Skelett trifft mit 2 (${leben0} → ${s.leben})`);
+  let hiebe = 0;
+  s.unverwundbarBis = uhr + 1e6;
+  while (!m.tot && hiebe < 8) {
+    Object.assign(m, { x: s.x + 20, y: s.y, getroffenBis: 0 });
+    s.richtung = 'rechts';
+    s.naechsterHieb = 0;
+    sp.nachricht(s.id, { t: 'hieb', r: 'rechts' });
+    hiebe++;
+  }
+  pruefe(m.tot && hiebe === 4, `Magier braucht ${hiebe} Hiebe für das Skelett`);
+}
+// Fledermaus: fliegt nicht gerade, sondern im Zickzack.
+{
+  const { s, m, lauf } = arena('riesenfledermaus', 130);
+  s.unverwundbarBis = uhr + 1e6;
+  let quer = 0;
+  lauf(1200, () => (quer = Math.max(quer, Math.abs(m.y - zeile9))));
+  pruefe(quer > 6, `Riesenfledermaus weicht ${quer.toFixed(0)} px von der geraden Linie ab`);
+}
+// Eine Art, die es nicht gibt, fällt beim Start auf.
+{
+  const kaputt = JSON.parse(JSON.stringify(tief));
+  kaputt.layers.find((l) => l.objects).objects.find((o) => o.name === 'gegner').properties[0].value = 'drache';
+  let f = '';
+  try {
+    new Spiel({ ...karten, tiefwald: kaputt }, werteWald);
+  } catch (e) {
+    f = e.message;
+  }
+  pruefe(f.includes('drache'), `unbekanntes Monster wird gemeldet („${f}")`);
+}
 
 // --- An die Wand heran, egal bei welcher Bildrate ---
 // Der Busch auf Kachel (8,16) beginnt bei y = 512.

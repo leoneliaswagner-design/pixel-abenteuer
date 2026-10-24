@@ -1,0 +1,131 @@
+{
+  "schleim": {
+    "name": "Schleim",
+    "verhalten": "jagen",
+    "leben": 2,
+    "schaden": 1,
+    "geschwindigkeit": 32,
+    "jagdGeschwindigkeit": 48,
+    "sichtweite": 110,
+    "stossGeschwindigkeit": 240,
+    "stossDauer": 180,
+    "neuErscheinen": 12000,
+    "herzChance": 0.35,
+    "gold": [
+      1,
+      3
+    ],
+    "bildTempo": 4
+  },
+  "riesenratte": {
+    "name": "Riesenratte",
+    "srd": "Giant Rat",
+    "verhalten": "jagen",
+    "leben": 1,
+    "schaden": 1,
+    "geschwindigkeit": 46,
+    "jagdGeschwindigkeit": 74,
+    "sichtweite": 120,
+    "stossGeschwindigkeit": 260,
+    "stossDauer": 160,
+    "neuErscheinen": 10000,
+    "herzChance": 0.2,
+    "gold": [
+      0,
+      1
+    ],
+    "bildTempo": 6
+  },
+  "wolf": {
+    "name": "Wolf",
+    "srd": "Wolf",
+    "verhalten": "anspringen",
+    "leben": 3,
+    "schaden": 1,
+    "geschwindigkeit": 36,
+    "jagdGeschwindigkeit": 56,
+    "sichtweite": 150,
+    "stossGeschwindigkeit": 220,
+    "stossDauer": 180,
+    "neuErscheinen": 15000,
+    "herzChance": 0.4,
+    "gold": [
+      1,
+      3
+    ],
+    "sprung": {
+      "abstand": 90,
+      "laden": 450,
+      "tempo": 240,
+      "dauer": 330,
+      "pause": 900
+    },
+    "bildTempo": 6
+  },
+  "goblin": {
+    "name": "Goblin",
+    "srd": "Goblin",
+    "verhalten": "fernkampf",
+    "leben": 2,
+    "schaden": 1,
+    "geschwindigkeit": 34,
+    "jagdGeschwindigkeit": 46,
+    "sichtweite": 170,
+    "stossGeschwindigkeit": 240,
+    "stossDauer": 180,
+    "neuErscheinen": 15000,
+    "herzChance": 0.35,
+    "gold": [
+      2,
+      5
+    ],
+    "schuss": {
+      "art": "pfeil",
+      "abstand": 110,
+      "tempo": 150,
+      "reichweite": 220,
+      "abklingzeit": 1800,
+      "schaden": 1
+    },
+    "bildTempo": 6
+  },
+  "skelett": {
+    "name": "Skelett",
+    "srd": "Skeleton",
+    "verhalten": "jagen",
+    "leben": 4,
+    "schaden": 2,
+    "geschwindigkeit": 26,
+    "jagdGeschwindigkeit": 36,
+    "sichtweite": 130,
+    "stossGeschwindigkeit": 160,
+    "stossDauer": 140,
+    "neuErscheinen": 20000,
+    "herzChance": 0.5,
+    "gold": [
+      1,
+      4
+    ],
+    "bildTempo": 6
+  },
+  "riesenfledermaus": {
+    "name": "Riesenfledermaus",
+    "srd": "Giant Bat",
+    "verhalten": "flattern",
+    "leben": 1,
+    "schaden": 1,
+    "geschwindigkeit": 50,
+    "jagdGeschwindigkeit": 66,
+    "sichtweite": 140,
+    "stossGeschwindigkeit": 260,
+    "stossDauer": 160,
+    "neuErscheinen": 12000,
+    "herzChance": 0.25,
+    "gold": [
+      0,
+      2
+    ],
+    "zickzack": 1.1,
+    "bildTempo": 10
+  }
+}

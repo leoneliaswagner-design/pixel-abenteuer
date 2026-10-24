@@ -51,6 +51,10 @@
   Schmuck; manche nur für bestimmte Klassen), Heiltrank auf Taste 1,
   Krämerin in Riftside mit Charisma-Preisen, Gold von Schleimen. Alles als
   Daten (`gegenstaende.json`, `laeden.json`). Prüfstand `inventar.mjs`.
+- **Monster als Daten** (`monster.json`, an das SRD angelehnt): Riesenratte,
+  Wolf, Goblin, Skelett, Riesenfledermaus mit vier Verhalten (jagen,
+  fernkampf, anspringen, flattern). Neues Gebiet „tiefer Wald" östlich vom
+  Inselwald. Prüfstand `monster.mjs`.
 
 ## Grundgerüst — als Nächstes
 
@@ -62,7 +66,9 @@
 3. ~~Inventar~~ — offen: Ausrüstung sieht man der Figur noch nicht an;
    Gegenstände fallen nur aus Truhen und aus dem Laden (keine Funde auf dem
    Boden, kein Tauschen zwischen Spielern); Gegenstände der Kampagne eintragen.
-4. **Monster aus dem D&D-SRD** als Daten.
+4. ~~Monster~~ — offen: Monster der Kampagne eintragen; Fledermäuse fliegen
+   noch nicht über Hindernisse; kein Sichtlinien-Test (Goblins schießen
+   durch Bäume nicht, der Pfeil bleibt aber am Baum hängen); Bosse.
 5. **Töne.**
 6. **Handy-Steuerung.**
 7. **Weltkarte der Kampagne** in Gebiete zerlegen (Karte liegt in `konzept/`).
@@ -161,3 +167,8 @@
 - Ein Prüfstand erwartete, der Heiltrank sei „bei vollem Leben" gesperrt —
   aber das neue Kettenhemd hatte die Herzen erhöht, Kai war gar nicht voll.
   Der Prüfstand irrte, nicht das Spiel; jetzt prüft er das Trinken.
+- Jeder Gegner war ein Schleim, auch wenn die Karte etwas anderes sagte:
+  `neuerGegner` las `ort.art`, die Art steht aber in `ort.eig.art`. Fiel
+  nicht auf, solange es nur Schleime gab. Jetzt prüft server-regeln die Arten.
+- Phaser rechnet Winkel in −180…180 um: `setAngle(270)` liest sich als −90.
+  Ein Prüfstand, der Winkel vergleicht, muss das wissen.

@@ -56,10 +56,12 @@ export class Gebiet {
   }
 
   neuerGegner(id, ort) {
-    const art = ort.art ?? 'schleim';
-    const w = this.w.gegner[art];
+    // Die Art steht in den Eigenschaften des Punkts. (Lange las das hier
+    // ort.art — das gab es nie, und jeder Gegner wurde ein Schleim.)
+    const art = ort.eig?.art ?? 'schleim';
+    const w = this.w.monster?.[art];
     if (!w) throw new Error(`Unbekannte Gegnerart „${art}" in „${this.name}"`);
-    return { id, art, w, start: ort, x: ort.x, y: ort.y + 8, leben: w.leben, tot: false, vx: 0, vy: 0, wechselBei: 0, stossBis: 0, getroffenBis: 0 };
+    return { id, art, w, start: ort, x: ort.x, y: ort.y + 8, leben: w.leben, tot: false, vx: 0, vy: 0, wechselBei: 0, stossBis: 0, getroffenBis: 0, phase: null, phaseBis: 0, schussBereit: 0, blick: 'links', takt: Math.random() * 10 };
   }
 
   // Wer noch Klasse und Spezies wählt, ist für das Gebiet nicht da.
@@ -102,6 +104,8 @@ export class Gebiet {
     g.vx = rx * g.w.stossGeschwindigkeit;
     g.vy = ry * g.w.stossGeschwindigkeit;
     g.stossBis = jetzt + g.w.stossDauer;
+    // Ein Treffer unterbricht den Sprung des Wolfs.
+    g.phase = null;
     if (g.leben > 0) {
       this.anAlle({ t: 'gegner_treffer', id: g.id });
       return;
@@ -162,7 +166,15 @@ export class Gebiet {
         p.rest -= (Math.hypot(p.vx, p.vy) * dt) / schritte;
         if (this.welt.istFest(Math.floor(p.x / t), Math.floor(p.y / t))) weg = 'wand';
         else if (p.rest <= 0) weg = 'weit';
-        else {
+        else if (p.feind) {
+          // Pfeil eines Gegners: trifft Spieler. Wer gerade unverwundbar ist,
+          // den fliegt er durch — wie das Blinken nach einem Treffer.
+          const s = this.spieler().find((s) => !s.tot && jetzt >= s.unverwundbarBis && Math.hypot(s.x - p.x, s.y - 10 - p.y) < 12);
+          if (s) {
+            this.spiel.spielerTreffen(s, { x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 6, w: { schaden: p.schaden } }, jetzt);
+            weg = 'treffer';
+          }
+        } else {
           const g = this.gegner.find((g) => !g.tot && Math.hypot(g.x - p.x, g.y - 6 - p.y) < 14);
           if (g) {
             this.gegnerTreffen(g, { id: p.von, x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden);
@@ -193,21 +205,20 @@ export class Gebiet {
       if (jetzt < g.wiederBei) return;
       const nah = hier.some((s) => Math.hypot(s.x - g.start.x, s.y - g.start.y) < 96);
       if (nah) return;
-      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0 });
+      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0, phase: null, sieht: false });
       this.anAlle({ t: 'gegner_neu', id: g.id });
       return;
     }
     let vx, vy;
+    const ziel = jetzt < g.stossBis ? null : naechster(g, hier);
     if (jetzt < g.stossBis) {
       vx = g.vx;
       vy = g.vy;
     } else {
-      const ziel = naechster(g, hier);
-      if (ziel) {
-        const d = Math.hypot(ziel.x - g.x, ziel.y - g.y) || 1;
-        vx = ((ziel.x - g.x) / d) * g.w.jagdGeschwindigkeit;
-        vy = ((ziel.y - g.y) / d) * g.w.jagdGeschwindigkeit;
-      } else {
+      if (ziel) [vx, vy] = (VERHALTEN[g.w.verhalten] ?? VERHALTEN.jagen).call(this, g, ziel, jetzt);
+      else {
+        g.phase = null;
+        g.sieht = false;
         if (jetzt >= g.wechselBei) {
           const r = Object.values(RICHTUNGEN)[Math.floor(Math.random() * 4)];
           const steht = Math.random() < 0.35;
@@ -221,6 +232,11 @@ export class Gebiet {
     }
     const neu = bewege(this.welt, g.x, g.y, vx * dt, vy * dt);
     if (neu.gestossen && jetzt >= g.stossBis) g.wechselBei = 0;
+    // Ein Sprung gegen die Wand ist zu Ende.
+    if (neu.gestossen && g.phase === 'springen') g.phaseBis = jetzt;
+    // Blickrichtung fürs Bild: wohin er läuft, sonst zum Ziel.
+    const blickX = Math.abs(vx) > 1 ? vx : ziel ? ziel.x - g.x : 0;
+    if (blickX) g.blick = blickX < 0 ? 'links' : 'rechts';
     g.x = neu.x;
     g.y = neu.y;
 
@@ -238,11 +254,72 @@ export class Gebiet {
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
       })),
-      geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot })),
+      // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
+      // fliegende Pfeile der Goblins dreht er danach.
+      geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
     };
   }
+}
+
+// Wie ein Gegner sich bewegt, wenn er jemanden sieht — „verhalten" in
+// monster.json. Jede Funktion gibt die Geschwindigkeit [vx, vy] zurück.
+const VERHALTEN = {
+  jagen(g, z) {
+    return zu(g, z, g.w.jagdGeschwindigkeit);
+  },
+
+  // Goblin: hält Abstand und schießt. Der erste Schuss kommt nicht sofort,
+  // sonst träfe er jeden, der gerade um die Ecke kommt.
+  fernkampf(g, z, jetzt) {
+    const s = g.w.schuss, d = Math.hypot(z.x - g.x, z.y - g.y);
+    if (!g.sieht) g.schussBereit = Math.max(g.schussBereit, jetzt + 700);
+    g.sieht = true;
+    if (jetzt >= g.schussBereit && d <= s.reichweite) {
+      g.schussBereit = jetzt + s.abklingzeit;
+      const dx = (z.x - g.x) / (d || 1), dy = (z.y - g.y) / (d || 1);
+      this.geschossAbfeuern({
+        von: g.id, feind: true, art: s.art, x: g.x + dx * 10, y: g.y - 10 + dy * 10, vx: dx * s.tempo, vy: dy * s.tempo,
+        rest: s.reichweite, schaden: s.schaden, richtung: Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'links' : 'rechts') : dy < 0 ? 'oben' : 'unten',
+      });
+    }
+    if (d < s.abstand - 24) return zu(g, z, -g.w.jagdGeschwindigkeit);
+    if (d > s.abstand + 24) return zu(g, z, g.w.jagdGeschwindigkeit);
+    return [0, 0];
+  },
+
+  // Wolf: schleicht heran, duckt sich (laden — der Browser zeigt es), springt
+  // geradeaus und verschnauft. Wer das Ducken sieht, kann ausweichen.
+  anspringen(g, z, jetzt) {
+    const s = g.w.sprung;
+    if (g.phase && jetzt >= g.phaseBis) {
+      if (g.phase === 'laden') [g.phase, g.phaseBis] = ['springen', jetzt + s.dauer];
+      else if (g.phase === 'springen') [g.phase, g.phaseBis] = ['ruhe', jetzt + s.pause];
+      else g.phase = null;
+    }
+    if (g.phase === 'laden' || g.phase === 'ruhe') return [0, 0];
+    if (g.phase === 'springen') return [g.sprungX * s.tempo, g.sprungY * s.tempo];
+    const d = Math.hypot(z.x - g.x, z.y - g.y);
+    if (d < s.abstand) {
+      [g.phase, g.phaseBis] = ['laden', jetzt + s.laden];
+      [g.sprungX, g.sprungY] = [(z.x - g.x) / (d || 1), (z.y - g.y) / (d || 1)];
+      return [0, 0];
+    }
+    return zu(g, z, g.w.jagdGeschwindigkeit);
+  },
+
+  // Fledermaus: auf das Ziel zu, aber im Zickzack quer dazu.
+  flattern(g, z, jetzt) {
+    const [vx, vy] = zu(g, z, g.w.jagdGeschwindigkeit);
+    const quer = Math.sin(jetzt / 1000 * 7 + g.takt) * (g.w.zickzack ?? 1);
+    return [vx - vy * quer, vy + vx * quer];
+  },
+};
+
+function zu(g, z, tempo) {
+  const d = Math.hypot(z.x - g.x, z.y - g.y) || 1;
+  return [((z.x - g.x) / d) * tempo, ((z.y - g.y) / d) * tempo];
 }
 
 function naechster(g, hier) {

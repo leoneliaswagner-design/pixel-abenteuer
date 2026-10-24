@@ -161,6 +161,28 @@ probe client/index.html "#fenster .kasten { margin: auto; width: 100%; max-width
 probe client/index.html "      .symbol.leer { background-image: none; }" "" pruefstand/inventar.mjs \
   "leere Plätze zeigen das Bildblatt gekachelt"
 
+# Monster (monster.json)
+probe server/gebiet.js "    const art = ort.eig?.art ?? 'schleim';" "    const art = 'schleim';" pruefstand/server-regeln.mjs \
+  "jedes Monster wird ein Schleim"
+probe server/gebiet.js "if (!g.sieht) g.schussBereit = Math.max(g.schussBereit, jetzt + 700);" "" pruefstand/server-regeln.mjs \
+  "Goblin schießt im selben Augenblick, in dem er einen sieht"
+probe server/gebiet.js "const s = this.spieler().find((s) => !s.tot && jetzt >= s.unverwundbarBis && Math.hypot(s.x - p.x, s.y - 10 - p.y) < 12);" "const s = null;" pruefstand/monster.mjs \
+  "Goblin-Pfeile treffen niemanden"
+probe server/gebiet.js "    if (d < s.abstand - 24) return zu(g, z, -g.w.jagdGeschwindigkeit);" "" pruefstand/server-regeln.mjs \
+  "Goblin weicht nicht zurück"
+probe server/gebiet.js "    if (g.phase === 'laden' || g.phase === 'ruhe') return [0, 0];" "    if (g.phase === 'ruhe') return [0, 0];" pruefstand/server-regeln.mjs \
+  "Wolf springt ohne sich zu ducken"
+probe server/gebiet.js "const quer = Math.sin(jetzt / 1000 * 7 + g.takt) * (g.w.zickzack ?? 1);" "const quer = 0;" pruefstand/server-regeln.mjs \
+  "Fledermaus fliegt geradeaus"
+probe server/gebiet.js "tot: g.tot, b: g.blick, z: g.phase })" "tot: g.tot, b: g.blick })" pruefstand/monster.mjs \
+  "der Browser erfährt nicht, dass der Wolf sich duckt"
+probe client/szenen/Spiel.js "        if (!this.textures.exists(art)) this.load.spritesheet(art," "        if (art === 'schleim') this.load.spritesheet(art," pruefstand/monster.mjs \
+  "Monsterbilder werden nicht geladen"
+probe client/szenen/Spiel.js "      if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);" "      if (false) e.sprite.anims.stop();" pruefstand/monster.mjs \
+  "geduckter Wolf sieht aus wie ein laufender"
+probe client/szenen/Spiel.js "      e.sprite.setFlipX(g.b === 'rechts');" "" pruefstand/monster.mjs \
+  "Monster laufen rückwärts nach rechts"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

@@ -7,7 +7,8 @@
     "haus_pip",
     "wald",
     "hoehle",
-    "tempel"
+    "tempel",
+    "tiefwald"
   ],
   "aussehen": [
     "alter_mann",
@@ -32,23 +33,6 @@
     "wiederbelebung": 3000,
     "schonfrist": 1500,
     "ansturmTempo": 260
-  },
-  "gegner": {
-    "schleim": {
-      "leben": 2,
-      "schaden": 1,
-      "geschwindigkeit": 32,
-      "jagdGeschwindigkeit": 48,
-      "sichtweite": 110,
-      "stossGeschwindigkeit": 240,
-      "stossDauer": 180,
-      "neuErscheinen": 12000,
-      "herzChance": 0.35,
-      "gold": [
-        1,
-        3
-      ]
-    }
   },
   "busch": {
     "nachwachsen": 30000,

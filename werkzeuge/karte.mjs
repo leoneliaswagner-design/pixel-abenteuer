@@ -175,8 +175,10 @@ JJJJJJuJJJJJ
     uebergaenge: {
       E: { ziel: 'hoehle', ankunft: 'von_oben' },
       P: { ziel: 'riftside', ankunft: 'vom_wald', kachel: 'weg' },
+      // Q: nach Osten in den tiefen Wald, wo die Monster aus monster.json wohnen.
+      Q: { ziel: 'tiefwald', ankunft: 'vom_inselwald', kachel: 'gras' },
     },
-    ankuenfte: { a: { id: 'von_hoehle', richtung: 'unten' }, w: { id: 'von_riftside', richtung: 'oben' } },
+    ankuenfte: { a: { id: 'von_hoehle', richtung: 'unten' }, w: { id: 'von_riftside', richtung: 'oben' }, z: { id: 'vom_tiefwald', richtung: 'links' } },
     // Dinge in der Reihenfolge, in der sie in der Textkarte stehen (zeilenweise).
     dinge: {
       '!': [{ text: 'Willkommen, Abenteurer!\n\nIm Südosten liegt eine alte Ruine. Man sagt, unter ihr beginne eine Höhle.' }],
@@ -198,9 +200,9 @@ T..,..............~~~~.......""""".....T
 T.....b..T........~~~~...T....""""".,..T
 T..*..............~~~~........"""""....T
 T.........,...b..~~~~~...,.....g...o...T
-T.T....*.........~~~~......*...........T
-T....b......o....~~~~..........b....T..T
-T.....!..,..@....~~~~...o..............T
+T.T....*.........~~~~......*...........Q
+T....b......o....~~~~..........b....Tz.Q
+T.....!..,..@....~~~~...o..............Q
 T..T....S........~~~~....,........*....T
 T...=============HHHH=============.....T
 T...=......S.....~~~~..........=.......T
@@ -244,6 +246,41 @@ X::g:::::XXXX::::g:::XXXXXXX
 X::::::::::::::::::::XXXXXXX
 X::::::::::a:::::::::XXXXXXX
 XXXXXXXXXXXAXXXXXXXXXXXXXXXX
+`,
+  },
+  // Östlich vom Inselwald: hier stehen die Monster aus monster.json, damit
+  // Wald und Höhle ruhig bleiben (und die Prüfstände dort vorhersehbar).
+  tiefwald: {
+    titel: 'den tiefen Wald',
+    grund: 'gras',
+    uebergaenge: { Q: { ziel: 'wald', ankunft: 'vom_tiefwald', kachel: 'gras' } },
+    ankuenfte: { z: { id: 'vom_inselwald', richtung: 'rechts' } },
+    gegner: ['riesenratte', 'riesenratte', 'goblin', 'wolf', 'riesenfledermaus', 'riesenfledermaus', 'skelett', 'goblin', 'wolf', 'skelett'],
+    dinge: {
+      '!': [{ text: 'Vorsicht!\n\nHinter diesem Schild beginnt der tiefe Wald.' }],
+      '$': [{ inhalt: 'heiltrank', id: 'tiefwald_trank' }],
+    },
+    text: `
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+T....b.......T.......,....b.$T
+T..g.....,.......g.......T...T
+T......T.....""""".....g.....T
+T.,..........""""".......,...T
+T......o...........T.........T
+T...b......,..........o....g.T
+T........T.......~~~~........T
+Q.z.!............~~~~...T....T
+Q.......g........~~~~........T
+Q........,...T...~~~~....,...T
+T.....b..........~~~~.g......T
+T..T........o.........b...g..T
+T.........,......T...........T
+T...g.......""""".......T....T
+T.......T...""""".....,......T
+T.,..............b.......g...T
+T......b.....g........o......T
+T...T.............,......b...T
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 `,
   },
   tempel: {
@@ -328,7 +365,14 @@ function karteBauen(name, def) {
         const eig = def.dinge?.[z]?.[n];
         if (!eig) throw new Error(`${name}: Ding '${z}' Nr. ${n + 1} bei ${x},${y} hat keine Angaben in „dinge"`);
         ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, v)) });
-      } else if (z === 'g') ort({ name: 'gegner', point: true, ...mitte(x, y), properties: [eigenschaft('art', 'schleim')] });
+      } else if (z === 'g') {
+        // „gegner": Liste der Arten in der Reihenfolge der „g" (zeilenweise);
+        // ohne Liste sind es Schleime.
+        const n = (gezaehlt.g = (gezaehlt.g ?? 0) + 1) - 1;
+        const art = def.gegner ? def.gegner[n] : 'schleim';
+        if (!art) throw new Error(`${name}: Gegner Nr. ${n + 1} bei ${x},${y} hat keine Art in „gegner"`);
+        ort({ name: 'gegner', point: true, ...mitte(x, y), properties: [eigenschaft('art', art)] });
+      }
       else if (def.ankuenfte?.[z]) {
         const a = nimm(def.ankuenfte, z, x, y);
         ort({ name: 'ankunft', point: true, ...mitte(x, y), properties: [eigenschaft('id', a.id), ...(a.richtung ? [eigenschaft('richtung', a.richtung)] : [])] });

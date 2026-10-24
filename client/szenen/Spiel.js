@@ -54,7 +54,14 @@ export class SpielSzene extends Phaser.Scene {
         if (!this.textures.exists(`held-${k}-${f}`)) this.load.spritesheet(`held-${k}-${f}`, `grafik/held-${k}-${f}.png`, { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet('geschosse', 'grafik/geschosse.png', { frameWidth: 16, frameHeight: 16 });
     this.load.image('funke', 'grafik/funke.png');
-    this.load.spritesheet('schleim', 'grafik/schleim.png', { frameWidth: 32, frameHeight: 32 });
+    // Monster: welche es gibt, steht in monster.json — geladen wie die Leute.
+    this.load.json('monster', 'daten/monster.json');
+    const monsterLaden = (liste) => {
+      for (const art of Object.keys(liste))
+        if (!this.textures.exists(art)) this.load.spritesheet(art, `grafik/${art}.png`, { frameWidth: 32, frameHeight: 32 });
+    };
+    if (this.cache.json.exists('monster')) monsterLaden(this.cache.json.get('monster'));
+    else this.load.once('filecomplete-json-monster', (schluessel, art, liste) => monsterLaden(liste));
     this.load.spritesheet('herz', 'grafik/herz.png', { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet('rauch', 'grafik/rauch.png', { frameWidth: 24, frameHeight: 24 });
     this.load.spritesheet('blaetter', 'grafik/blaetter.png', { frameWidth: 8, frameHeight: 8 });
@@ -83,11 +90,6 @@ export class SpielSzene extends Phaser.Scene {
     this.faehigkeitBereit ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
-    // Wie schnell welches Geschoss fliegt: der Stand kommt nur alle 50 ms,
-    // dazwischen rechnet der Browser weiter (ein Pfeil springt sonst 16 px).
-    this.geschossTempo = {};
-    for (const k of Object.values(wk.auswahl?.klassen ?? {}))
-      if (k.faehigkeit?.art === 'geschoss') this.geschossTempo[k.faehigkeit.geschoss] = k.faehigkeit.tempo;
     this.ich.x = wk.x;
     this.ich.y = wk.y;
     this.ich.richtung = wk.r ?? 'unten';
@@ -189,7 +191,10 @@ export class SpielSzene extends Phaser.Scene {
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key })),
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
-        gegner: [...this.gegner.entries()].map(([id, g]) => ({ id, x: g.x, y: g.y, sichtbar: g.sprite.visible })),
+        gegner: [...this.gegner.entries()].map(([id, g]) => ({
+          id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
+          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt,
+        })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
         hinweis: this.hinweis.visible,
@@ -353,10 +358,15 @@ export class SpielSzene extends Phaser.Scene {
       da.add(p.id);
       let g = this.geschosse.get(p.id);
       if (!g) {
-        const bild = this.add.image(p.x, p.y, 'geschosse', GESCHOSS_BILD[p.art] ?? 0).setAngle(WINKEL[p.r] ?? 0);
-        g = { art: p.art, r: p.r, bild };
+        // Gedreht nach der Flugrichtung — Goblins schießen auch schräg.
+        const winkel = p.vx || p.vy ? (Math.atan2(p.vy, p.vx) * 180) / Math.PI : WINKEL[p.r] ?? 0;
+        const bild = this.add.image(p.x, p.y, 'geschosse', GESCHOSS_BILD[p.art] ?? 0).setAngle(winkel);
+        g = { art: p.art, bild };
         this.geschosse.set(p.id, g);
       }
+      // Der Stand kommt nur alle 50 ms; dazwischen rechnet der Browser mit
+      // vx/vy weiter (ein Pfeil sprang sonst 16 px auf einmal).
+      Object.assign(g, { vx: p.vx ?? 0, vy: p.vy ?? 0 });
       g.bild.setPosition(p.x, p.y);
     }
     for (const [id, g] of this.geschosse)
@@ -524,8 +534,10 @@ export class SpielSzene extends Phaser.Scene {
       let e = this.gegner.get(g.id);
       if (!e) {
         const schatten = this.add.image(g.x, g.y, 'schatten');
+        if (!this.anims.exists(g.art))
+          this.anims.create({ key: g.art, frames: this.anims.generateFrameNumbers(g.art, { frames: [0, 1] }), frameRate: this.cache.json.get('monster')?.[g.art]?.bildTempo ?? 6, repeat: -1 });
         const sprite = this.add.sprite(g.x, g.y, g.art).setOrigin(0.5, 1).play(g.art);
-        e = { x: g.x, y: g.y, sprite, schatten };
+        e = { x: g.x, y: g.y, art: g.art, sprite, schatten };
         this.gegner.set(g.id, e);
       }
       // Ein Gegner, der wieder erscheint, springt an seinen Startpunkt —
@@ -536,6 +548,14 @@ export class SpielSzene extends Phaser.Scene {
       }
       e.zielX = g.x;
       e.zielY = g.y;
+      // Die Bilder schauen nach links; nach rechts wird gespiegelt.
+      e.blick = g.b;
+      e.sprite.setFlipX(g.b === 'rechts');
+      // Der Wolf duckt sich vor dem Sprung — drittes Bild, und er zittert.
+      // So sieht man den Sprung kommen und kann ausweichen.
+      e.duckt = g.z === 'laden';
+      if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
+      else if (!e.sprite.anims.isPlaying) e.sprite.play(g.art);
       e.sprite.setVisible(!g.tot);
       e.schatten.setVisible(!g.tot);
     }
@@ -586,16 +606,14 @@ export class SpielSzene extends Phaser.Scene {
       b.bild.setAlpha(dahinter ? 0.55 : 1);
     }
     for (const g of this.geschosse.values()) {
-      const [vx, vy] = { rechts: [1, 0], links: [-1, 0], unten: [0, 1], oben: [0, -1] }[g.r] ?? [0, 0];
-      const v = (this.geschossTempo[g.art] ?? 0) * dt;
-      g.bild.x += vx * v;
-      g.bild.y += vy * v;
+      g.bild.x += g.vx * dt;
+      g.bild.y += g.vy * dt;
       g.bild.setDepth(20 + g.bild.y);
       if (g.art === 'feuerball') g.bild.setFrame(2 + (Math.floor(jetzt / 90) % 2));
     }
     for (const g of this.gegner.values()) {
       gleiten(g);
-      g.sprite.setPosition(g.x, g.y + 2).setDepth(10 + g.y);
+      g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
       g.schatten.setPosition(g.x, g.y).setDepth(9);
     }
   }

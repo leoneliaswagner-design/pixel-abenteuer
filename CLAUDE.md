@@ -45,6 +45,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   als `inventar` (mit neuen Werten) zurück; der Browser rechnet nichts
   selbst. Regeln, die beide brauchen (Platz, Preise, wer was tragen darf),
   stehen in `gemeinsam/regeln.js`. Neue Daten-Dateien in `ZUSATZDATEN`.
+- **Monster**: `monster.json`, Verhalten in `VERHALTEN` (server/gebiet.js).
+  Gegner-Pfeile sind Geschosse mit `feind: true` und treffen Spieler. Neue
+  Monster nur in Gebieten, die kein Prüfstand für Ruhe braucht — der tiefe
+  Wald ist dafür da; Wald und Höhle bleiben bei Schleimen.
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -81,6 +85,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/inventar.mjs` — Krämerin, kaufen, gesperrte Knöpfe mit
   Grund, anlegen, Trank auf 1, leere Herzen am Bildpunkt, Spielstand-Datei,
   Ladenfenster bei 360 Punkten.
+- `node pruefstand/monster.mjs` — alle Monsterbilder geladen und gespiegelt,
+  Goblin-Pfeil trifft im Browser, Wolf duckt sich sichtbar.
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner

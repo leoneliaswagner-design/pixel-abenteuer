@@ -20,8 +20,7 @@ const SCHWERT = {
 // Animationen gehören dem ganzen Spiel, nicht der Szene — nach einem
 // Gebietswechsel sind sie schon da.
 export function animationenAnlegen(szene) {
-  if (szene.anims.exists('schleim')) return;
-  szene.anims.create({ key: 'schleim', frames: szene.anims.generateFrameNumbers('schleim', { frames: [0, 1] }), frameRate: 4, repeat: -1 });
+  if (szene.anims.exists('rauch')) return;
   szene.anims.create({ key: 'rauch', frames: szene.anims.generateFrameNumbers('rauch', { frames: [0, 1, 2] }), frameRate: 14 });
   szene.anims.create({ key: 'riss', frames: szene.anims.generateFrameNumbers('riss', { frames: [0, 1, 2, 3] }), frameRate: 7, repeat: -1 });
 }

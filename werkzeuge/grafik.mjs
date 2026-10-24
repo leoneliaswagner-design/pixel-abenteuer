@@ -1159,6 +1159,124 @@ for (const [klasse, k] of Object.entries(KLASSEN))
   blatt.speichern(ziel + 'schleim.png');
 }
 
+// ---------- Monster aus monster.json: Seitenansicht, Blick nach links ----------
+// Der Browser spiegelt sie, wenn sie nach rechts laufen. Zwei Laufbilder;
+// der Wolf hat ein drittes (geduckt, kurz vor dem Sprung).
+function monsterBlatt(name, bilder) {
+  const blatt = new Bild(32 * bilder.length, 32);
+  bilder.forEach((zeichnen, i) => {
+    const b = new Bild(32, 32);
+    zeichnen(b);
+    b.umriss(UMRISS);
+    blatt.einfuegen(b, i * 32, 0);
+  });
+  blatt.speichern(ziel + `${name}.png`);
+}
+
+{
+  const fell = '#8a7a6a', fellDunkel = '#5e5248', rosa = '#e8a0a8';
+  const ratte = (schritt) => (b) => {
+    b.rechteck(24, 22, 4, 1, rosa); // Schwanz
+    b.rechteck(27, 19, 1, 3, rosa);
+    b.rechteck(28, 18, 2, 1, rosa);
+    b.ellipse(17, 23, 8, 4.5, fell);
+    b.ellipse(17, 25, 7, 2.5, fellDunkel, (x, y) => y > 25);
+    b.ellipse(9, 21, 4.5, 3.5, fell);
+    b.rechteck(4, 21, 3, 2, fell);
+    b.setze(3, 21, rosa);
+    b.ellipse(10, 17.5, 2, 2, rosa);
+    b.rechteck(8, 20, 2, 1, UMRISS);
+    for (const [x, d] of [[11, schritt], [15, -schritt], [20, schritt], [23, -schritt]]) b.rechteck(x + d, 27, 2, 2, fellDunkel);
+  };
+  monsterBlatt('riesenratte', [ratte(0), ratte(1)]);
+}
+
+{
+  const grau = '#8c8c98', hell = '#b8b8c4', dunkel = '#5c5c6a';
+  const wolf = (schritt, geduckt = false) => (b) => {
+    const tief = geduckt ? 3 : 0;
+    b.rechteck(26, 12 + tief, 3, 7, grau); // Schwanz
+    b.rechteck(28, 10 + tief, 2, 3, hell);
+    b.ellipse(18, 18 + tief, 10, 5.5, grau);
+    b.ellipse(18, 21 + tief, 8, 2.5, hell, (x, y) => y > 20 + tief);
+    b.ellipse(8, 14 + tief, 5, 4.5, grau);
+    b.rechteck(1, 15 + tief, 5, 3, grau); // Schnauze
+    b.setze(1, 15 + tief, UMRISS);
+    b.rechteck(7, 7 + tief, 2, 4, dunkel); // Ohren
+    b.rechteck(10, 7 + tief, 2, 4, dunkel);
+    b.rechteck(6, 13 + tief, 2, 2, '#f0d040');
+    if (!geduckt)
+      for (const [x, d] of [[10, schritt], [14, -schritt], [21, schritt], [25, -schritt]]) b.rechteck(x + d, 23, 2, 6, dunkel);
+    else for (const x of [9, 13, 21, 25]) b.rechteck(x, 26, 3, 3, dunkel);
+  };
+  monsterBlatt('wolf', [wolf(0), wolf(1), wolf(0, true)]);
+}
+
+{
+  const haut = '#7cae4a', hautDunkel = '#557a32', tunika = '#7a5a3a';
+  const goblin = (schritt) => (b) => {
+    b.rechteck(12 + schritt, 25, 3, 4, P.stiefel);
+    b.rechteck(17 - schritt, 25, 3, 4, P.stiefel);
+    b.rechteck(11, 17, 10, 9, tunika);
+    b.rechteck(11, 22, 10, 1, P.guertel);
+    b.ellipse(15, 11, 6.5, 6, haut);
+    b.rechteck(5, 8, 4, 2, haut); // spitzes Ohr
+    b.rechteck(3, 7, 2, 1, haut);
+    b.rechteck(21, 8, 3, 2, hautDunkel);
+    b.rechteck(10, 10, 2, 2, '#f8e040');
+    b.setze(10, 10, UMRISS);
+    b.rechteck(9, 14, 4, 1, hautDunkel);
+    // Bogen in der vorderen Hand
+    b.rechteck(7, 16, 3, 3, haut);
+    for (let y = 12; y < 26; y++) b.setze(5 - (y > 15 && y < 22 ? 1 : 0), y, P.holz);
+    for (let y = 13; y < 25; y++) b.setze(6, y, '#e0e0d0');
+  };
+  monsterBlatt('goblin', [goblin(0), goblin(1)]);
+}
+
+{
+  const knochen = '#e8e4d4', schatten = '#a8a494';
+  const skelett = (schritt) => (b) => {
+    b.rechteck(12 + schritt, 21, 2, 8, knochen);
+    b.rechteck(18 - schritt, 21, 2, 8, knochen);
+    b.rechteck(11, 27, 3, 2, knochen);
+    b.rechteck(17, 27, 3, 2, knochen);
+    b.rechteck(15, 13, 2, 9, knochen); // Wirbelsäule
+    for (const y of [14, 16, 18]) b.rechteck(11, y, 10, 1, knochen);
+    b.rechteck(12, 20, 8, 2, schatten);
+    b.rechteck(8, 14 - schritt, 2, 7, knochen); // Arme
+    b.rechteck(22, 14 + schritt, 2, 7, knochen);
+    b.ellipse(15, 8, 6, 5.5, knochen);
+    b.rechteck(11, 11, 8, 2, knochen);
+    b.rechteck(11, 7, 3, 3, UMRISS);
+    b.rechteck(16, 7, 3, 3, UMRISS);
+    b.setze(12, 8, '#e04040');
+    b.rechteck(12, 12, 6, 1, schatten);
+  };
+  monsterBlatt('skelett', [skelett(0), skelett(1)]);
+}
+
+{
+  const fluegel = '#5a3a6a', koerper = '#3e2a4a', haut = '#8a6a9a';
+  const fledermaus = (oben) => (b) => {
+    // Höher im Bild: sie fliegt. Darunter malt der Browser den Schatten.
+    b.ellipse(16, 12, 4.5, 5, koerper);
+    b.rechteck(13, 5, 2, 3, koerper);
+    b.rechteck(18, 5, 2, 3, koerper);
+    b.rechteck(13, 10, 2, 2, '#ff4040');
+    b.rechteck(17, 10, 2, 2, '#ff4040');
+    for (const seite of [-1, 1]) {
+      for (let i = 0; i < 11; i++) {
+        const x = 16 + seite * (5 + i);
+        const y = oben ? 10 - Math.round(i * 0.6) : 12 + Math.round(i * 0.4);
+        b.rechteck(Math.min(x, x + seite), y, 1, 4 - (i % 3 === 2 ? 2 : 0), fluegel);
+        if (i % 3 === 0) b.setze(x, y, haut);
+      }
+    }
+  };
+  monsterBlatt('riesenfledermaus', [fledermaus(true), fledermaus(false)]);
+}
+
 // ---------- Herzen 16×16: voll, halb, leer ----------
 {
   const form = [

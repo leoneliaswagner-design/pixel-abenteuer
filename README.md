@@ -25,6 +25,29 @@ E oder Enter zum Lesen, Ansprechen und Öffnen (und zum Weiterblättern),
 Q oder K für die Fähigkeit der Klasse, I für den Rucksack (oder der Knopf
 unten rechts), 1 trinkt einen Heiltrank, Esc schließt Fenster.
 
+## Monster
+
+Östlich vom Inselwald liegt **der tiefe Wald** — dort wohnen die Monster.
+Sie sind an das D&D-SRD angelehnt (System Reference Document 5.1,
+CC BY 4.0) und stehen als Daten in `inhalte/daten/monster.json`:
+
+| Monster | SRD | Verhalten |
+|---|---|---|
+| Schleim | — | jagt langsam (Inselwald, Höhle, Tempel) |
+| Riesenratte | Giant Rat | jagt schnell, hält wenig aus |
+| Wolf | Wolf | duckt sich kurz (zittert), dann springt er — ausweichen! |
+| Goblin | Goblin | hält Abstand und schießt Pfeile |
+| Skelett | Skeleton | langsam, zäh (4 Treffer), trifft doppelt |
+| Riesenfledermaus | Giant Bat | fliegt im Zickzack auf einen zu |
+
+Jedes Monster hat Leben, Schaden, Tempo, Sichtweite, Beute (`gold`),
+Herz-Chance und ein `verhalten`: `jagen`, `fernkampf`, `anspringen` oder
+`flattern`. Ein neues Monster ist ein Eintrag dort und ein Bild
+`inhalte/grafik/<name>.png` (32×32, zwei Bilder nebeneinander, Blick nach
+links). Auf einer Karte ist ein Gegner ein Punkt `gegner` mit der
+Eigenschaft `art`; im Kartengenerator nimmt die Liste `gegner` die Arten
+der `g` der Reihe nach.
+
 ## Rucksack, Ausrüstung, Laden
 
 - **Rucksack** (I): 12 Plätze, jede Art Gegenstand belegt einen, egal wie
@@ -182,6 +205,7 @@ node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempe
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
+node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
 node pruefstand/karten.mjs          # Kartengenerator: Boden unter Dingen, jeder Übergang kommt an
 UEBER_HTTPS=1 node pruefstand/zwei-spieler.mjs   # dasselbe hinter https, wie im Tunnel
 sh pruefstand/gegenprobe.sh         # macht absichtlich etwas kaputt — die Prüfungen müssen anschlagen
