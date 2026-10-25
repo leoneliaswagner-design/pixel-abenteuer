@@ -49,6 +49,54 @@ die Risse und müssen die Stadt retten.
   eigene Grafik, eigene Rätsel (ein rollender Felsbrocken im Tempel darf
   natürlich nicht fehlen).
 
+## Das Setting (vom Spielleiter, 25.10.2026)
+
+**Ton und Vorbilder:** eine Mischung aus *One Piece*, *Star Wars* und
+*Gravity Falls*, dazu eine Prise *Warhammer 40k* für den Hintergrund und
+für coole Technik.
+
+**Kräfte:** Als Kräftesystem dienen
+- **die Macht** aus *Star Wars*: Der Spielleiter hat alle beschriebenen
+  Machtfähigkeiten recherchiert und eingeteilt. Diese Liste kommt noch.
+- **eine eigene Spielart der Teufelsfrüchte** aus *One Piece*: Einzelheiten
+  kommen noch.
+
+**Vorgeschichte:**
+1. Vor Tausenden von Jahren, im goldenen Zeitalter der Menschheit, lernte
+   ein genialer Wissenschaftler, die **vier Grundkräfte des Universums** zu
+   beherrschen. Die Macht verdarb ihn. Er stürzte die Galaxis in einen
+   gewaltigen Krieg und wurde als **Nemroth** bekannt.
+2. Ein mächtiger Krieger besiegte ihn schließlich und verbannte ihn in eine
+   **Spiegeldimension**.
+3. Der Krieg hatte die Galaxis zerstört. Die Menschen suchten sich eine neue
+   Heimat und fanden einen geeigneten Planeten. Ein mächtiger
+   **Terraformer** machte ihn bewohnbar.
+4. Wegen des Geschehenen wurde **Technologie verbannt**. Die Menschheit fiel
+   in ein eher mittelalterliches Zeitalter zurück und vergaß, woher sie
+   einst kam.
+5. Über die Jahrtausende veränderte der Terraformer die Lebewesen des
+   Planeten, und es entstanden **neue Arten**. Auch die Macht und die
+   Teufelsfrüchte bekommen ihre Kraft von diesem Gerät, das die Realität
+   verändern kann.
+
+**Jetzt:** Kultisten, Anhänger Nemroths, wollen ihn zurückholen. Die Spieler
+müssen das verhindern. Es gibt noch Kleinigkeiten, die nach und nach kommen.
+
+### Was das fürs Spiel heißen könnte (noch nicht entschieden)
+
+- Das mittelalterliche Aussehen von Riftside und den Inseln passt. Technik
+  wäre dann etwas Altes, Verbotenes: Fundstücke, Ruinen, Kultisten mit
+  Geräten.
+- Die Spezies im Spiel (bisher D&D-artig) könnten die „neuen Arten" des
+  Terraformers werden. Was der Spielleiter dazu festlegt, ersetzt
+  `spezies.json`.
+- Klassen und Fähigkeiten (bisher Kämpfer, Schurke, Magier, Kleriker,
+  Waldläufer) könnten sich nach Macht und Teufelsfrüchten richten, sobald
+  die Einteilung da ist.
+- **Ob die Dimensionsrisse mit Nemroth, der Spiegeldimension, dem
+  Terraformer oder den Kultisten zusammenhängen, ist offen.** Das entscheidet
+  der Spielleiter; nichts davon ist im Spiel eingebaut.
+
 ## Offene Fragen
 
 - Namen der Kontinente und der Startinsel. (Die Hafenstadt heißt **Riftside**
@@ -59,6 +107,9 @@ die Risse und müssen die Stadt retten.
 - ~~Wie reist man zwischen den Inseln?~~ Mit Booten und Schiffen; man muss sich
   selbst mit Karte und Kompass orientieren (eingebaut: Ruderboot, Dunst,
   Kompass, Weltkarte ohne eigenen Punkt auf See).
-- Homebrew-Klassen und -Spezies.
+- Homebrew-Klassen und -Spezies: die neuen Arten des Terraformers, die
+  Einteilung der Machtfähigkeiten, die eigene Spielart der Teufelsfrüchte.
+- Hängen die Risse mit Nemroth, der Spiegeldimension, dem Terraformer oder
+  den Kultisten zusammen? Wo kommen Kultisten vor?
 - ~~Gehören Schlüssel dem Finder oder der Gruppe?~~ Der Gruppe (gemeinsamer
   Schlüsselbund), vorerst.
