@@ -82,6 +82,37 @@ für coole Technik.
 **Jetzt:** Kultisten, Anhänger Nemroths, wollen ihn zurückholen. Die Spieler
 müssen das verhindern. Es gibt noch Kleinigkeiten, die nach und nach kommen.
 
+### Die Macht
+
+Der ganze Skilltree steht in [`macht.md`](macht.md), das Original liegt
+daneben (`Der_Macht_Skilltree.pptx`): acht Äste (Wahrnehmung, Kommunikation,
+Telekinese, Bewegung und Verstärkung, Lebensenergie & Medizin,
+Energiemanipulation & Elemente, Transformation & Täuschung, Willenskraft).
+
+### Konzeptsteine (statt Teufelsfrüchten)
+
+- Steine, die je **ein Konzept verkörpern** und dem Träger die Kontrolle
+  darüber geben: Feuer, Gummi, Freundschaft …
+- Ihre Kraft kommt aus dem **Terraformer**.
+- Der Träger muss sich mit dem Stein **verbinden**. Die Bindung kann er
+  willentlich wieder lösen.
+- **Je länger** man den Stein trägt, **desto stärker** werden die Kräfte.
+- Wer eine Bindung aufgibt, muss warten, bevor er eine neue eingehen kann —
+  **umso länger, je länger die alte bestand**.
+- Ein Träger hat immer **nur eine Bindung**; es gibt **Relikte**, mit denen
+  man mehrere haben kann.
+- Wer eine Bindung eingeht, dessen **Wichtigstes wird zu seiner größten
+  Schwäche**.
+
+### Die Risse in Riftside
+
+Sie stammen von einem **antiken Gerät, das in einer Krypta unter der Stadt
+versteckt** ist. Kultisten wollten es in Betrieb nehmen und haben dabei aus
+Versehen die Risse erzeugt. Das hat **nichts direkt mit Nemroth** zu tun —
+aber die Kultisten wollen das Gerät benutzen, um ihn zu befreien.
+(Im Chat stand „antiken temporär" und „Krippe" — gemeint vermutlich ein
+Teleporter oder Zeitgerät und eine Krypta; Name des Geräts offen.)
+
 ### Was das fürs Spiel heißen könnte (noch nicht entschieden)
 
 - Das mittelalterliche Aussehen von Riftside und den Inseln passt. Technik
@@ -93,9 +124,10 @@ müssen das verhindern. Es gibt noch Kleinigkeiten, die nach und nach kommen.
 - Klassen und Fähigkeiten (bisher Kämpfer, Schurke, Magier, Kleriker,
   Waldläufer) könnten sich nach Macht und Teufelsfrüchten richten, sobald
   die Einteilung da ist.
-- **Ob die Dimensionsrisse mit Nemroth, der Spiegeldimension, dem
-  Terraformer oder den Kultisten zusammenhängen, ist offen.** Das entscheidet
-  der Spielleiter; nichts davon ist im Spiel eingebaut.
+- Die Krypta unter Riftside mit dem Gerät wäre ein natürliches Ziel, wenn
+  die Risse geschlossen sind: ein Dungeon unter der Stadt, Kultisten darin.
+- Konzeptsteine passen zum Inventar: ein Platz „Bindung", ein Stein darin,
+  Stärke wächst mit der Tragezeit (im Spielstand), Wartezeit nach dem Lösen.
 
 ## Offene Fragen
 
@@ -109,7 +141,12 @@ müssen das verhindern. Es gibt noch Kleinigkeiten, die nach und nach kommen.
   Kompass, Weltkarte ohne eigenen Punkt auf See).
 - Homebrew-Klassen und -Spezies: die neuen Arten des Terraformers, die
   Einteilung der Machtfähigkeiten, die eigene Spielart der Teufelsfrüchte.
-- Hängen die Risse mit Nemroth, der Spiegeldimension, dem Terraformer oder
-  den Kultisten zusammen? Wo kommen Kultisten vor?
+- ~~Woher kommen die Risse?~~ Antikes Gerät in einer Krypta unter Riftside,
+  von Kultisten versehentlich gestartet. Offen: wie heißt es, was tut es
+  eigentlich (Teleporter? Zeit?)
+- Was bedeutet die rote Markierung im Macht-Skilltree?
+- Wer im Spiel nutzt die Macht, wer Konzeptsteine — jeder beides, oder
+  ersetzt das die Klassen?
+- Welche Konzeptsteine gibt es, und wie zeigt sich die Schwäche im Spiel?
 - ~~Gehören Schlüssel dem Finder oder der Gruppe?~~ Der Gruppe (gemeinsamer
   Schlüsselbund), vorerst.
