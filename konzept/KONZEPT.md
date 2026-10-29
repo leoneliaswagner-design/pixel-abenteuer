@@ -88,6 +88,14 @@ Der ganze Skilltree steht in [`macht.md`](macht.md), das Original liegt
 daneben (`Der_Macht_Skilltree.pptx`): acht Äste (Wahrnehmung, Kommunikation,
 Telekinese, Bewegung und Verstärkung, Lebensenergie & Medizin,
 Energiemanipulation & Elemente, Transformation & Täuschung, Willenskraft).
+**Jeder Spieler kann die Macht erlernen**, unabhängig von der Klasse. Die
+rot markierten Fähigkeiten sind die **stärksten**.
+
+### Klassen
+
+Acht Homebrew-Klassen mit Stufen 1–20 und Pfaden: Krieger, Drachenreiter,
+Bogenschütze, Dieb, Arzt, Koch, Musiker, Gelehrter — Übersicht in
+[`klassen.md`](klassen.md), Original `Klassen_Teil_1_Kapitel_3.docx`.
 
 ### Konzeptsteine (statt Teufelsfrüchten)
 
@@ -106,12 +114,11 @@ Energiemanipulation & Elemente, Transformation & Täuschung, Willenskraft).
 
 ### Die Risse in Riftside
 
-Sie stammen von einem **antiken Gerät, das in einer Krypta unter der Stadt
-versteckt** ist. Kultisten wollten es in Betrieb nehmen und haben dabei aus
+Sie stammen von einem **antiken Teleporter, der in einer Krypta unter der
+Stadt versteckt** ist. Kultisten wollten es in Betrieb nehmen und haben dabei aus
 Versehen die Risse erzeugt. Das hat **nichts direkt mit Nemroth** zu tun —
 aber die Kultisten wollen das Gerät benutzen, um ihn zu befreien.
-(Im Chat stand „antiken temporär" und „Krippe" — gemeint vermutlich ein
-Teleporter oder Zeitgerät und eine Krypta; Name des Geräts offen.)
+Das Gerät ist ein **antiker Teleporter** in einer **Krypta** (Name offen).
 
 ### Was das fürs Spiel heißen könnte (noch nicht entschieden)
 
@@ -121,9 +128,10 @@ Teleporter oder Zeitgerät und eine Krypta; Name des Geräts offen.)
 - Die Spezies im Spiel (bisher D&D-artig) könnten die „neuen Arten" des
   Terraformers werden. Was der Spielleiter dazu festlegt, ersetzt
   `spezies.json`.
-- Klassen und Fähigkeiten (bisher Kämpfer, Schurke, Magier, Kleriker,
-  Waldläufer) könnten sich nach Macht und Teufelsfrüchten richten, sobald
-  die Einteilung da ist.
+- Die fünf Spielklassen (Kämpfer, Schurke, Magier, Kleriker, Waldläufer)
+  werden durch die acht Homebrew-Klassen ersetzt. Dafür braucht das Spiel
+  **Stufen und Erfahrung** (gibt es noch nicht) und Pfade ab Stufe 3; die
+  Macht wird ein eigener Baum, den jeder mit Punkten freischaltet.
 - Die Krypta unter Riftside mit dem Gerät wäre ein natürliches Ziel, wenn
   die Risse geschlossen sind: ein Dungeon unter der Stadt, Kultisten darin.
 - Konzeptsteine passen zum Inventar: ein Platz „Bindung", ein Stein darin,
@@ -144,9 +152,10 @@ Teleporter oder Zeitgerät und eine Krypta; Name des Geräts offen.)
 - ~~Woher kommen die Risse?~~ Antikes Gerät in einer Krypta unter Riftside,
   von Kultisten versehentlich gestartet. Offen: wie heißt es, was tut es
   eigentlich (Teleporter? Zeit?)
-- Was bedeutet die rote Markierung im Macht-Skilltree?
-- Wer im Spiel nutzt die Macht, wer Konzeptsteine — jeder beides, oder
-  ersetzt das die Klassen?
+- ~~Rote Markierung im Skilltree?~~ Die stärksten Fähigkeiten.
+- ~~Wer nutzt die Macht?~~ Jeder kann sie lernen; dazu eine der acht
+  Homebrew-Klassen (`klassen.md`). Die Klassen haben sich seit dem Dokument
+  etwas geändert — der neue Stand kommt noch.
 - Welche Konzeptsteine gibt es, und wie zeigt sich die Schwäche im Spiel?
 - ~~Gehören Schlüssel dem Finder oder der Gruppe?~~ Der Gruppe (gemeinsamer
   Schlüsselbund), vorerst.
