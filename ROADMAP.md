@@ -97,6 +97,14 @@
   und Attributspunkte (4, 6, 8, 12, 14, 16, 19) im Charakterfenster (C).
   Tasten F/R/T. Prüfstand `krieger.mjs`.
 
+- **Bogenschütze** (31.10.2026): ersetzt den Waldläufer. Alle Stufen-
+  Fähigkeiten und die Pfade Meisterschütze, Trickschütze, Jägerschütze:
+  Fokussierter Schuss (Ruhe), Reichweite, Tarnung, Gezielter Schuss
+  (Durchschlag, F), Doppelschuss, Schnellfeuer (T), Beute markieren (R, für
+  die ganze Gruppe), Blendpfeil, Beutezugriff u. a. Prüfstand `bogen.mjs`.
+- **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
+  beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -121,9 +129,9 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger steht. Offen: Drachenreiter, Bogenschütze, Dieb, Arzt, Koch,
+   Krieger und Bogenschütze stehen. Offen: Drachenreiter, Dieb, Arzt, Koch,
    Musiker, Gelehrter — nach demselben Muster in `klassen.json`. Danach
-   fallen Schurke, Magier, Kleriker, Waldläufer weg. Die Spezies aus
+   fallen Schurke, Magier, Kleriker weg. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
    schnellere Abklingzeiten).

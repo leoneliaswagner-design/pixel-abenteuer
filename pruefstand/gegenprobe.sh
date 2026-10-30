@@ -329,6 +329,38 @@ probe client/szenen/Spiel.js "    for (const taste of ['F', 'R', 'T']) this.inpu
 probe client/fenster.js "    if (offen.pfad) {" "    if (false) {" pruefstand/krieger.mjs \
   "das Charakterfenster bietet keine Pfade an"
 
+# Bogenschütze und Menü
+probe server/spiel.js "    const schaden = schuss.schaden + (jetzt < s.rauschBis ? s.rauschBoni?.faehigkeit ?? 0 : 0) + (ruhe ? k.ruheSchuss : 0);" "    const schaden = schuss.schaden + (jetzt < s.rauschBis ? s.rauschBoni?.faehigkeit ?? 0 : 0);" pruefstand/server-regeln.mjs \
+  "Fokussierter Schuss ohne Wirkung"
+probe server/gebiet.js "            if (p.durch > 0) p.durch--;" "            if (false) p.durch--;" pruefstand/server-regeln.mjs \
+  "Pfeile schlagen nicht durch"
+probe server/gebiet.js "    if (d < g.w.sichtweite * (getarnt ? 0.5 : 1) && d < abstand)" "    if (d < g.w.sichtweite && d < abstand)" pruefstand/server-regeln.mjs \
+  "Tarnung wirkt nicht"
+probe server/spiel.js "        pfeile: 1 + s.werte.kampf.mehrPfeile," "        pfeile: 1," pruefstand/server-regeln.mjs \
+  "Doppelschuss schießt einen Pfeil"
+probe server/gebiet.js "    if (jetzt < (g.markiertBis ?? 0)) schaden += g.markeSchaden ?? 1;" "" pruefstand/server-regeln.mjs \
+  "Markierung bringt keinen Schaden"
+probe server/gebiet.js "      if (neu) Object.assign(neu, { markiertBis: g.markiertBis, markeSchaden: g.markeSchaden, markeSpringt: true });" "" pruefstand/server-regeln.mjs \
+  "Beutezugriff springt nicht"
+probe server/gebiet.js "      s.leben = Math.min(this.spiel.maxLeben(s), s.leben + this.w.herz.heilung + (s.werte?.kampf.herzPlus ?? 0));" "      s.leben = Math.min(this.spiel.maxLeben(s), s.leben + this.w.herz.heilung);" pruefstand/server-regeln.mjs \
+  "Kräuterkunde heilt nicht mehr"
+probe client/szenen/Spiel.js "      if (g.mk && !e.marke) e.marke" "      if (false && !e.marke) e.marke" pruefstand/bogen.mjs \
+  "Markierung ist beim anderen nicht zu sehen"
+probe server/spiel.js "    if (s.geloescht) return;
+    const tot = s.tot;" "    const tot = s.tot;" pruefstand/server-regeln.mjs \
+  "der gelöschte Charakter schreibt sich beim Speichern wieder hinein"
+probe server/spiel.js "    if (this.spieler.size > 1) {" "    if (false) {" pruefstand/server-regeln.mjs \
+  "Welt lässt sich zurücksetzen, während andere spielen"
+probe server/spiel.js "    this.spielstand.daten = { version: 1, spieler: {}, welt: {} };
+    s.geloescht = true;
+    this.gebieteAufbauen();" "    this.spielstand.daten = { version: 1, spieler: {}, welt: {} };
+    s.geloescht = true;" pruefstand/server-regeln.mjs \
+  "nach dem Zurücksetzen liegt die Kugel noch"
+probe client/szenen/Spiel.js "    n.bei('neustart', () => location.reload());" "" pruefstand/bogen.mjs \
+  "nach dem Neubeginn lädt der Browser nicht neu"
+probe client/fenster.js "!allein && \`Geht nur, wenn sonst niemand im Spiel ist (gerade \${d.online}).\`" "false" pruefstand/bogen.mjs \
+  "Welt-Zurücksetzen ist trotz Mitspielern freigegeben"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

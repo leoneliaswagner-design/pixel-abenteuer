@@ -43,6 +43,12 @@ export class Fenster {
     this.zeichnen();
   }
 
+  menue() {
+    this.art = 'menue';
+    this.bestaetigen = null;
+    this.zeichnen();
+  }
+
   laden(angebot) {
     this.art = 'laden';
     this.angebot = angebot;
@@ -77,6 +83,11 @@ export class Fenster {
     if (!k || k.disabled) return;
     const { tun, art, platz } = k.dataset;
     if (tun === 'schliessen') this.schliessen();
+    // Was sich nicht rückgängig machen lässt, fragt erst nach.
+    else if (tun === 'fragen' || tun === 'abbrechen') {
+      this.bestaetigen = tun === 'fragen' ? art : null;
+      this.zeichnen();
+    }
     else if (tun === 'zoom') {
       this.nah = !this.nah;
       this.zeichnen();
@@ -98,8 +109,8 @@ export class Fenster {
     const d = this.daten();
     this.wurzel.hidden = false;
     if (this.gewaehlt && !(d.inventar[this.gewaehlt] > 0) && !Object.values(d.ausruestung).includes(this.gewaehlt)) this.gewaehlt = null;
-    const inhalt = { laden: () => this.ladenHtml(d), weltkarte: () => this.weltkarteHtml(d), rucksack: () => this.rucksackHtml(d), charakter: () => this.charakterHtml(d) }[this.art]();
-    const titel = { laden: 'Laden', weltkarte: 'Weltkarte', rucksack: 'Rucksack', charakter: 'Charakter' }[this.art];
+    const inhalt = { laden: () => this.ladenHtml(d), weltkarte: () => this.weltkarteHtml(d), rucksack: () => this.rucksackHtml(d), charakter: () => this.charakterHtml(d), menue: () => this.menueHtml(d) }[this.art]();
+    const titel = { laden: 'Laden', weltkarte: 'Weltkarte', rucksack: 'Rucksack', charakter: 'Charakter', menue: 'Menü' }[this.art];
     this.wurzel.innerHTML = `<div class="kasten${this.art === 'weltkarte' ? ' breit' : ''}" role="dialog" aria-label="${titel}">${inhalt}</div>`;
     if (this.art === 'weltkarte') this.nebelMalen(d);
     // Fokus in das Fenster, damit Enter die Knöpfe trifft und nicht das Spiel.
@@ -139,6 +150,31 @@ export class Fenster {
     if (gruppe.length)
       zeilen.push(`<h3>Gehört der Gruppe</h3><p class="gruppe">${gruppe.map(([a, n]) => `<span>${this.symbol(a)} ${n} × ${html(d.gegenstaende[a]?.name ?? a)}</span>`).join('')}</p>`);
     zeilen.push(this.gewaehlt ? this.einzelheiten(d, this.gewaehlt) : '<p class="tipp">Tippe auf einen Gegenstand.</p>');
+    return zeilen.join('');
+  }
+
+  // Weiterspielen, Verlassen, von vorn. Zurücksetzen fragt nach; die ganze
+  // Welt nur, wenn sonst niemand im Spiel ist (der Server prüft es auch).
+  menueHtml(d) {
+    const zeilen = [`<div class="kopf"><h2>Menü</h2><button data-tun="schliessen" class="zu" aria-label="Schließen">✕</button></div>`];
+    const was = {
+      neu_anfangen: ['Charakter neu beginnen', `${d.name} wird vergessen: Stufe, Rucksack, Gold, Pfad. Du wählst Klasse und Spezies neu. Die Welt bleibt, wie sie ist.`],
+      welt_zuruecksetzen: ['Ganze Welt zurücksetzen', 'Alle Truhen, Türen, Risse und Weltkarte zurück auf Anfang — und alle Figuren werden vergessen. Ein neues Abenteuer.'],
+    };
+    if (this.bestaetigen) {
+      const [titel, text] = was[this.bestaetigen];
+      zeilen.push(`<p><b>${html(titel)}?</b></p><p>${html(text)}</p><p>Das lässt sich nicht rückgängig machen.</p><div class="menue">
+        ${this.knopf(`Ja, ${titel.toLowerCase()}`, { tun: this.bestaetigen })}${this.knopf('Abbrechen', { tun: 'abbrechen' })}</div>`);
+      return zeilen.join('');
+    }
+    const allein = (d.online ?? 1) <= 1;
+    zeilen.push(`<div class="menue">
+      ${this.knopf('Weiterspielen', { tun: 'schliessen' })}
+      ${this.knopf('Spiel verlassen', { tun: 'verlassen' })}
+      <p>Dein Stand bleibt gespeichert; mit demselben Namen geht es später weiter.</p>
+      ${this.knopf('Charakter neu beginnen …', { tun: 'fragen', art: 'neu_anfangen' })}
+      ${this.knopf('Ganze Welt zurücksetzen …', { tun: 'fragen', art: 'welt_zuruecksetzen' }, !allein && `Geht nur, wenn sonst niemand im Spiel ist (gerade ${d.online}).`)}
+    </div>`);
     return zeilen.join('');
   }
 

@@ -117,6 +117,8 @@ export class Gebiet {
   // richtung für den Rückstoß, und id für die Beute.
   // wirkung: { krit, betaeuben (ms), verlangsamen (ms) } aus einem Hieb.
   gegnerTreffen(g, s, jetzt, schaden = 1, wirkung = {}) {
+    // Markierte Beute (Jägerschütze): jeder Treffer, von wem auch immer, macht mehr.
+    if (jetzt < (g.markiertBis ?? 0)) schaden += g.markeSchaden ?? 1;
     g.leben -= schaden;
     if (wirkung.betaeuben) g.betaeubtBis = jetzt + wirkung.betaeuben;
     if (wirkung.verlangsamen) g.langsamBis = jetzt + wirkung.verlangsamen;
@@ -133,6 +135,12 @@ export class Gebiet {
     }
     g.tot = true;
     g.wiederBei = jetzt + g.w.neuErscheinen;
+    // Beutezugriff: die Markierung springt zum nächsten Gegner.
+    if (jetzt < (g.markiertBis ?? 0) && g.markeSpringt) {
+      const neu = this.gegner.filter((o) => !o.tot && Math.hypot(o.x - g.x, o.y - g.y) <= 240).sort((a, b) => Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y))[0];
+      if (neu) Object.assign(neu, { markiertBis: g.markiertBis, markeSchaden: g.markeSchaden, markeSpringt: true });
+    }
+    g.markiertBis = 0;
     this.anAlle({ t: 'gegner_tot', id: g.id, x: g.x, y: g.y });
     this.spiel.beute(s.id, g, this);
     this.vielleichtHerz(g.x, g.y, g.w.herzChance);
@@ -197,10 +205,20 @@ export class Gebiet {
             weg = 'treffer';
           }
         } else {
-          const g = this.gegner.find((g) => !g.tot && Math.hypot(g.x - p.x, g.y - 6 - p.y) < 14);
+          // Wen dieser Pfeil schon getroffen hat, den trifft er nicht zweimal
+          // (Durchschlag: er fliegt weiter durch).
+          const g = this.gegner.find((g) => !g.tot && !p.getroffen?.has(g.id) && Math.hypot(g.x - p.x, g.y - 6 - p.y) < 14);
           if (g) {
-            this.gegnerTreffen(g, { id: p.von, x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden);
-            weg = 'treffer';
+            const z = this.spiel.zufall;
+            const krit = p.kritChance > 0 && z() < p.kritChance;
+            const betaeuben = p.betaeubenFest || (p.betaeubenChance > 0 && z() < p.betaeubenChance ? 1500 : 0);
+            this.gegnerTreffen(g, { id: p.von, x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 8, richtung: p.richtung }, jetzt, p.schaden * (krit ? p.kritFaktor : 1),
+              { krit, betaeuben, verlangsamen: p.verlangsamen ?? 0 });
+            // Legendärer Trick: der Blendpfeil betäubt auch die um das Ziel herum.
+            if (p.blend && betaeuben) for (const o of this.gegner) if (!o.tot && o !== g && Math.hypot(o.x - g.x, o.y - g.y) <= p.blend) o.betaeubtBis = jetzt + betaeuben;
+            p.getroffen?.add(g.id);
+            if (p.durch > 0) p.durch--;
+            else weg = 'treffer';
           }
         }
       }
@@ -211,12 +229,16 @@ export class Gebiet {
     }
   }
 
+  markieren(g, s, bis) {
+    Object.assign(g, { markiertBis: bis, markeSchaden: s.werte.kampf.markeSchaden, markeSpringt: s.werte.kampf.markeSpringt });
+  }
+
   herzenAufheben(s) {
     if (s.tot) return;
     for (const h of this.herzen.values()) {
       if (Math.hypot(h.x - s.x, h.y - (s.y - 8)) > 16) continue;
       if (s.leben >= this.spiel.maxLeben(s)) continue;
-      s.leben = Math.min(this.spiel.maxLeben(s), s.leben + this.w.herz.heilung);
+      s.leben = Math.min(this.spiel.maxLeben(s), s.leben + this.w.herz.heilung + (s.werte?.kampf.herzPlus ?? 0));
       this.herzen.delete(h.id);
       this.anAlle({ t: 'herz_genommen', id: h.id, von: s.id });
     }
@@ -234,7 +256,7 @@ export class Gebiet {
     // Betäubt: steht still und tut niemandem etwas.
     if (jetzt < (g.betaeubtBis ?? 0) && jetzt >= g.stossBis) return;
     let vx, vy;
-    const ziel = jetzt < g.stossBis ? null : naechster(g, hier);
+    const ziel = jetzt < g.stossBis ? null : naechster(g, hier, jetzt);
     if (jetzt < g.stossBis) {
       vx = g.vx;
       vy = g.vy;
@@ -277,6 +299,8 @@ export class Gebiet {
     return {
       t: 'stand',
       zeit: this.spiel.tageszeit(jetzt),
+      // Wie viele überhaupt im Spiel sind (alle Gebiete) — fürs Menü.
+      online: this.spiel.spieler.size,
       spieler: this.spieler().map((s) => ({
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
@@ -286,7 +310,7 @@ export class Gebiet {
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0) })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0) })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
       ...this.fallen.stand(jetzt),
     };
@@ -352,12 +376,15 @@ function zu(g, z, tempo) {
   return [((z.x - g.x) / d) * tempo, ((z.y - g.y) / d) * tempo];
 }
 
-function naechster(g, hier) {
-  let bester = null, abstand = g.w.sichtweite;
+// Wen ein Gegner sieht. Wer getarnt stillsteht (Bogenschütze), wird erst
+// aus halber Sichtweite bemerkt.
+export function naechster(g, hier, jetzt = 0) {
+  let bester = null, abstand = Infinity;
   for (const s of hier) {
     if (s.tot) continue;
+    const getarnt = s.werte?.kampf.tarnung && jetzt - s.stehtSeit >= 600;
     const d = Math.hypot(s.x - g.x, s.y - g.y);
-    if (d < abstand) { bester = s; abstand = d; }
+    if (d < g.w.sichtweite * (getarnt ? 0.5 : 1) && d < abstand) { bester = s; abstand = d; }
   }
   return bester;
 }

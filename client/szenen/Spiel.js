@@ -133,10 +133,12 @@ export class SpielSzene extends Phaser.Scene {
     this.gruppe = wk.gruppe ?? {};
     // Ein Fenster für das ganze Spiel: die Szene startet bei jedem
     // Gebietswechsel neu, das HTML darunter bleibt.
-    this.fenster ??= new Fenster(() => this.fensterDaten(), (m) => this.netz.senden(m), () => (this.fensterZu = this.time.now));
+    // „verlassen" geht nicht an den Server: die Seite lädt neu, die Verbindung
+    // schließt sich dabei, und der Server speichert wie bei jedem Gehen.
+    this.fenster ??= new Fenster(() => this.fensterDaten(), (m) => (m.t === 'verlassen' ? location.reload() : this.netz.senden(m)), () => (this.fensterZu = this.time.now));
     this.fenster.schliessen();
     this.fensterZu = 0;
-    for (const [id, fn] of [['rucksack-knopf', () => this.rucksackUmschalten()], ['karte-knopf', () => this.karteUmschalten()]]) {
+    for (const [id, fn] of [['rucksack-knopf', () => this.rucksackUmschalten()], ['karte-knopf', () => this.karteUmschalten()], ['menue-knopf', () => this.menueUmschalten()]]) {
       const knopf = document.getElementById(id);
       if (!knopf) continue;
       knopf.hidden = false;
@@ -178,7 +180,8 @@ export class SpielSzene extends Phaser.Scene {
     this.input.keyboard.on('keydown-C', (e) => !e.repeat && this.charakterUmschalten());
     this.input.keyboard.on('keydown-I', (e) => !e.repeat && this.rucksackUmschalten());
     this.input.keyboard.on('keydown-M', (e) => !e.repeat && this.karteUmschalten());
-    this.input.keyboard.on('keydown-ESC', () => this.fenster.schliessen());
+    // Esc schließt ein offenes Fenster, sonst öffnet es das Menü.
+    this.input.keyboard.on('keydown-ESC', () => (this.fenster.offen ? this.fenster.schliessen() : this.menueUmschalten()));
     // Schnelltaste 1: der erste Trank im Rucksack.
     this.input.keyboard.on('keydown-ONE', (e) => {
       const g = this.cache.json.get('gegenstaende');
@@ -232,7 +235,7 @@ export class SpielSzene extends Phaser.Scene {
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt,
+          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -309,7 +312,7 @@ export class SpielSzene extends Phaser.Scene {
       gegenstaende: this.cache.json.get('gegenstaende'), inventar: this.inventar, ausruestung: this.ausruestung,
       gruppe: this.gruppe, charakter: c, leben: this.leben, plaetze: this.w.inventar?.plaetze ?? 12,
       klassen: wk.auswahl?.klassen ?? {}, name: wk.name ?? '',
-      welt: this.cache.json.get('welt'), meineId: this.meineId, gebiet: this.gebiet,
+      welt: this.cache.json.get('welt'), meineId: this.meineId, gebiet: this.gebiet, online: this.online ?? 1,
       klassenName: wk.auswahl?.klassen?.[c?.klasse]?.name ?? '', speziesName: wk.auswahl?.spezies?.[c?.spezies]?.name ?? '',
     };
   }
@@ -324,6 +327,11 @@ export class SpielSzene extends Phaser.Scene {
   rucksackUmschalten() {
     if (this.fenster.offen) this.fenster.schliessen();
     else if (!this.dialogOffen && !this.wechselt) this.fenster.rucksack();
+  }
+
+  menueUmschalten() {
+    if (this.fenster.art === 'menue') this.fenster.schliessen();
+    else if (!this.dialogOffen && !this.wechselt) this.fenster.menue();
   }
 
   charakterUmschalten() {
@@ -540,6 +548,8 @@ export class SpielSzene extends Phaser.Scene {
   netzAnschliessen() {
     const n = this.netz;
     n.bei('stand', (m) => this.standUebernehmen(m));
+    // Charakter oder Welt zurückgesetzt: neu laden, dann wieder anmelden.
+    n.bei('neustart', () => location.reload());
     n.bei('beben', (m) => this.cameras.main.shake(m.dauer, m.stark));
     n.bei('hieb', (m) => this.andere.get(m.id)?.hieb(m.r, this.w.spieler.hiebDauer));
     n.bei('getroffen', (m) => {
@@ -700,6 +710,7 @@ export class SpielSzene extends Phaser.Scene {
 
   standUebernehmen(m) {
     this.fallenUebernehmen(m);
+    if (m.online) this.online = m.online;
     if (m.zeit != null) {
       this.zeit = m.zeit;
       this.zeitBei = this.time.now;
@@ -758,6 +769,10 @@ export class SpielSzene extends Phaser.Scene {
       e.duckt = g.z === 'laden';
       if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
       else if (!e.sprite.anims.isPlaying) e.sprite.play(g.art);
+      // Markiert (Jägerschütze): ein rotes Dreieck über dem Kopf, für alle.
+      if (g.mk && !e.marke) e.marke = this.add.triangle(0, 0, 0, 0, 10, 0, 5, 7, 0xff4a3a).setStrokeStyle(1, 0x5a1010);
+      if (e.marke) e.marke.setVisible(!!g.mk && !g.tot);
+      e.markiert = !!g.mk;
       // Betäubt: bläulich grau, solange es dauert.
       if (g.bt) e.sprite.setTint(0x9098c8);
       else if (e.betaeubt) e.sprite.clearTint();
@@ -828,6 +843,7 @@ export class SpielSzene extends Phaser.Scene {
       gleiten(g);
       g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
       g.schatten.setPosition(g.x, g.y).setDepth(9);
+      g.marke?.setPosition(g.x, g.y - 34).setDepth(6000);
     }
 
     // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.
@@ -915,9 +931,13 @@ export class SpielSzene extends Phaser.Scene {
         const a = this.aktionGewuenscht && this.charakter?.werte.aktionen?.find((x) => x.taste === this.aktionGewuenscht);
         if (a && jetzt >= (this.aktionBereit[a.id] ?? 0)) {
           this.positionSenden(jetzt, false);
-          this.netz.senden({ t: 'aktion', id: a.id });
+          this.netz.senden({ t: 'aktion', id: a.id, r: ich.richtung });
           this.aktionBereit[a.id] = jetzt + a.abklingzeit;
           if (a.art === 'sprint') [this.sprintBis, this.sprintFaktor] = [jetzt + a.dauer, a.tempoFaktor];
+          // Den eigenen Rausch kennen: Schnellfeuer lädt Q schneller, und
+          // der Browser muss den nächsten Pfeil dann auch schon zulassen.
+          if (a.art === 'rausch') [this.rauschBis, this.rauschBoni] = [jetzt + a.dauer, a.boni ?? {}];
+          if (a.art === 'schuss') ich.ausholen(ich.richtung, 200);
           this.events.emit('faehigkeit', this.faehigkeitAngabe());
         }
         const f = this.charakter?.werte.faehigkeit;
@@ -925,7 +945,7 @@ export class SpielSzene extends Phaser.Scene {
           // Wie beim Ansprechen: der Server soll vom selben Fleck aus werfen.
           this.positionSenden(jetzt, false);
           this.netz.senden({ t: 'faehigkeit', r: ich.richtung });
-          this.faehigkeitBereit = jetzt + f.abklingzeit;
+          this.faehigkeitBereit = jetzt + f.abklingzeit * (1 - (jetzt < (this.rauschBis ?? 0) ? this.rauschBoni?.qTempo ?? 0 : 0) / 100);
           this.events.emit('faehigkeit', this.faehigkeitAngabe());
           if (f.art !== 'ansturm') {
             ich.ausholen(ich.richtung, 200);

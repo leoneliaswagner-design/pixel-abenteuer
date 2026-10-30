@@ -14,6 +14,7 @@ class Spiel extends EchtesSpiel {
   }
 }
 import { Spielstand } from '../server/spielstand.js';
+import { naechster } from '../server/gebiet.js';
 import { bewege } from '../gemeinsam/welt.js';
 import { ZUSATZDATEN, kaufpreis, stufeFuer, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 
@@ -1173,6 +1174,145 @@ const arena = (art, abstand) => {
   wurf = 0.15;
   sp.hieb(kampf, { r: 'oben' });
   pruefe(uhr < (g.betaeubtBis ?? 0), 'Betäubender Schlag: der Schleim ist betäubt (Wurf 0,15 unter 20 %)');
+}
+
+// ---------- Bogenschütze ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const mk = (name, stufe, pfad) => {
+    const x = mitCharakter(sp, name, () => {}, 'waldlaeufer');
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    return x;
+  };
+  const lauf = (ms) => {
+    for (let i = 0; i < ms; i += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+    }
+  };
+  // Zwei Schleime übereinander in einer Reihe, der Schütze darunter, Blick nach oben.
+  const reihe = () => {
+    const [a, b] = wald.gegner;
+    const x = 30 * 32 + 16;
+    // vx/vy 0 und wechselBei weit weg: der hintere Schleim wandert nicht aus
+    // der Schussbahn (das tat er in jedem dritten Lauf).
+    for (const [g, y] of [[a, 20 * 32 + 16], [b, 18 * 32 + 16]]) Object.assign(g, { x, y, tot: false, leben: 50, getroffenBis: 0, stossBis: 0, markiertBis: 0, betaeubtBis: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6 });
+    return [a, b, x];
+  };
+  const schiesse = (wer, art = 'q', id) => {
+    const [a, b, x] = reihe();
+    Object.assign(wer, { x, y: 23 * 32 + 16, richtung: 'oben', faehigkeitBereit: 0, aktionBereit: {} });
+    wald.geschosse.clear();
+    if (art === 'q') sp.faehigkeit(wer, { r: 'oben' });
+    else sp.aktion(wer, { id, r: 'oben' });
+    const pfeile = wald.geschosse.size;
+    lauf(800);
+    return { a: 50 - a.leben, b: 50 - b.leben, pfeile };
+  };
+  const frei = sp.gebiete.get('wald').welt.frei(30 * 32 + 16, 23 * 32 + 16) && sp.gebiete.get('wald').welt.frei(30 * 32 + 16, 18 * 32 + 16);
+  const bo = mk('Bo', 2);
+  pruefe(frei && bo.werte.faehigkeit.reichweite === Math.round(260 * 1.2) && bo.werte.aktionen[0]?.id === 'gezielt',
+    `Bogenschütze Stufe 2: Reichweite ${bo.werte.faehigkeit.reichweite}, F ${bo.werte.aktionen[0]?.name} (Schussbahn frei: ${frei})`);
+  // Fokussierter Schuss: stillstehend +1.
+  bo.stehtSeit = uhr;
+  const gelaufen = schiesse(bo).a;
+  bo.stehtSeit = uhr - 2000;
+  const gestanden = schiesse(bo).a;
+  pruefe(gestanden === gelaufen + 1, `Fokussierter Schuss: gelaufen ${gelaufen}, gestanden ${gestanden} Schaden`);
+  // Q trifft nur den ersten, der Gezielte Schuss beide.
+  bo.stehtSeit = uhr;
+  const q = schiesse(bo);
+  const f = schiesse(bo, 'aktion', 'gezielt');
+  pruefe(q.a > 0 && q.b === 0 && f.a > 0 && f.b > 0, `Durchschlag: Q trifft ${q.a}/${q.b}, Gezielter Schuss ${f.a}/${f.b}`);
+  // Tarnung: stillstehend erst aus halber Sichtweite bemerkt.
+  const g = wald.gegner[2];
+  Object.assign(bo, { x: g.x + g.w.sichtweite * 0.7, y: g.y });
+  bo.stehtSeit = uhr - 2000;
+  const getarnt = naechster(g, [bo], uhr);
+  bo.stehtSeit = uhr;
+  const gesehen = naechster(g, [bo], uhr);
+  pruefe(!getarnt && gesehen === bo, 'Tarnung: stillstehend bemerkt der Schleim Bo nicht, laufend schon');
+  // Kräuterkunde: ein Herz heilt mehr.
+  bo.leben = 2;
+  wald.herzen.set('hx', { id: 'hx', x: bo.x, y: bo.y - 8, bis: uhr + 9999 });
+  wald.herzenAufheben(bo);
+  pruefe(bo.leben === 2 + werte.herz.heilung + 1, `Kräuterkunde: Herz heilt ${bo.leben - 2} halbe`);
+  // Doppelschuss (9) und Schnellfeuer (17).
+  const da = mk('Da', 17);
+  const doppel = schiesse(da, 'aktion', 'gezielt');
+  sp.aktion(da, { id: 'schnellfeuer' });
+  da.faehigkeitBereit = 0;
+  sp.faehigkeit(da, { r: 'oben' });
+  pruefe(doppel.pfeile === 2 && da.faehigkeitBereit - uhr === Math.round(da.werte.faehigkeit.abklingzeit * 0.5),
+    `Doppelschuss: ${doppel.pfeile} Pfeile; Schnellfeuer: Pfeil lädt in ${da.faehigkeitBereit - uhr} statt ${da.werte.faehigkeit.abklingzeit} ms`);
+  // Jägerschütze: Markieren, alle treffen härter, die Markierung springt.
+  const ja = mk('Ja', 10, 'jaeger');
+  const helfer = mitCharakter(sp, 'Hel', () => {});
+  sp.wechseln(helfer, 'wald', 'von_hoehle');
+  const [ziel, zweiter] = reihe();
+  Object.assign(ja, { x: ziel.x, y: ziel.y + 60, aktionBereit: {} });
+  sp.aktion(ja, { id: 'markieren' });
+  const markiert = uhr < ziel.markiertBis && wald.stand(uhr).gegner.find((x) => x.id === ziel.id)?.mk;
+  Object.assign(helfer, { x: ziel.x, y: ziel.y + 20, naechsterHieb: 0 });
+  const vor = ziel.leben;
+  sp.hieb(helfer, { r: 'oben' });
+  const mitMarke = vor - ziel.leben;
+  pruefe(markiert && mitMarke === helfer.werte.schaden + 1, `Beute markiert: Helfers Hieb macht ${mitMarke} statt ${helfer.werte.schaden}`);
+  wald.gegnerTreffen(ziel, helfer, uhr, 99);
+  pruefe(uhr < (zweiter.markiertBis ?? 0), 'Beutezugriff: nach dem Tod springt die Markierung zum Nachbarn');
+  // Trickschütze: der Blendpfeil betäubt.
+  // Höchstens vier im Spiel: zwei gehen.
+  sp.verlassen(bo.id);
+  sp.verlassen(da.id);
+  const tr = mk('Tri', 3, 'trickschuetze');
+  const [b1] = reihe();
+  schiesse(tr, 'aktion', 'blendpfeil');
+  pruefe(uhr - 800 < (b1.betaeubtBis ?? 0), 'Blendpfeil: der getroffene Schleim ist betäubt');
+}
+
+// ---------- Menü: Charakter neu, Welt zurücksetzen ----------
+{
+  const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+  const sp = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  const pa = [], pb = [];
+  const a = mitCharakter(sp, 'Alma', (m) => pa.push(m));
+  const b = mitCharakter(sp, 'Bert', (m) => pb.push(m));
+  sp.zustandSetzen('tempel_geschlossen');
+  sp.nachricht(a.id, { t: 'neu_anfangen' });
+  for (let i = 0; i < 200; i += 50) {
+    uhr += 50;
+    sp.schritt(0.05);
+  }
+  uhr += 60000;
+  sp.schritt(0.05);
+  const nachSpeichern = 'alma' in sp.spielstand.daten.spieler;
+  sp.verlassen(a.id);
+  const gespeichert = JSON.parse(readFileSync(datei, 'utf8'));
+  pruefe(pa.some((m) => m.t === 'neustart') && !nachSpeichern && !('alma' in gespeichert.spieler) && 'bert' in gespeichert.spieler && gespeichert.welt.zustaende?.tempel_geschlossen,
+    'Charakter neu: Alma ist aus dem Spielstand, auch nach dem Speichern und Gehen; Bert und die Welt bleiben');
+  const a2 = sp.beitreten('Alma', () => {});
+  pruefe(a2.waehlt, 'Alma kommt zurück und wählt neu');
+  sp.verlassen(a2.id);
+  // Welt zurücksetzen: mit Bert im Spiel nicht.
+  pb.length = 0;
+  const c = mitCharakter(sp, 'Cleo', () => {});
+  sp.nachricht(b.id, { t: 'welt_zuruecksetzen' });
+  pruefe(sp.zustaende().tempel_geschlossen && !pb.some((m) => m.t === 'neustart'), 'Welt zurücksetzen: nicht, solange noch jemand im Spiel ist');
+  sp.verlassen(c.id);
+  sp.gebiete.get('tempel').fallen.kugel.z = 'liegt';
+  sp.nachricht(b.id, { t: 'welt_zuruecksetzen' });
+  sp.verlassen(b.id);
+  const leer = JSON.parse(readFileSync(datei, 'utf8'));
+  pruefe(pb.some((m) => m.t === 'neustart') && !Object.keys(leer.spieler).length && !Object.keys(leer.welt.zustaende ?? {}).length && sp.gebiete.get('tempel').fallen.kugel.z === 'ruht',
+    'allein: Welt zurückgesetzt — Spielstand leer, die Kugel im Tempel ruht wieder');
 }
 
 // --- An die Wand heran, egal bei welcher Bildrate ---

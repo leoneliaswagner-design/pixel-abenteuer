@@ -75,14 +75,21 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
-- **Klassen-Fähigkeiten** (zuerst der Krieger, intern `kaempfer`): in
+- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`): in
   `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
   (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
   macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
   `gelernt`, `hiebAbstand`. Pfad (`s.pfad`) und Attributspunkte
   (`s.attributPlus`) stehen im Spielstand; offene Wahl rechnet `offeneWahl()`.
   Glück läuft über `spiel.zufall` — Prüfstände setzen `ZUFALL=0.99` (nie)
-  bzw. geben in server-regeln einen eigenen Wurf vor.
+  bzw. geben in server-regeln einen eigenen Wurf vor. Schüsse der Spieler
+  gehen über `spiel.schiessen()` (Durchschlag, Krit, Betäuben je Treffer);
+  „Ruhe" heißt: seit 0,6 s nicht bewegt (`s.stehtSeit`).
+- **Menü** (Esc oder Knopf ≡): Verlassen lädt die Seite neu (der Server
+  speichert wie bei jedem Gehen). `neu_anfangen` löscht den eigenen Eintrag
+  im Spielstand (`s.geloescht`: `merken` schreibt ihn nicht zurück),
+  `welt_zuruecksetzen` leert alles und baut die Gebiete neu — nur, wenn
+  sonst niemand im Spiel ist. Danach `neustart` → der Browser lädt neu.
 - **Fallen und Steinkugel** (server/fallen.js): Punkte `falle` (stacheln,
   pfeile, platte) und `kugel_start`/`kugel_ende`; Zahlen in `werte.fallen`.
   Der Stand schickt `fallen` als Liste in Ortsreihenfolge und `kugel`. Die
@@ -121,6 +128,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/krieger.mjs` — Pfad und Attributspunkte im
   Charakterfenster (C), Leiste Q/F/R, Kampfrausch beim anderen rot am
   Bildpunkt, Fenster bei 360 Punkten.
+- `node pruefstand/bogen.mjs` — Bogenschützin markiert einen Schleim (rotes
+  Dreieck beim anderen am Bildpunkt); Menü: Welt-Zurücksetzen gesperrt mit
+  Grund, Charakter neu beginnen (Wahl kommt wieder), Spiel verlassen.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

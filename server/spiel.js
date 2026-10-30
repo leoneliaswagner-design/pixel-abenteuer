@@ -27,8 +27,8 @@ export class Spiel {
     this.spielstand = spielstand;
     this.spieler = new Map();
     this.naechsteId = 1;
-    this.gebiete = new Map(Object.entries(karten).map(([name, karte]) => [name, new Gebiet(name, karte, this)]));
-    this.startGebiet = this.gebiete.get(werte.startGebiet);
+    this.karten = karten;
+    this.gebieteAufbauen();
     if (!this.startGebiet?.starts.length) throw new Error(`Startgebiet „${werte.startGebiet}" fehlt oder hat keinen Ort „spieler_start"`);
     for (const g of this.gebiete.values())
       for (const u of g.uebergaenge)
@@ -198,6 +198,19 @@ export class Spiel {
       s.leben = Math.min(this.maxLeben(s), s.leben + (a.menge ?? 2));
       gebiet.anAlle({ t: 'heilung', von: s.id, ziele: [s.id] });
     } else if (a.art === 'sprint') s.sprintBis = jetzt + a.dauer;
+    else if (a.art === 'schuss') {
+      // Wie der Pfeil auf Q, aber stärker; wer auf Q keinen Bogen hat, schießt trotzdem einen Pfeil.
+      if (RICHTUNGEN[m.r]) s.richtung = m.r;
+      const f = s.werte.faehigkeit?.art === 'geschoss' ? s.werte.faehigkeit : { geschoss: 'pfeil', tempo: 330, reichweite: 260, staerke: 1 };
+      this.schiessen(s, gebiet, {
+        art: f.geschoss, tempo: f.tempo, reichweite: Math.round(f.reichweite * (a.reichweiteFaktor ?? 1)), schaden: f.staerke + (a.schadenPlus ?? 0),
+        pfeile: 1 + s.werte.kampf.mehrPfeile, durchschlag: a.durchschlag ?? 0, betaeuben: a.betaeuben ?? 0, krit: s.werte.kampf.schussKrit,
+      }, jetzt);
+    } else if (a.art === 'markieren') {
+      // Der nächste Gegner in Reichweite; die Markierung zählt für alle.
+      const ziel = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= 240).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y))[0];
+      if (ziel) gebiet.markieren(ziel, s, jetzt + a.dauer);
+    }
     else if (a.art === 'leere') {
       s.leereBis = jetzt + a.dauer;
       s.unverwundbarBis = Math.max(s.unverwundbarBis, s.leereBis);
@@ -209,6 +222,32 @@ export class Spiel {
     gebiet.anAlle({ t: 'aktion', id: s.id, art: a.art, dauer: a.dauer ?? 0 });
   }
 
+  ruhig(s, jetzt) {
+    return jetzt - s.stehtSeit >= 600;
+  }
+
+  // Pfeile, Dolche, Feuerbälle des Spielers. schuss: { art, tempo,
+  // reichweite, schaden, pfeile, durchschlag, krit (immer kritisch),
+  // betaeuben (ms, fest) }. Was im Ziel passiert, rechnet gebiet.js beim
+  // Treffer — je Gegner neu gewürfelt.
+  schiessen(s, gebiet, schuss, jetzt) {
+    const k = s.werte.kampf, ruhe = this.ruhig(s, jetzt);
+    const [dx, dy] = RICHTUNGEN[s.richtung];
+    const schaden = schuss.schaden + (jetzt < s.rauschBis ? s.rauschBoni?.faehigkeit ?? 0 : 0) + (ruhe ? k.ruheSchuss : 0);
+    const n = schuss.pfeile ?? 1;
+    for (let i = 0; i < n; i++) {
+      // Mehrere Pfeile fliegen nebeneinander, quer zur Richtung versetzt.
+      const quer = (i - (n - 1) / 2) * 12;
+      gebiet.geschossAbfeuern({
+        von: s.id, art: schuss.art, richtung: s.richtung, rest: schuss.reichweite, schaden,
+        x: s.x + dx * 10 - dy * quer, y: s.y - 10 + dy * 8 + dx * quer, vx: dx * schuss.tempo, vy: dy * schuss.tempo,
+        kritChance: schuss.krit ? 1 : k.krit + (ruhe ? k.ruheKrit : 0), kritFaktor: k.kritFaktor,
+        betaeubenChance: k.betaeuben, betaeubenFest: schuss.betaeuben ?? 0, blend: schuss.betaeuben ? k.blendFlaeche : 0,
+        verlangsamen: k.verlangsamen, durch: (schuss.durchschlag ?? 0) + k.durchschlag, getroffen: new Set(),
+      });
+    }
+  }
+
   // Der Schaden eines Hiebs: Grundwert, Rausch, Kampfhaltung (wer kurz
   // stillstand), dann vielleicht kritisch. Dazu, was er beim Gegner auslöst.
   hiebSchaden(s, jetzt) {
@@ -216,7 +255,8 @@ export class Spiel {
     let schaden = s.werte.schaden;
     if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;
     if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
-    const krit = k.krit > 0 && this.zufall() < k.krit;
+    const kc = k.krit + (this.ruhig(s, jetzt) ? k.ruheKrit : 0);
+    const krit = kc > 0 && this.zufall() < kc;
     if (krit) schaden *= k.kritFaktor;
     return {
       schaden, krit,
@@ -233,6 +273,7 @@ export class Spiel {
     if (!k) return 0;
     let p = k.schutz;
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
+    p += this.ruhig(s, jetzt) ? k.ruheSchutz : jetzt - s.stehtSeit < 300 ? k.laufSchutz : 0;
     const aura = Math.max(0, ...this.gebiete.get(s.gebiet).spieler().filter((x) => x !== s && !x.tot && Math.hypot(x.x - s.x, x.y - s.y) <= 96).map((x) => x.werte?.kampf.aura ?? 0));
     p += aura;
     if (art === 'geschoss' || art === 'falle') p += k.ausweichen;
@@ -283,6 +324,43 @@ export class Spiel {
     this.speichern();
     this.spieler.delete(id);
     this.anAlle({ t: 'nachricht', text: `${s.name} ist gegangen.` });
+  }
+
+  // Alle Gebiete frisch aus den Karten — beim Start und wenn die Welt
+  // zurückgesetzt wird (offene Truhen, Türen, die liegende Kugel stehen in
+  // den Gebieten und kämen sonst aus dem alten Stand).
+  gebieteAufbauen() {
+    this.gebiete = new Map(Object.entries(this.karten).map(([name, karte]) => [name, new Gebiet(name, karte, this)]));
+    this.startGebiet = this.gebiete.get(this.w.startGebiet);
+  }
+
+  // ---------- Menü: von vorn ----------
+
+  // Den eigenen Charakter vergessen. Der Browser lädt danach neu und meldet
+  // sich unter demselben Namen an — dann ohne Spielstand, also mit neuer Wahl.
+  neuAnfangen(s) {
+    delete this.spielstand.daten.spieler[s.schluessel];
+    s.geloescht = true;
+    this.geaendert = true;
+    this.speichern();
+    this.anAlle({ t: 'nachricht', text: `${s.name} beginnt von vorn.` }, s.id);
+    s.senden({ t: 'neustart', grund: 'charakter' });
+  }
+
+  // Die ganze Welt und alle Figuren zurück auf Anfang. Nur, wenn niemand
+  // sonst im Spiel ist: den anderen verschwänden sonst mitten im Spiel
+  // Truhen, Risse und ihre eigene Figur.
+  weltZuruecksetzen(s) {
+    if (this.spieler.size > 1) {
+      s.senden({ t: 'nachricht', text: 'Die Welt lässt sich nur zurücksetzen, wenn sonst niemand im Spiel ist.' });
+      return;
+    }
+    this.spielstand.daten = { version: 1, spieler: {}, welt: {} };
+    s.geloescht = true;
+    this.gebieteAufbauen();
+    this.geaendert = true;
+    this.speichern();
+    s.senden({ t: 'neustart', grund: 'welt' });
   }
 
   // Was ein Browser braucht, um ein Gebiet aufzubauen.
@@ -403,6 +481,8 @@ export class Spiel {
     else if (m.t === 'verkaufen') this.verkaufen(s, m.art);
     else if (m.t === 'weltkarte') this.weltkarte(s);
     else if (m.t === 'aktion') this.aktion(s, m);
+    else if (m.t === 'neu_anfangen') this.neuAnfangen(s);
+    else if (m.t === 'welt_zuruecksetzen') this.weltZuruecksetzen(s);
     // Aus dem Charakterfenster kommt die Wahl als „art" (wie bei Gegenständen).
     else if (m.t === 'pfad') this.pfadWaehlen(s, m.pfad ?? m.art);
     else if (m.t === 'attribut') this.attributSetzen(s, m.attribut ?? m.art);
@@ -688,13 +768,14 @@ export class Spiel {
     const jetzt = this.jetzt();
     if (!f || s.tot || jetzt < s.faehigkeitBereit || this.gebiete.get(s.gebiet).meer) return;
     if (RICHTUNGEN[m.r]) s.richtung = m.r;
-    s.faehigkeitBereit = jetzt + f.abklingzeit;
+    // Schnellfeuer: im Rausch mit „qTempo" lädt Q schneller.
+    s.faehigkeitBereit = jetzt + Math.round(f.abklingzeit * (1 - (jetzt < s.rauschBis ? s.rauschBoni?.qTempo ?? 0 : 0) / 100));
     const gebiet = this.gebiete.get(s.gebiet);
     const [dx, dy] = RICHTUNGEN[s.richtung];
     gebiet.anAlle({ t: 'faehigkeit', id: s.id, art: f.art, r: s.richtung }, s.id);
 
     if (f.art === 'geschoss') {
-      gebiet.geschossAbfeuern({ von: s.id, art: f.geschoss, x: s.x + dx * 10, y: s.y - 10 + dy * 8, vx: dx * f.tempo, vy: dy * f.tempo, rest: f.reichweite, schaden: f.staerke, richtung: s.richtung });
+      this.schiessen(s, gebiet, { art: f.geschoss, tempo: f.tempo, reichweite: f.reichweite, schaden: f.staerke }, jetzt);
     } else if (f.art === 'heilung') {
       const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= f.umkreis);
       for (const p of ziele) p.leben = Math.min(this.maxLeben(p), p.leben + f.staerke);
@@ -797,6 +878,9 @@ export class Spiel {
   // Wer besiegt ist, wird mit vollem Leben an seiner Ankunft gespeichert —
   // sonst käme er nach einem Absturz mit 0 Herzen zurück.
   merken(s) {
+    // Gelöscht (Menü: von vorn): nicht wieder hineinschreiben, auch nicht
+    // beim regelmäßigen Speichern, bevor die Verbindung zugeht.
+    if (s.geloescht) return;
     const tot = s.tot;
     this.spielstand.daten.spieler[s.schluessel] = {
       name: s.name, farbe: s.farbe, richtung: s.richtung,

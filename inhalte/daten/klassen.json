@@ -525,8 +525,8 @@
     "vorteile": []
   },
   "waldlaeufer": {
-    "name": "Waldläufer",
-    "beschreibung": "Jäger der Wildnis. Schießt Pfeile über weite Strecken.",
+    "name": "Bogenschütze",
+    "beschreibung": "Meister des Fernkampfs: Pfeile auf Q, je ruhiger er steht, desto tödlicher. Hält Gegner auf Abstand.",
     "attribute": {
       "staerke": 12,
       "geschick": 15,
@@ -545,6 +545,431 @@
       "schaden": 1,
       "attribut": "geschick"
     },
-    "vorteile": []
+    "vorteile": [],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "fokus",
+          "name": "Fokussierter Schuss",
+          "quelle": "Fokussierter Schuss",
+          "text": "Wer einen Moment stillsteht, schießt mit +1 Schaden.",
+          "boni": {
+            "ruheSchuss": 1
+          }
+        },
+        {
+          "id": "ausbildung",
+          "name": "Bogenschützenausbildung",
+          "quelle": "Bogenschützenausbildung",
+          "text": "Pfeile fliegen 20 % weiter.",
+          "boni": {
+            "reichweite": 20
+          }
+        },
+        {
+          "id": "tarnung",
+          "name": "Unsichtbar im Gelände",
+          "quelle": "Hide in Plain Sight",
+          "text": "Solange du stillstehst, bemerken Gegner dich erst aus halber Entfernung.",
+          "boni": {
+            "tarnung": 1
+          }
+        },
+        {
+          "id": "entdecker",
+          "name": "Naturkundiger",
+          "quelle": "Natural Explorer",
+          "text": "5 % schneller.",
+          "boni": {
+            "tempoProzent": 5
+          }
+        },
+        {
+          "id": "landschritt",
+          "name": "Leichter Schritt",
+          "quelle": "Land's Stride",
+          "text": "Gelände bremst dich nicht — im Spiel bremst es bisher niemanden.",
+          "hinweis": true
+        }
+      ],
+      "2": [
+        {
+          "id": "gezielt",
+          "name": "Gezielter Schuss",
+          "quelle": "Gezielter Schuss",
+          "text": "Taste F: ein Pfeil mit +1 Schaden, der durch alle Gegner in seiner Bahn fliegt. Lädt 8 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "schuss",
+            "abklingzeit": 8000,
+            "schadenPlus": 1,
+            "durchschlag": 99
+          }
+        },
+        {
+          "id": "kraeuter",
+          "name": "Kräuterkunde",
+          "quelle": "Spellcasting",
+          "text": "Herzen, die du aufhebst, heilen ein halbes Herz mehr.",
+          "boni": {
+            "herzPlus": 1
+          }
+        },
+        {
+          "id": "ki_b",
+          "name": "Innere Ruhe",
+          "quelle": "Ki",
+          "text": "Aktive Fähigkeiten laden 10 % schneller.",
+          "boni": {
+            "aktionAbkling": 10
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "schnellschuss",
+          "name": "Schneller Schuss",
+          "quelle": "Schneller Schuss",
+          "text": "Pfeile laden 25 % schneller.",
+          "boni": {
+            "qAbkling": 25
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "wachsam",
+          "name": "Wachsamkeit",
+          "quelle": "Wachsamkeit",
+          "text": "Fallen und Geschosse verfehlen dich zu 15 %.",
+          "boni": {
+            "ausweichen": 0.15
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "schwaechend",
+          "name": "Schwächende Treffer",
+          "quelle": "Schwächende Treffer",
+          "text": "Wen du triffst, der ist 1,5 Sekunden lang halb so schnell.",
+          "boni": {
+            "verlangsamen": 1500
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "doppelschuss",
+          "name": "Doppelschuss",
+          "quelle": "Doppelschuss",
+          "text": "Gezielter Schuss und andere Schüsse auf Tasten schießen zwei Pfeile nebeneinander.",
+          "boni": {
+            "mehrPfeile": 1
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "erfahren",
+          "name": "Erfahrener Schütze",
+          "quelle": "Erfahrener Schütze",
+          "text": "10 % der Treffer sind kritisch, und Pfeile fliegen durch einen Gegner hindurch.",
+          "boni": {
+            "krit": 0.1,
+            "durchschlag": 1
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "angriff_b",
+          "name": "Zusätzlicher Angriff (2)",
+          "quelle": "Zusätzlicher Angriff (2)",
+          "text": "Mehr Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        }
+      ],
+      "13": [
+        {
+          "id": "instinkt_b",
+          "name": "Kampfinstinkt",
+          "quelle": "Kampfinstinkt",
+          "text": "Fallen und Geschosse verfehlen dich zu weiteren 15 %.",
+          "boni": {
+            "ausweichen": 0.15
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "praezision",
+          "name": "Gezielter Präzisionsschuss",
+          "quelle": "Gezielter Präzisionsschuss",
+          "text": "Wer stillsteht, trifft zu 25 % kritisch.",
+          "boni": {
+            "ruheKrit": 0.25
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "ruhe",
+          "name": "Tödliche Ruhe",
+          "quelle": "Tödliche Ruhe",
+          "text": "Wer stillsteht: 20 % der Treffer prallen ab und Pfeile machen +1 Schaden.",
+          "boni": {
+            "ruheSchutz": 0.2,
+            "ruheSchuss": 1
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "schnellfeuer",
+          "name": "Schnellfeuer",
+          "quelle": "Schnellfeuer",
+          "text": "Taste T: 5 Sekunden lang laden Pfeile doppelt so schnell und machen +1 Schaden. Lädt 45 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "rausch",
+            "dauer": 5000,
+            "abklingzeit": 45000,
+            "boni": {
+              "faehigkeit": 1,
+              "qTempo": 50
+            }
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "meisterschuetze",
+          "name": "Meisterschütze",
+          "quelle": "Meisterschütze",
+          "text": "Pfeile fliegen 50 % weiter.",
+          "boni": {
+            "reichweite": 50
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "legendaer",
+          "name": "Legendärer Treffer",
+          "quelle": "Legendärer Treffer",
+          "text": "Gezielter Schuss trifft immer kritisch.",
+          "boni": {
+            "schussKrit": 1
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "meisterschuetze": {
+        "name": "Meisterschütze",
+        "text": "Ruhe und Präzision: wer steht, trifft kritisch; ein Schuss quer über die Karte.",
+        "stufen": {
+          "3": [
+            {
+              "id": "kalibriert",
+              "name": "Kalibrierter Fokus",
+              "quelle": "Kalibrierter Fokus",
+              "text": "Wer stillsteht, schießt mit weiteren +1 Schaden.",
+              "boni": {
+                "ruheSchuss": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "winkel",
+              "name": "Perfekter Winkel",
+              "quelle": "Perfekter Winkel",
+              "text": "10 % der Treffer sind kritisch.",
+              "boni": {
+                "krit": 0.1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "ballistisch",
+              "name": "Durchdringender Schuss",
+              "quelle": "Ballistische Meisterschaft",
+              "text": "Taste R: ein Pfeil mit doppelter Reichweite und +2 Schaden, der durch alles fliegt. Lädt 15 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "schuss",
+                "abklingzeit": 15000,
+                "schadenPlus": 2,
+                "durchschlag": 99,
+                "reichweiteFaktor": 2
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "toedlich",
+              "name": "Tödliche Präzision",
+              "quelle": "Tödliche Präzision",
+              "text": "Wer stillsteht, trifft zu weiteren 25 % kritisch.",
+              "boni": {
+                "ruheKrit": 0.25
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "salve",
+              "name": "Legendärer Scharfschütze",
+              "quelle": "Legendärer Scharfschütze",
+              "text": "Aktive Fähigkeiten wirken doppelt so lange.",
+              "boni": {
+                "aktionDauer": 100
+              }
+            }
+          ]
+        }
+      },
+      "trickschuetze": {
+        "name": "Trickschütze",
+        "text": "Blendpfeile und Tricks: Gegner betäuben, schneller wechseln.",
+        "stufen": {
+          "3": [
+            {
+              "id": "blendpfeil",
+              "name": "Blendpfeil",
+              "quelle": "Showtime",
+              "text": "Taste R: ein Pfeil, der den Getroffenen 2 Sekunden betäubt. Lädt 10 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "schuss",
+                "abklingzeit": 10000,
+                "schadenPlus": 0,
+                "betaeuben": 2000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "improvisation",
+              "name": "Improvisationskünstler",
+              "quelle": "Improvisationskünstler",
+              "text": "Pfeile laden 20 % schneller.",
+              "boni": {
+                "qAbkling": 20
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "trickreich",
+              "name": "Trickreicher Angriff",
+              "quelle": "Trickreicher Angriff",
+              "text": "15 % deiner Treffer betäuben 1,5 Sekunden.",
+              "boni": {
+                "betaeuben": 0.15
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "blitzschnell",
+              "name": "Blitzschnelles Spiel",
+              "quelle": "Blitzschnelles Spiel",
+              "text": "+1 Schaden mit dem Schwert, und Hiebe kommen 20 % schneller.",
+              "boni": {
+                "schaden": 1,
+                "hiebTempo": 20
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "legendaerertrick",
+              "name": "Legendärer Trick",
+              "quelle": "Legendärer Trick",
+              "text": "Der Blendpfeil betäubt auch alle Gegner um das Ziel herum.",
+              "boni": {
+                "blendFlaeche": 64
+              }
+            }
+          ]
+        }
+      },
+      "jaeger": {
+        "name": "Jägerschütze",
+        "text": "Beute markieren: die ganze Gruppe trifft das markierte Ziel härter.",
+        "stufen": {
+          "3": [
+            {
+              "id": "markieren",
+              "name": "Beute markieren",
+              "quelle": "Jägerinstinkt",
+              "text": "Taste R: markiert den nächsten Gegner 15 Sekunden lang — jeder Treffer darauf macht +1 Schaden, von allen. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "markieren",
+                "dauer": 15000,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "wendig",
+              "name": "Wendige Jagd",
+              "quelle": "Wendige Jagd",
+              "text": "10 % schneller.",
+              "boni": {
+                "tempoProzent": 10
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "beutezugriff",
+              "name": "Beutezugriff",
+              "quelle": "Beutezugriff",
+              "text": "Stirbt dein markiertes Ziel, springt die Markierung zum nächsten Gegner.",
+              "boni": {
+                "markeSpringt": 1
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "deckung",
+              "name": "Instinktive Deckung",
+              "quelle": "Instinktive Deckung",
+              "text": "Solange du läufst, prallen 15 % der Treffer ab.",
+              "boni": {
+                "laufSchutz": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "meisterjaeger",
+              "name": "Meisterjäger",
+              "quelle": "Meisterjäger",
+              "text": "Treffer auf dein markiertes Ziel machen +2 statt +1 Schaden.",
+              "boni": {
+                "markeSchaden": 1
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

@@ -94,6 +94,7 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
     faehigkeit: f && {
       ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe),
       abklingzeit: Math.round(f.abklingzeit * (1 - Math.min(80, p.qAbkling ?? 0) / 100)),
+      ...(f.reichweite && { reichweite: Math.round(f.reichweite * (1 + (p.reichweite ?? 0) / 100)) }),
     },
     vorteile: klasse.vorteile ?? [],
     stufe,
@@ -106,6 +107,12 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       schutz: Math.min(0.75, p.schutz ?? 0), ausweichen: Math.min(0.75, p.ausweichen ?? 0), krit: Math.min(0.75, p.krit ?? 0),
       kritFaktor: 2 + (p.kritFaktor ?? 0), betaeuben: p.betaeuben ?? 0, verlangsamen: p.verlangsamen ?? 0, standfest: !!p.standfest,
       zaeh: p.zaeh ?? 0, erholung: p.erholung ?? 0, aura: p.aura ?? 0, haltung: p.haltung ?? 0, schreck: p.schreck ?? 0,
+      // Bogenschütze: wer stillsteht (Ruhe), schießt härter, trifft öfter
+      // kritisch, ist besser geschützt und schwerer zu entdecken; wer läuft,
+      // hat „laufSchutz". Pfeile: Reichweite (Prozent), Durchschlag (Gegner).
+      ruheSchuss: p.ruheSchuss ?? 0, ruheKrit: p.ruheKrit ?? 0, ruheSchutz: p.ruheSchutz ?? 0, laufSchutz: p.laufSchutz ?? 0,
+      reichweite: p.reichweite ?? 0, durchschlag: p.durchschlag ?? 0, mehrPfeile: p.mehrPfeile ?? 0, schussKrit: !!p.schussKrit,
+      herzPlus: p.herzPlus ?? 0, tarnung: !!p.tarnung, blendFlaeche: p.blendFlaeche ?? 0, markeSpringt: !!p.markeSpringt, markeSchaden: 1 + (p.markeSchaden ?? 0),
     },
   };
 }
