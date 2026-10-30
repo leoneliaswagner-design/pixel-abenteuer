@@ -129,7 +129,7 @@ export class Gebiet {
     g.tot = true;
     g.wiederBei = jetzt + g.w.neuErscheinen;
     this.anAlle({ t: 'gegner_tot', id: g.id, x: g.x, y: g.y });
-    this.spiel.beute(s.id, g);
+    this.spiel.beute(s.id, g, this);
     this.vielleichtHerz(g.x, g.y, g.w.herzChance);
   }
 

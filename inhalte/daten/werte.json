@@ -22,6 +22,12 @@
     "mutter",
     "kraemerin"
   ],
+  "stufen": {
+    "erfahrung": [0, 20, 50, 100, 170, 260, 370, 500, 650, 820, 1010, 1220, 1450, 1700, 1970, 2260, 2570, 2900, 3250, 3620],
+    "herzAb": [3, 6, 9, 12, 15, 18],
+    "schadenAb": [5, 11, 20],
+    "faehigkeitAb": [5, 11, 17]
+  },
   "spieler": {
     "leben": 6,
     "geschwindigkeit": 90,

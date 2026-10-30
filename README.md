@@ -284,6 +284,7 @@ node pruefstand/zwei-spieler.mjs    # zwei echte Browser gegen einen Server
 node pruefstand/gebiete.mjs         # Treppe in die Höhle, Spielstand über einen Neustart
 node pruefstand/interaktion.mjs     # Textbox, Figur dreht sich, Truhe öffnet für alle
 node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempel, Riss schließt sich
+node pruefstand/stufen.mjs          # Erfahrung, Aufstieg, Balken und Herzen am Bildpunkt
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo

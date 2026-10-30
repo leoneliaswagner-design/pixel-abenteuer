@@ -273,6 +273,28 @@ probe server/gebiet.js "    this.zustaendeGeaendert(false);" "" pruefstand/serve
 probe werkzeuge/karte.mjs "        { ziel: 'akropolis', ankunft: 'von_riftside', art: 'riss', bedingung: '!akropolis_geschlossen' }," "        { ziel: 'akropolis', ankunft: 'von_riftside', bedingung: '!akropolis_geschlossen' }," pruefstand/karten.mjs \
   "die Seilergasse ist kein Riss, sondern eine Haustür"
 
+# Stufen und Erfahrung
+probe gemeinsam/regeln.js "  while (n < t.length && erfahrung >= t[n]) n++;" "  while (n < t.length && erfahrung > t[n] * 2) n++;" pruefstand/server-regeln.mjs \
+  "Stufen kommen zu spät"
+probe server/spiel.js "    for (const s of gebiet.spieler()) if (!s.tot) this.erfahrungGeben(s, n);" "    void gebiet;" pruefstand/server-regeln.mjs \
+  "Siege bringen keine Erfahrung"
+probe server/spiel.js "      s.leben = s.werte.maxLeben;
+      this.gebiete" "      this.gebiete" pruefstand/server-regeln.mjs \
+  "Aufstieg füllt die Herzen nicht"
+probe server/spiel.js "      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung," "      klasse: s.klasse, spezies: s.spezies," pruefstand/server-regeln.mjs \
+  "Spielstand vergisst die Erfahrung"
+probe server/spiel.js "      if (e.erfahrung) for (const p of this.spieler.values())" "      if (e.erfahrung) for (const p of [s])" pruefstand/server-regeln.mjs \
+  "ein geschlossener Riss bringt nur dem Finder Erfahrung"
+probe gemeinsam/regeln.js " + 2 * erreicht(stufen?.herzAb, stufe)," "," pruefstand/stufen.mjs \
+  "Stufen bringen keine Herzen"
+probe client/szenen/Oberflaeche.js "    this.balken.width = Math.round((breite - 2) * Math.min(1, hat / braucht));" "    this.balken.width = breite - 2;" pruefstand/stufen.mjs \
+  "Erfahrungsbalken immer voll"
+probe client/szenen/Oberflaeche.js "      if (st.aufstieg) this.aufstiegZeigen(st.stufe);" "" pruefstand/stufen.mjs \
+  "keine Aufstiegs-Schrift in der Mitte"
+probe client/szenen/Spiel.js "      this.maxLeben = m.werte.maxLeben;
+      this.events.emit('stufe'" "      this.events.emit('stufe'" pruefstand/stufen.mjs \
+  "Browser zeigt die neuen Herzen erst nach dem Neuladen"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

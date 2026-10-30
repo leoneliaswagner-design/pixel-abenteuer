@@ -17,9 +17,33 @@ export const modifikator = (wert) => Math.floor((wert - 10) / 2);
 // Zahlen, die zu Herzen und Schleimen mit 2 Leben passen.
 const bonus = (mod) => (mod >= 2 ? 1 : 0);
 
+// ---------- Stufen ----------
+// Erfahrung → Stufe, nach der Tabelle in werte.json („stufen.erfahrung":
+// so viel Erfahrung braucht Stufe 1, 2, 3 …). Höchstens so viele Stufen,
+// wie die Tabelle Einträge hat.
+export function stufeFuer(erfahrung, stufen) {
+  const t = stufen?.erfahrung ?? [0];
+  let n = 1;
+  while (n < t.length && erfahrung >= t[n]) n++;
+  return n;
+}
+
+// Wie viel bis zur nächsten Stufe: [schon geschafft, nötig] für den Balken.
+export function stufenFortschritt(erfahrung, stufen) {
+  const t = stufen?.erfahrung ?? [0], n = stufeFuer(erfahrung, stufen);
+  if (n >= t.length) return [1, 1];
+  return [erfahrung - t[n - 1], t[n] - t[n - 1]];
+}
+
+// Was eine Stufe bringt: ein Herz mehr auf den Stufen in „herzAb", einen
+// Punkt Schaden auf „schadenAb" (wie Extra Attack auf 5, 11, 20), die
+// Fähigkeit wird auf „faehigkeitAb" stärker. Was die Klassen auf ihren
+// Stufen Eigenes lernen, kommt mit den Homebrew-Klassen dazu.
+const erreicht = (liste, stufe) => (liste ?? []).filter((s) => stufe >= s).length;
+
 // ausruestung: die angelegten Gegenstände (aus gegenstaende.json) mit ihren
 // „boni" — schaden, leben (halbe Herzen), tempo, faehigkeit.
-export function werteBerechnen(klasse, spezies, grund, ausruestung = []) {
+export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe = 1, stufen = null) {
   const attribute = {};
   for (const a of ATTRIBUTE) attribute[a] = (klasse.attribute?.[a] ?? 10) + (spezies.boni?.[a] ?? 0);
   const mod = Object.fromEntries(ATTRIBUTE.map((a) => [a, modifikator(attribute[a])]));
@@ -29,11 +53,11 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = []) {
     attribute,
     mod,
     // Halbe Herzen: Grund plus Konstitutions-Modifikator, mindestens zwei Herzen.
-    maxLeben: Math.max(4, grund.leben + mod.konstitution) + plus('leben'),
+    maxLeben: Math.max(4, grund.leben + mod.konstitution) + plus('leben') + 2 * erreicht(stufen?.herzAb, stufe),
     // Geschick macht schneller: 4 % je Punkt Modifikator.
     tempo: Math.round(grund.geschwindigkeit * (1 + 0.04 * mod.geschick)) + plus('tempo'),
-    schaden: 1 + bonus(mod.staerke) + plus('schaden'),
-    faehigkeit: f && { ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') },
+    schaden: 1 + bonus(mod.staerke) + plus('schaden') + erreicht(stufen?.schadenAb, stufe),
+    faehigkeit: f && { ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe) },
     vorteile: klasse.vorteile ?? [],
   };
 }

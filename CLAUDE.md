@@ -70,6 +70,11 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   fest. Im Browser: `rudern()` mit Schwung statt Laufen, Dunst, Kompass; der
   Server ignoriert Hieb und Fähigkeit dort und deckt beim Segeln auf
   (`sichten`). Auf See hat niemand einen Punkt auf der Weltkarte.
+- **Stufen**: `s.erfahrung` steht im Spielstand, die Stufe wird daraus
+  gerechnet (`stufeFuer()`, Tabelle `werte.stufen.erfahrung`). Was Stufen
+  bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
+  für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
+  alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
 - **Fallen und Steinkugel** (server/fallen.js): Punkte `falle` (stacheln,
   pfeile, platte) und `kugel_start`/`kugel_ende`; Zahlen in `werte.fallen`.
   Der Stand schickt `fallen` als Liste in Ortsreihenfolge und `kugel`. Die
@@ -103,6 +108,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   blättern, Figur dreht sich beim anderen Spieler, Truhe öffnet für alle.
 - `node pruefstand/risse.mjs` — Gruppenschlüssel, Tür, Riss in den Tempel;
   ein dritter Spieler nimmt das Idol, der zweite sieht den Riss vergehen.
+- `node pruefstand/stufen.mjs` — Idol bringt zwei Spielern Stufe 3: Schrift,
+  Erfahrungsbalken und fünftes Herz am Bildpunkt, Stufe nach dem Neuladen.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

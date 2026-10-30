@@ -54,7 +54,7 @@ export function karteBauen(name, def) {
         const n = (gezaehlt[z] = (gezaehlt[z] ?? 0) + 1) - 1;
         const eig = def.dinge?.[z]?.[n];
         if (!eig) throw new Error(`${name}: Ding '${z}' Nr. ${n + 1} bei ${x},${y} hat keine Angaben in „dinge"`);
-        ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, v)) });
+        ort({ name: DING_ZEICHEN[z], point: true, ...mitte(x, y), properties: Object.entries(eig).map(([k, v]) => eigenschaft(k, typeof v === 'number' ? String(v) : v)) });
       } else if (def.punkte?.[z]) {
         // Weitere Punkte mit Namen und Eigenschaften — Fallen, Start und Ende
         // der Steinkugel. Liste: das n-te Vorkommen nimmt den n-ten Eintrag.

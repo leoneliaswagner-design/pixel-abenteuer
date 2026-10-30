@@ -98,6 +98,7 @@ export class SpielSzene extends Phaser.Scene {
     // Nicht in create zurücksetzen: sonst wäre die Abklingzeit nach jedem
     // Gebietswechsel vorbei.
     this.faehigkeitBereit ??= 0;
+    this.aufstiege ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
     // Auf dem Meer: Boot, Schwung, Dunst, Kompass (s. eigeneFigur).
@@ -210,6 +211,7 @@ export class SpielSzene extends Phaser.Scene {
           id: this.meineId, x: this.ich.x, y: this.ich.y, leben: this.leben, max: this.maxLeben, tot: this.ich.tot,
           richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar, klasse: this.charakter?.klasse, textur: this.ich.koerper.texture.key,
           tempo: this.tempo, faehigkeitBereit: Math.max(0, this.faehigkeitBereit - this.time.now),
+          stufe: this.charakter?.stufe, erfahrung: this.charakter?.erfahrung, schaden: this.charakter?.werte.schaden,
         },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key })),
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
@@ -231,6 +233,8 @@ export class SpielSzene extends Phaser.Scene {
         tueren: [...this.welt.geoeffnet],
         risse: this.risse.map((r) => ({ ziel: r.ort.eig.ziel, sichtbar: r.bild.visible })),
         anzeige: this.oberflaeche().anzeigeText?.(),
+        stufenAnzeige: this.oberflaeche().stufenStand?.(),
+        aufstiege: this.aufstiege,
         fallen: this.fallen.map((f) => ({ art: f.art, bild: f.bild.frame.name })),
         kugel: this.kugel && { x: this.kugel.bild.x, y: this.kugel.bild.y, z: this.kugel.z, bild: this.kugel.bild.frame.name },
         gesperrt: [...this.welt.gesperrt],
@@ -576,6 +580,23 @@ export class SpielSzene extends Phaser.Scene {
       this.maxLeben = m.werte.maxLeben;
       this.events.emit('inventar', { inventar: this.inventar, gruppe: this.gruppe });
       this.fenster.aktualisieren();
+    });
+    // Erfahrung und Aufstieg: Stufe, Balken und neue Werte. Am selben Objekt
+    // wie willkommen.charakter — so stimmt alles auch nach dem nächsten
+    // Gebietswechsel (scene.restart baut aus willkommen neu auf).
+    n.bei('erfahrung', (m) => {
+      if (this.charakter) Object.assign(this.charakter, { stufe: m.stufe, erfahrung: m.erfahrung, fortschritt: m.fortschritt, werte: m.werte });
+      this.leben = m.leben;
+      this.tempo = m.werte.tempo;
+      this.maxLeben = m.werte.maxLeben;
+      this.events.emit('stufe', { stufe: m.stufe, fortschritt: m.fortschritt, aufstieg: m.aufstieg, dazu: m.dazu });
+      this.events.emit('faehigkeit', this.faehigkeitAngabe());
+    });
+    // Jemand im Gebiet steigt auf (auch man selbst): Funkeln an der Figur.
+    n.bei('aufstieg', (m) => {
+      const f = m.id === this.meineId ? this.ich : this.andere.get(m.id);
+      if (f) this.funkeln(f.x, f.y);
+      this.aufstiege++;
     });
     n.bei('weltkarte', (m) => {
       if (this.dialogOffen) return;

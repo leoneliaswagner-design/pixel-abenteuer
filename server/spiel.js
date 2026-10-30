@@ -6,7 +6,7 @@
 // Laufen bei 80 ms Ping zäh an. Der Server prüft sie aber (Tempo und Wände)
 // und schickt eine Korrektur, wenn sie nicht stimmen kann.
 import { RICHTUNGEN, erfuellt, hiebFlaeche, imRechteck } from '../gemeinsam/welt.js';
-import { PLAETZE, darfTragen, kaufpreis, passtHinein, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
+import { PLAETZE, darfTragen, kaufpreis, passtHinein, stufeFuer, stufenFortschritt, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 import { Gebiet, richtungZu } from './gebiet.js';
 
 const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
@@ -65,7 +65,7 @@ export class Spiel {
   // eine Rüstung ablegt, hat danach nicht mehr Leben als Herzen.
   werteNeu(s) {
     const an = PLAETZE.map((p) => this.gegenstaende[s.ausruestung[p]]).filter(Boolean);
-    s.werte = werteBerechnen(this.klassen[s.klasse], this.spezies[s.spezies], this.w.spieler, an);
+    s.werte = werteBerechnen(this.klassen[s.klasse], this.spezies[s.spezies], this.w.spieler, an, s.stufe ?? 1, this.w.stufen);
     s.leben = Math.min(s.leben, s.werte.maxLeben);
   }
 
@@ -103,6 +103,9 @@ export class Spiel {
       leben: Math.max(1, alt?.leben ?? this.w.spieler.leben), tot: false, wiederBei: 0,
       ankunft: alt?.ankunft && this.gebiete.has(alt.ankunft.gebiet) ? alt.ankunft : ort,
       inventar: { ...(alt?.inventar ?? {}) }, zuletztAngesprochen: 0,
+      // Die Stufe wird aus der Erfahrung gerechnet, nicht gespeichert: so
+      // passt sie auch dann, wenn jemand die Tabelle in werte.json ändert.
+      erfahrung: Math.max(0, Number(alt?.erfahrung) || 0),
       // Nur, was es (noch) gibt und an den richtigen Platz gehört — ein
       // umbenannter Gegenstand im Spielstand soll nichts kaputt machen.
       ausruestung: Object.fromEntries(PLAETZE.filter((p) => this.gegenstand(alt?.ausruestung?.[p])?.platz === p).map((p) => [p, alt.ausruestung[p]])),
@@ -112,6 +115,7 @@ export class Spiel {
       unverwundbarBis: jetzt + 15000, naechsterHieb: 0, faehigkeitBereit: 0, stossBis: 0,
       korrektur: 0, budget: 0, zuletzt: jetzt,
     };
+    s.stufe = stufeFuer(s.erfahrung, this.w.stufen);
     // Wer noch keine Klasse hat, wählt erst — bis dahin ist er für die
     // anderen nicht da (kein Stand, keine Gegner, kein Schaden).
     if (this.charakterGueltig(alt?.klasse, alt?.spezies)) this.charakterSetzen(s, alt.klasse, alt.spezies);
@@ -131,7 +135,36 @@ export class Spiel {
   }
 
   charakterAngabe(s) {
-    return { klasse: s.klasse, spezies: s.spezies, werte: s.werte };
+    return { klasse: s.klasse, spezies: s.spezies, werte: s.werte, ...this.stufenAngabe(s) };
+  }
+
+  stufenAngabe(s) {
+    return { stufe: s.stufe, erfahrung: s.erfahrung, fortschritt: stufenFortschritt(s.erfahrung, this.w.stufen) };
+  }
+
+  // Erfahrung für einen Spieler. Beim Aufstieg: Werte neu, Herzen voll,
+  // und alle sehen es (Funkeln bei der Figur, Meldung).
+  erfahrungGeben(s, n) {
+    if (!n || s.waehlt) return;
+    s.erfahrung += n;
+    const vorher = s.stufe;
+    s.stufe = stufeFuer(s.erfahrung, this.w.stufen);
+    const auf = s.stufe > vorher;
+    if (auf) {
+      this.werteNeu(s);
+      s.leben = s.werte.maxLeben;
+      this.gebiete.get(s.gebiet).anAlle({ t: 'aufstieg', id: s.id, stufe: s.stufe });
+      this.anAlle({ t: 'nachricht', text: `${s.name} erreicht Stufe ${s.stufe}!` });
+    }
+    s.senden({ t: 'erfahrung', dazu: n, aufstieg: auf, werte: s.werte, leben: s.leben, ...this.stufenAngabe(s) });
+    this.geaendert = true;
+  }
+
+  // Erfahrung für einen Sieg bekommen alle im Gebiet, nicht nur wer zuletzt
+  // zugeschlagen hat — wie in D&D die Gruppe; sonst lohnte es sich nicht,
+  // den Heiler zu spielen. Wer in einem anderen Gebiet ist, war nicht dabei.
+  erfahrungFuerGebiet(gebiet, n) {
+    for (const s of gebiet.spieler()) if (!s.tot) this.erfahrungGeben(s, n);
   }
 
   charakterWaehlen(s, m) {
@@ -422,6 +455,9 @@ export class Spiel {
       this.inventarSenden(s);
       gebiet.anAlle({ t: 'nachricht', text: sockel ? `${s.name} nimmt ${was} vom Sockel.` : `${s.name} öffnet eine Truhe.` }, s.id);
       this.zustandSetzen(e.setzt, e.meldung);
+      // Einen Riss zu schließen ist ein Erfolg der ganzen Gruppe — auch für
+      // die, die gerade in Riftside warten.
+      if (e.erfahrung) for (const p of this.spieler.values()) this.erfahrungGeben(p, Number(e.erfahrung));
       this.merken(s);
       this.speichern();
     } else if (ding.name === 'tuer' && e.oeffnet_bei) {
@@ -529,9 +565,11 @@ export class Spiel {
     this.inventarSenden(s);
   }
 
-  // Ein besiegter Gegner gibt dem, der ihn besiegt hat, etwas Gold.
-  beute(id, g) {
+  // Ein besiegter Gegner gibt dem, der ihn besiegt hat, etwas Gold — und
+  // allen im Gebiet Erfahrung.
+  beute(id, g, gebiet) {
     const s = this.spieler.get(id);
+    if (g.w.erfahrung && gebiet) this.erfahrungFuerGebiet(gebiet, g.w.erfahrung);
     const [von, bis] = g.w.gold ?? [0, 0];
     if (!s || !bis) return;
     const n = von + Math.floor(Math.random() * (bis - von + 1));
@@ -632,7 +670,7 @@ export class Spiel {
       name: s.name, farbe: s.farbe, richtung: s.richtung,
       gebiet: tot ? s.ankunft.gebiet : s.gebiet, x: tot ? s.ankunft.x : s.x, y: tot ? s.ankunft.y : s.y,
       leben: tot ? this.maxLeben(s) : s.leben, ankunft: s.ankunft, inventar: s.inventar, ausruestung: s.ausruestung,
-      klasse: s.klasse, spezies: s.spezies,
+      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung,
     };
     this.geaendert = true;
   }

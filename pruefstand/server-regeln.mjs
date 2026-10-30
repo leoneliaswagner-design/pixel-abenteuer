@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { Spiel } from '../server/spiel.js';
 import { Spielstand } from '../server/spielstand.js';
 import { bewege } from '../gemeinsam/welt.js';
-import { ZUSATZDATEN, kaufpreis, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
+import { ZUSATZDATEN, kaufpreis, stufeFuer, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 
 const lies = (p) => JSON.parse(readFileSync(new URL(`../${p}`, import.meta.url), 'utf8'));
 const werte = lies('inhalte/daten/werte.json');
@@ -922,6 +922,67 @@ const arena = (art, abstand) => {
   sp.verlassen(bea.id);
   sp = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
   pruefe(sp.gebiete.get('akropolis').welt.geoeffnet.has(tor.schluessel), 'nach dem Neustart steht das Tor offen');
+}
+
+// ---------- Stufen und Erfahrung ----------
+{
+  const st = werte.stufen;
+  pruefe(stufeFuer(0, st) === 1 && stufeFuer(st.erfahrung[1] - 1, st) === 1 && stufeFuer(st.erfahrung[1], st) === 2 && stufeFuer(1e9, st) === st.erfahrung.length,
+    `Erfahrung → Stufe nach der Tabelle (bis Stufe ${st.erfahrung.length})`);
+  const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+  let sp = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  const pa = [], pb = [], pc = [];
+  const ana = mitCharakter(sp, 'Ana', (m) => pa.push(m));
+  const bo = mitCharakter(sp, 'Bo', (m) => pb.push(m));
+  const cleo = mitCharakter(sp, 'Cleo', (m) => pc.push(m));
+  sp.wechseln(cleo, 'riftside', 'vom_wald');
+  const wald = sp.gebiete.get('wald');
+  const sieg = (wer) => {
+    const g = wald.gegner.find((x) => !x.tot);
+    wald.gegnerTreffen(g, wer, uhr, 99);
+    return g;
+  };
+  const max1 = ana.werte.maxLeben, schaden1 = ana.werte.schaden;
+  pa.length = pb.length = pc.length = 0;
+  const g = sieg(ana);
+  const xp = werte.monster[g.art].erfahrung;
+  pruefe(xp > 0 && ana.erfahrung === xp && bo.erfahrung === xp && cleo.erfahrung === 0,
+    `ein Sieg: Ana ${ana.erfahrung}, Bo ${bo.erfahrung} (im selben Gebiet), Cleo ${cleo.erfahrung} (anderswo)`);
+  pruefe(pb.some((m) => m.t === 'erfahrung' && m.dazu === xp && m.stufe === 1 && m.fortschritt[0] === xp), 'Bo bekommt die Erfahrung gemeldet, mit Fortschritt für den Balken');
+  // Kurz vor der nächsten Stufe: der nächste Sieg hebt Ana auf Stufe 2.
+  ana.erfahrung = st.erfahrung[1] - 1;
+  ana.leben = 1;
+  pa.length = pb.length = 0;
+  sieg(bo);
+  pruefe(ana.stufe === 2 && ana.leben === ana.werte.maxLeben && pa.some((m) => m.t === 'erfahrung' && m.aufstieg),
+    `Aufstieg auf Stufe ${ana.stufe}: Herzen wieder voll (${ana.leben}/${ana.werte.maxLeben})`);
+  pruefe(pb.some((m) => m.t === 'aufstieg' && m.id === ana.id && m.stufe === 2) && pc.some((m) => m.t === 'nachricht' && m.text.includes('Stufe 2')),
+    'Bo sieht den Aufstieg, Cleo liest die Meldung');
+  // Was Stufen bringen: ein Herz auf 3, Schaden auf 5.
+  ana.erfahrung = st.erfahrung[2] - 1;
+  sieg(bo);
+  const max3 = ana.werte.maxLeben;
+  ana.erfahrung = st.erfahrung[4] - 1;
+  sieg(bo);
+  pruefe(ana.stufe === 5 && max3 === max1 + 2 && ana.werte.schaden === schaden1 + 1,
+    `Stufe 3: ${max1} → ${max3} halbe Herzen; Stufe 5: Schaden ${schaden1} → ${ana.werte.schaden}`);
+  // Spielstand: Erfahrung (und damit Stufe) bleibt.
+  const merk = ana.erfahrung;
+  for (const x of [ana, bo, cleo]) sp.verlassen(x.id);
+  sp = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  const pa2 = [];
+  const ana2 = mitCharakter(sp, 'Ana', (m) => pa2.push(m));
+  const w = pa2.find((m) => m.t === 'willkommen');
+  pruefe(ana2.erfahrung === merk && ana2.stufe === 5 && w?.charakter?.stufe === 5 && ana2.werte.schaden === schaden1 + 1,
+    `nach dem Neustart: Stufe ${ana2.stufe}, ${ana2.erfahrung} Erfahrung, im Willkommen angegeben`);
+  // Ein Riss schließt sich: Erfahrung für alle, auch in einem anderen Gebiet.
+  const bo2 = mitCharakter(sp, 'Bo', () => {});
+  sp.wechseln(ana2, 'tempel', 'von_riftside');
+  const vor = bo2.erfahrung;
+  Object.assign(ana2, { x: 10 * 32 + 16, y: 5 * 32 + 16 });
+  uhr += 300;
+  sp.nachricht(ana2.id, { t: 'ansprechen', r: 'oben' });
+  pruefe(bo2.erfahrung === vor + 60 && bo2.gebiet !== 'tempel', `das Idol: ${bo2.erfahrung - vor} Erfahrung auch für Bo in ${bo2.gebiet}`);
 }
 
 // --- An die Wand heran, egal bei welcher Bildrate ---

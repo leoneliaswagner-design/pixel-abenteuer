@@ -310,7 +310,7 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     ankuenfte: { a: { id: 'von_riftside', richtung: 'oben' } },
     dinge: {
       '?': [{
-        inhalt: 'idol', id: 'tempel_idol', setzt: 'idol_genommen,tempel_geschlossen',
+        inhalt: 'idol', id: 'tempel_idol', setzt: 'idol_genommen,tempel_geschlossen', erfahrung: 60,
         meldung: 'Ein Grollen geht durch den Tempel … und in Riftside schließt sich der Riss in der Fischergasse!',
       }],
       // Magische Schrift: nur ein Magier kann sie lesen (Vorteil „magie").
@@ -374,7 +374,7 @@ WWWWWWWWWWWWWWWWWWWWW
     ankuenfte: { a: { id: 'von_riftside', richtung: 'oben' } },
     dinge: {
       '?': [{
-        inhalt: 'eule', id: 'akropolis_eule', aussehen: 'marmor', setzt: 'akropolis_geschlossen',
+        inhalt: 'eule', id: 'akropolis_eule', aussehen: 'marmor', setzt: 'akropolis_geschlossen', erfahrung: 60,
         meldung: 'Die Eule ist fort … und in Riftside schließt sich der Riss in der Seilergasse!',
       }],
       D: [{ id: 'akropolis_tor', oeffnet_bei: 'akropolis_tor', text: 'Das bronzene Tor rührt sich nicht. Kein Schloss, kein Griff.' }],

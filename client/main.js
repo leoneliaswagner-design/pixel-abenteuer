@@ -53,7 +53,7 @@ form.addEventListener('submit', async (e) => {
       const antwort = netz.warteAuf('charakter');
       netz.senden({ t: 'charakter', ...wahl });
       const c = await antwort;
-      willkommen.charakter = { klasse: c.klasse, spezies: c.spezies, werte: c.werte };
+      willkommen.charakter = { klasse: c.klasse, spezies: c.spezies, werte: c.werte, stufe: c.stufe, erfahrung: c.erfahrung, fortschritt: c.fortschritt };
       willkommen.leben = c.leben;
     }
     willkommen.name = name;

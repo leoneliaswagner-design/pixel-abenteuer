@@ -41,6 +41,18 @@ export class Oberflaeche extends Phaser.Scene {
     this.kompassText = this.add.text(72, h - 38, '', schrift).setOrigin(0, 0.5).setVisible(false);
     this.kompassZeichen = ['N', 'O', 'S', 'W'].map((z) => this.add.text(0, 0, z, { ...schrift, color: '#3e2a1c', stroke: '#f4e4c0' }).setOrigin(0.5).setVisible(false));
 
+    // Stufe neben den Herzen, darunter ein Balken bis zur nächsten.
+    this.stufeText = this.add.text(0, 12, '', schrift).setOrigin(0, 0.5);
+    this.balkenGrund = this.add.rectangle(6, 22, 60, 3, 0x1b1424).setOrigin(0, 0.5);
+    this.balken = this.add.rectangle(7, 22, 0, 1, 0x8ee05a).setOrigin(0, 0.5);
+    this.aufstiegText = this.add.text(b / 2, h / 2 - 30, '', { ...schrift, fontSize: '16px', color: '#ffd84a', strokeThickness: 4 }).setOrigin(0.5).setAlpha(0);
+    const c = spiel.charakter;
+    this.stufe = { stufe: c?.stufe ?? 1, fortschritt: c?.fortschritt ?? [0, 1] };
+    spiel.events.on('stufe', (st) => {
+      this.stufe = st;
+      this.stufeZeigen();
+      if (st.aufstieg) this.aufstiegZeigen(st.stufe);
+    });
     spiel.events.on('stand', (s) => this.zeigen(s));
     spiel.events.on('nachricht', (text) => this.melden(text));
     spiel.events.on('getrennt', () => {
@@ -51,7 +63,12 @@ export class Oberflaeche extends Phaser.Scene {
   zeigen({ leben, max, tot, spieler, meineId }) {
     const anzahl = Math.ceil(max / 2);
     while (this.herzen.length < anzahl) this.herzen.push(this.add.image(12 + this.herzen.length * 14, 12, 'herz', 0));
-    this.herzen.forEach((herz, i) => herz.setFrame(leben >= (i + 1) * 2 ? 0 : leben === i * 2 + 1 ? 1 : 2));
+    // Weniger Herzen (Rüstung abgelegt): die überzähligen ausblenden.
+    this.herzen.forEach((herz, i) => herz.setVisible(i < anzahl).setFrame(leben >= (i + 1) * 2 ? 0 : leben === i * 2 + 1 ? 1 : 2));
+    if (this.herzAnzahl !== anzahl) {
+      this.herzAnzahl = anzahl;
+      this.stufeZeigen();
+    }
 
     // Phaser-Text kennt keine Farbe pro Zeile; deshalb steht vor jedem
     // Namen ein Punkt in der Farbe seiner Tunika.
@@ -63,6 +80,26 @@ export class Oberflaeche extends Phaser.Scene {
       this.listePunkte([]);
     }
     if (!this.mitte.text.startsWith('Verbindung')) this.mitte.setText(tot ? 'Besiegt — gleich geht es weiter …' : '');
+  }
+
+  stufeZeigen() {
+    const breite = Math.max(48, (this.herzAnzahl ?? 3) * 14 - 2);
+    this.stufeText.setPosition(6 + (this.herzAnzahl ?? 3) * 14 + 2, 12).setText(`St. ${this.stufe.stufe}`);
+    const [hat, braucht] = this.stufe.fortschritt;
+    this.balkenGrund.width = breite;
+    this.balken.width = Math.round((breite - 2) * Math.min(1, hat / braucht));
+  }
+
+  aufstiegZeigen(stufe) {
+    this.tweens.killTweensOf(this.aufstiegText);
+    this.aufstiegText.setText(`Stufe ${stufe}!`).setAlpha(1).setScale(0.6);
+    this.tweens.add({ targets: this.aufstiegText, scale: 1, duration: 250, ease: 'Back.Out' });
+    this.tweens.add({ targets: this.aufstiegText, alpha: 0, delay: 1800, duration: 500 });
+  }
+
+  // Für den Prüfstand: Stufe, Balken in Bildpunkten, ob die Aufstiegs-Schrift steht.
+  stufenStand() {
+    return { text: this.stufeText.text, balken: this.balken.width, voll: this.balkenGrund.width - 2, aufstieg: this.aufstiegText.alpha > 0.5 ? this.aufstiegText.text : '' };
   }
 
   update() {

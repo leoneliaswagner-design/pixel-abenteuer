@@ -1,5 +1,6 @@
 {
   "schleim": {
+    "erfahrung": 3,
     "name": "Schleim",
     "verhalten": "jagen",
     "leben": 2,
@@ -18,6 +19,7 @@
     "bildTempo": 4
   },
   "riesenratte": {
+    "erfahrung": 2,
     "name": "Riesenratte",
     "srd": "Giant Rat",
     "verhalten": "jagen",
@@ -37,6 +39,7 @@
     "bildTempo": 6
   },
   "wolf": {
+    "erfahrung": 6,
     "name": "Wolf",
     "srd": "Wolf",
     "verhalten": "anspringen",
@@ -63,6 +66,7 @@
     "bildTempo": 6
   },
   "goblin": {
+    "erfahrung": 6,
     "name": "Goblin",
     "srd": "Goblin",
     "verhalten": "fernkampf",
@@ -90,6 +94,7 @@
     "bildTempo": 6
   },
   "skelett": {
+    "erfahrung": 8,
     "name": "Skelett",
     "srd": "Skeleton",
     "verhalten": "jagen",
@@ -109,6 +114,7 @@
     "bildTempo": 6
   },
   "riesenfledermaus": {
+    "erfahrung": 2,
     "name": "Riesenfledermaus",
     "srd": "Giant Bat",
     "verhalten": "flattern",

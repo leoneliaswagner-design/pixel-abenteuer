@@ -83,6 +83,12 @@
     das Tor (zu zweit leicht, allein ein Wettlauf); die silberne Eule auf
     dem Sockel schließt den Riss.
 
+- **Stufen und Erfahrung** (30.10.2026): Stufe 1–20 nach einer Tabelle in
+  `werte.json`; Erfahrung für Siege (alle im Gebiet) und geschlossene Risse
+  (alle). Stufen bringen Herzen (3, 6, 9 …), Schaden (5, 11, 20) und eine
+  stärkere Fähigkeit (5, 11, 17). Anzeige „St. n" mit Balken, „Stufe n!"
+  und Funkeln beim Aufstieg. Prüfstand `stufen.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -106,11 +112,15 @@
    (Strände, Leuchtturm …), sobald die Kampagne dazu etwas sagt.
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
-9. **Weitere Risse** — welche Orte, sagt die Kampagne. Offen auch: was
+9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
+   die acht Klassen mit ihren Fähigkeiten je Stufe, Pfadwahl auf Stufe 3,
+   Attributspunkte auf 4, 8, 12, 16, 19. Erst dann ersetzen sie die fünf
+   bisherigen Klassen. Die Spezies aus Foundry (18) ersetzen die vier.
+10. **Weitere Risse** — welche Orte, sagt die Kampagne. Offen auch: was
    passiert, wenn alle Risse zu sind (die Stadt „gerettet")? Die Leute in
    Riftside kennen bisher nur die Fischergasse; Texte für die Seilergasse
    (`text_wenn_akropolis_geschlossen`) fehlen noch.
-10. Die Akropolis-Platten prüft nur server-regeln; ein Browser-Prüfstand
+11. Die Akropolis-Platten prüft nur server-regeln; ein Browser-Prüfstand
    (Platte am Bildpunkt gedrückt, Tor geht beim anderen auf) fehlt.
 
 ## Später (Vorschlag — Reihenfolge offen)
@@ -248,3 +258,10 @@
   Server — beim Spieler kam nur „Keine Verbindung zum Spielserver". Die
   Prüfstände merken das nicht (sie laufen mit Server); vor dem Veröffentlichen
   gehört eine Anmeldung auf der Vorschau ohne Server dazu.
+- In der vollen Runde (Maschine ausgelastet) schlugen einmal `zwei-spieler`
+  (Gras neben dem Busch Byte für Byte gleich) und `monster` (Pfeilwinkel)
+  fehl, einzeln liefen beide grün. Beide messen bewegte Welt — offen, ob sie
+  robuster werden sollten.
+- stufen.mjs maß das neue Herz erst, nachdem die Steinkugel (vom Idol
+  geweckt) Ana schon getroffen hatte: gemessen wird jetzt gleich nach dem
+  Aufstieg.
