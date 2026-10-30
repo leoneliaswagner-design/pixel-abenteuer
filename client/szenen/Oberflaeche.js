@@ -29,10 +29,10 @@ export class Oberflaeche extends Phaser.Scene {
     this.anzeigen({ inventar: spiel.inventar ?? {}, gruppe: spiel.gruppe ?? {} });
     spiel.events.on('inventar', (i) => this.anzeigen(i));
 
-    // Die Klassen-Fähigkeit unten links: Taste und Name, darunter ein Balken,
-    // der sich füllt, bis sie wieder geht.
-    this.faehigkeitText = this.add.text(6, h - 10, '', schrift).setOrigin(0, 1);
-    this.faehigkeitBalken = this.add.rectangle(6, h - 6, 0, 2, 0xe8c15a).setOrigin(0, 0.5);
+    // Die Fähigkeiten unten links, Q zuunterst: Taste und Name, darunter ein
+    // Balken, der sich füllt, bis sie wieder geht.
+    this.schrift = schrift;
+    this.zeilen = [];
     this.faehigkeit = spiel.faehigkeitAngabe?.() ?? null;
     spiel.events.on('faehigkeit', (f) => (this.faehigkeit = f));
 
@@ -46,8 +46,10 @@ export class Oberflaeche extends Phaser.Scene {
     this.balkenGrund = this.add.rectangle(6, 22, 60, 3, 0x1b1424).setOrigin(0, 0.5);
     this.balken = this.add.rectangle(7, 22, 0, 1, 0x8ee05a).setOrigin(0, 0.5);
     this.aufstiegText = this.add.text(b / 2, h / 2 - 30, '', { ...schrift, fontSize: '16px', color: '#ffd84a', strokeThickness: 4 }).setOrigin(0.5).setAlpha(0);
+    // Offene Wahl (Pfad, Attributspunkte): ein Hinweis unter dem Balken.
+    this.wahlText = this.add.text(0, 12, '', { ...schrift, color: '#ffd84a' }).setOrigin(0, 0.5);
     const c = spiel.charakter;
-    this.stufe = { stufe: c?.stufe ?? 1, fortschritt: c?.fortschritt ?? [0, 1] };
+    this.stufe = { stufe: c?.stufe ?? 1, fortschritt: c?.fortschritt ?? [0, 1], offen: c?.offen };
     spiel.events.on('stufe', (st) => {
       this.stufe = st;
       this.stufeZeigen();
@@ -88,6 +90,9 @@ export class Oberflaeche extends Phaser.Scene {
     const [hat, braucht] = this.stufe.fortschritt;
     this.balkenGrund.width = breite;
     this.balken.width = Math.round((breite - 2) * Math.min(1, hat / braucht));
+    const o = this.stufe.offen ?? {};
+    const was = [o.pfad && 'Pfad', o.punkte && `+${o.punkte}`].filter(Boolean).join(', ');
+    this.wahlText.setPosition(this.stufeText.x + this.stufeText.width + 8, 12).setText(was ? `C: ${was}` : '');
   }
 
   aufstiegZeigen(stufe) {
@@ -99,20 +104,27 @@ export class Oberflaeche extends Phaser.Scene {
 
   // Für den Prüfstand: Stufe, Balken in Bildpunkten, ob die Aufstiegs-Schrift steht.
   stufenStand() {
-    return { text: this.stufeText.text, balken: this.balken.width, voll: this.balkenGrund.width - 2, aufstieg: this.aufstiegText.alpha > 0.5 ? this.aufstiegText.text : '' };
+    return { wahl: this.wahlText.text, zeilen: this.zeilen.filter((z) => z.text.visible).map((z) => z.text.text), text: this.stufeText.text, balken: this.balken.width, voll: this.balkenGrund.width - 2, aufstieg: this.aufstiegText.alpha > 0.5 ? this.aufstiegText.text : '' };
   }
 
   update() {
     const spiel = this.scene.get('spiel');
     const meer = !!spiel.meer;
     this.kompassMalen(meer, spiel.kurs ?? 0, spiel.ich && Math.hypot(spiel.bootV?.x ?? 0, spiel.bootV?.y ?? 0) > 8);
-    const f = meer ? null : this.faehigkeit;
-    this.faehigkeitText.setVisible(!!f);
-    this.faehigkeitBalken.setVisible(!!f);
-    if (!f) return;
-    const rest = Math.max(0, f.bereitBis - this.scene.get('spiel').time.now);
-    this.faehigkeitText.setText(`Q ${f.name}`).setAlpha(rest ? 0.5 : 1);
-    this.faehigkeitBalken.width = this.faehigkeitText.width * (1 - rest / f.dauer);
+    const liste = meer ? [] : this.faehigkeit ?? [];
+    const h = this.scale.height;
+    while (this.zeilen.length < liste.length)
+      this.zeilen.push({ text: this.add.text(6, 0, '', this.schrift).setOrigin(0, 1), balken: this.add.rectangle(6, 0, 0, 2, 0xe8c15a).setOrigin(0, 0.5) });
+    this.zeilen.forEach((z, i) => {
+      const f = liste[i];
+      z.text.setVisible(!!f);
+      z.balken.setVisible(!!f);
+      if (!f) return;
+      const rest = Math.max(0, f.bereitBis - spiel.time.now);
+      z.text.setPosition(6, h - 10 - i * 16).setText(`${f.taste} ${f.name}`).setAlpha(rest ? 0.5 : 1);
+      z.balken.setPosition(6, h - 6 - i * 16);
+      z.balken.width = z.text.width * (1 - rest / f.dauer);
+    });
   }
 
   // Ein Kompass: Rose mit N oben, die Nadel zeigt den Kurs des Boots.
@@ -162,9 +174,10 @@ export class Oberflaeche extends Phaser.Scene {
     for (const [art, bild, anzahl] of eintraege) {
       if (!anzahl) continue;
       const symbol = art === 'heiltrank' || art === 'idol' || art === 'eule'
-        ? this.add.image(x - 2, 28, 'gegenstaende', bild).setOrigin(0, 0.5)
-        : this.add.image(x, 28, 'symbole', bild).setOrigin(0, 0.5);
-      const zahl = this.add.text(x + 14, 28, art === 'heiltrank' ? `${anzahl} [1]` : String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);
+        ? this.add.image(x - 2, 33, 'gegenstaende', bild).setOrigin(0, 0.5)
+        : this.add.image(x, 33, 'symbole', bild).setOrigin(0, 0.5);
+      // y 33: unter dem Erfahrungsbalken (y 22), nicht darüber.
+      const zahl = this.add.text(x + 14, 33, art === 'heiltrank' ? `${anzahl} [1]` : String(anzahl), { fontFamily: SCHRIFT, fontSize: '8px', color: '#f4ecd8', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0, 0.5);
       this.anzeige.push(symbol, zahl);
       this.anzeigeStand.push(`${art} ${anzahl}`);
       x += 14 + zahl.width + 8;

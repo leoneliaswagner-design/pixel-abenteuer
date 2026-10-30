@@ -1,4 +1,7 @@
-import { PLAETZE, PLATZ_NAME, darfTragen, passtHinein } from '../gemeinsam/regeln.js';
+import { ATTRIBUTE, ATTRIBUT_HOECHSTENS, PLAETZE, PLATZ_NAME, darfTragen, gelernteFaehigkeiten, modifikator, passtHinein } from '../gemeinsam/regeln.js';
+
+const ATTRIBUT_NAME = { staerke: 'Stärke', geschick: 'Geschick', konstitution: 'Konstitution', intelligenz: 'Intelligenz', weisheit: 'Weisheit', charisma: 'Charisma' };
+const WIRKT = { staerke: 'Schwertschaden', geschick: 'Tempo', konstitution: 'Herzen', charisma: 'Preise' };
 
 // Rucksack, Laden und Weltkarte: HTML über dem Spiel, nicht in Phaser — Beschreibungen
 // brechen von selbst um, Knöpfe gehen mit Maus, Finger und Enter, und am
@@ -32,6 +35,11 @@ export class Fenster {
 
   rucksack() {
     this.art = 'rucksack';
+    this.zeichnen();
+  }
+
+  charakter() {
+    this.art = 'charakter';
     this.zeichnen();
   }
 
@@ -90,8 +98,8 @@ export class Fenster {
     const d = this.daten();
     this.wurzel.hidden = false;
     if (this.gewaehlt && !(d.inventar[this.gewaehlt] > 0) && !Object.values(d.ausruestung).includes(this.gewaehlt)) this.gewaehlt = null;
-    const inhalt = { laden: () => this.ladenHtml(d), weltkarte: () => this.weltkarteHtml(d), rucksack: () => this.rucksackHtml(d) }[this.art]();
-    const titel = { laden: 'Laden', weltkarte: 'Weltkarte', rucksack: 'Rucksack' }[this.art];
+    const inhalt = { laden: () => this.ladenHtml(d), weltkarte: () => this.weltkarteHtml(d), rucksack: () => this.rucksackHtml(d), charakter: () => this.charakterHtml(d) }[this.art]();
+    const titel = { laden: 'Laden', weltkarte: 'Weltkarte', rucksack: 'Rucksack', charakter: 'Charakter' }[this.art];
     this.wurzel.innerHTML = `<div class="kasten${this.art === 'weltkarte' ? ' breit' : ''}" role="dialog" aria-label="${titel}">${inhalt}</div>`;
     if (this.art === 'weltkarte') this.nebelMalen(d);
     // Fokus in das Fenster, damit Enter die Knöpfe trifft und nicht das Spiel.
@@ -131,6 +139,44 @@ export class Fenster {
     if (gruppe.length)
       zeilen.push(`<h3>Gehört der Gruppe</h3><p class="gruppe">${gruppe.map(([a, n]) => `<span>${this.symbol(a)} ${n} × ${html(d.gegenstaende[a]?.name ?? a)}</span>`).join('')}</p>`);
     zeilen.push(this.gewaehlt ? this.einzelheiten(d, this.gewaehlt) : '<p class="tipp">Tippe auf einen Gegenstand.</p>');
+    return zeilen.join('');
+  }
+
+  // Stufe, Attribute (mit Punkten zum Verteilen), Pfadwahl, was man kann
+  // und was noch kommt. Die Wahl schickt der Knopf an den Server.
+  charakterHtml(d) {
+    const c = d.charakter, w = c?.werte;
+    const zeilen = [this.kopf('Charakter', d)];
+    if (!w) return zeilen.join('') + '<p>Noch keine Klasse gewählt.</p>';
+    const k = d.klassen[c.klasse] ?? {};
+    const [hat, braucht] = c.fortschritt ?? [0, 1];
+    const offen = c.offen ?? {};
+    zeilen.push(`<p class="wer">${html(d.name)} — ${html(d.speziesName)}, ${html(d.klassenName)}${w.pfad ? ` (${html(k.pfade?.[w.pfad]?.name ?? w.pfad)})` : ''}</p>
+      <p class="werte"><span>Stufe ${c.stufe ?? 1}</span><span>Erfahrung ${c.erfahrung ?? 0}</span><span>${hat >= braucht ? 'höchste Stufe' : `noch ${braucht - hat} bis Stufe ${(c.stufe ?? 1) + 1}`}</span></p>`);
+    zeilen.push(`<h3>Attribute${offen.punkte ? ` <small>noch ${offen.punkte} ${offen.punkte === 1 ? 'Punkt' : 'Punkte'} zu verteilen</small>` : ''}</h3><div class="liste attributliste">`);
+    for (const a of ATTRIBUTE) {
+      const wert = w.attribute[a], mod = modifikator(wert);
+      const voll = wert >= ATTRIBUT_HOECHSTENS;
+      zeilen.push(`<div class="ware"><b>${ATTRIBUT_NAME[a]}</b><span>${wert} (${mod >= 0 ? '+' : ''}${mod})${WIRKT[a] ? `<small>wirkt auf ${WIRKT[a]}</small>` : ''}</span>${offen.punkte ? this.knopf('+1', { tun: 'attribut', art: a }, voll && `höchstens ${ATTRIBUT_HOECHSTENS}`) : '<span></span>'}</div>`);
+    }
+    zeilen.push('</div>');
+    if (offen.pfad) {
+      zeilen.push('<h3>Wähle deinen Weg <small>einmal, für immer</small></h3><div class="liste">');
+      for (const [id, p] of Object.entries(k.pfade ?? {})) {
+        const was = gelernteFaehigkeiten({ pfade: { [id]: p } }, 20, id).map((f) => `<li><b>Stufe ${f.ab}:</b> ${html(f.name)} — ${html(f.text)}</li>`).join('');
+        zeilen.push(`<div class="einzeln pfad"><div><b>${html(p.name)}</b><p>${html(p.text)}</p><ul>${was}</ul>${this.knopf(`${p.name} werden`, { tun: 'pfad', art: id })}</div></div>`);
+      }
+      zeilen.push('</div>');
+    }
+    zeilen.push('<h3>Das kannst du</h3><ul class="faehig">');
+    for (const g of w.gelernt) {
+      const a = w.aktionen.find((x) => x.id === g.id);
+      zeilen.push(`<li><b>${html(g.name)}</b>${a ? ` <span class="taste">${a.taste}</span>` : ''} — ${html(g.text)}</li>`);
+    }
+    zeilen.push('</ul>');
+    // Was noch kommt: aus der Klasse und dem gewählten Pfad, die nächsten Stufen.
+    const spaeter = gelernteFaehigkeiten(k, 20, w.pfad).filter((f) => f.ab > (c.stufe ?? 1)).slice(0, 6);
+    if (spaeter.length) zeilen.push(`<h3>Kommt noch</h3><ul class="faehig spaeter">${spaeter.map((f) => `<li><b>Stufe ${f.ab}: ${html(f.name)}</b> — ${html(f.text)}</li>`).join('')}</ul>`);
     return zeilen.join('');
   }
 

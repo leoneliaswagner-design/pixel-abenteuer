@@ -21,7 +21,7 @@ const ort = (gebiet, x, y) => ({ gebiet, x: x * 32 + 16, y: y * 32 + 24 });
 const spieler = (name, farbe, o) => ({ name, farbe, klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', ...o, leben: 8, ankunft: o, inventar: {} });
 const datei = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
 writeFileSync(datei, JSON.stringify({ version: 1, welt: { entdeckt: ['insel-047'] }, spieler: { ana: spieler('Ana', 'gruen', ort('riftside', 22, 9)), bodo: spieler('Bodo', 'rot', ort('tempel', 9, 9)) } }));
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: datei } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: datei } });
 let log = '';
 await new Promise((gut, schlecht) => {
   const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);

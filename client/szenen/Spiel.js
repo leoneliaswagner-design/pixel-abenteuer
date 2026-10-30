@@ -98,7 +98,11 @@ export class SpielSzene extends Phaser.Scene {
     // Nicht in create zurücksetzen: sonst wäre die Abklingzeit nach jedem
     // Gebietswechsel vorbei.
     this.faehigkeitBereit ??= 0;
+    this.aktionBereit ??= {};
+    this.sprintBis ??= 0;
     this.aufstiege ??= 0;
+    this.krits ??= 0;
+    this.abgewehrt ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
     // Auf dem Meer: Boot, Schwung, Dunst, Kompass (s. eigeneFigur).
@@ -168,6 +172,10 @@ export class SpielSzene extends Phaser.Scene {
     for (const [taste, r] of Object.entries(RICHTUNG_DER_TASTE)) this.input.keyboard.on(`keydown-${taste}`, () => (this.getippt = r));
     this.faehigkeitGewuenscht = false;
     for (const taste of ['Q', 'K']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.faehigkeitGewuenscht = true));
+    // Aktive Fähigkeiten aus der Klasse (klassen.json „aktion.taste").
+    this.aktionGewuenscht = null;
+    for (const taste of ['F', 'R', 'T']) this.input.keyboard.on(`keydown-${taste}`, (e) => !e.repeat && (this.aktionGewuenscht = taste));
+    this.input.keyboard.on('keydown-C', (e) => !e.repeat && this.charakterUmschalten());
     this.input.keyboard.on('keydown-I', (e) => !e.repeat && this.rucksackUmschalten());
     this.input.keyboard.on('keydown-M', (e) => !e.repeat && this.karteUmschalten());
     this.input.keyboard.on('keydown-ESC', () => this.fenster.schliessen());
@@ -212,15 +220,19 @@ export class SpielSzene extends Phaser.Scene {
           richtung: this.ich.richtung, unverwundbar: this.ich.unverwundbar, klasse: this.charakter?.klasse, textur: this.ich.koerper.texture.key,
           tempo: this.tempo, faehigkeitBereit: Math.max(0, this.faehigkeitBereit - this.time.now),
           stufe: this.charakter?.stufe, erfahrung: this.charakter?.erfahrung, schaden: this.charakter?.werte.schaden,
+          pfad: this.charakter?.pfad, offen: this.charakter?.offen, effekt: this.ich.effekt, tint: this.ich.koerper.tintTopLeft, alpha: this.ich.koerper.alpha,
+          aktionen: (this.charakter?.werte.aktionen ?? []).map((a) => ({ id: a.id, taste: a.taste, bereitIn: Math.max(0, (this.aktionBereit[a.id] ?? 0) - this.time.now) })),
+          gelernt: (this.charakter?.werte.gelernt ?? []).map((g) => g.id), attribute: this.charakter?.werte.attribute,
         },
-        andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key })),
+        andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key, effekt: f.effekt, tint: f.koerper.tintTopLeft, alpha: f.koerper.alpha })),
+        krits: this.krits, abgewehrt: this.abgewehrt,
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt,
+          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -312,6 +324,11 @@ export class SpielSzene extends Phaser.Scene {
   rucksackUmschalten() {
     if (this.fenster.offen) this.fenster.schliessen();
     else if (!this.dialogOffen && !this.wechselt) this.fenster.rucksack();
+  }
+
+  charakterUmschalten() {
+    if (this.fenster.art === 'charakter') this.fenster.schliessen();
+    else if (!this.dialogOffen && !this.wechselt) this.fenster.charakter();
   }
 
   oberflaeche() {
@@ -474,9 +491,20 @@ export class SpielSzene extends Phaser.Scene {
     }
   }
 
+  // Was unten links steht: die Klassenfähigkeit (Q) und die aktiven
+  // Fähigkeiten aus den Stufen (F, R, T), jede mit ihrer Abklingzeit.
   faehigkeitAngabe() {
-    const f = this.charakter?.werte.faehigkeit;
-    return f ? { name: f.name, bereitBis: this.faehigkeitBereit, dauer: f.abklingzeit } : null;
+    const w = this.charakter?.werte;
+    const liste = [];
+    if (w?.faehigkeit) liste.push({ taste: 'Q', name: w.faehigkeit.name, bereitBis: this.faehigkeitBereit, dauer: w.faehigkeit.abklingzeit });
+    for (const a of w?.aktionen ?? []) liste.push({ taste: a.taste, name: a.name, bereitBis: this.aktionBereit?.[a.id] ?? 0, dauer: a.abklingzeit });
+    return liste.length ? liste : null;
+  }
+
+  // Ein Wort über einer Figur oder einem Gegner („Krit!", „Abgewehrt").
+  aufschrift(x, y, text, farbe) {
+    const t = this.add.text(x, y - 40, text, { fontFamily: SCHRIFT, fontSize: '8px', color: farbe, stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5).setDepth(6000);
+    this.tweens.add({ targets: t, y: t.y - 14, alpha: 0, duration: 800, onComplete: () => t.destroy() });
   }
 
   geschosseUebernehmen(liste) {
@@ -585,11 +613,12 @@ export class SpielSzene extends Phaser.Scene {
     // wie willkommen.charakter — so stimmt alles auch nach dem nächsten
     // Gebietswechsel (scene.restart baut aus willkommen neu auf).
     n.bei('erfahrung', (m) => {
-      if (this.charakter) Object.assign(this.charakter, { stufe: m.stufe, erfahrung: m.erfahrung, fortschritt: m.fortschritt, werte: m.werte });
+      if (this.charakter) Object.assign(this.charakter, { stufe: m.stufe, erfahrung: m.erfahrung, fortschritt: m.fortschritt, werte: m.werte, offen: m.offen, pfad: m.pfad, attributPlus: m.attributPlus });
+      this.fenster.aktualisieren();
       this.leben = m.leben;
       this.tempo = m.werte.tempo;
       this.maxLeben = m.werte.maxLeben;
-      this.events.emit('stufe', { stufe: m.stufe, fortschritt: m.fortschritt, aufstieg: m.aufstieg, dazu: m.dazu });
+      this.events.emit('stufe', { stufe: m.stufe, fortschritt: m.fortschritt, aufstieg: m.aufstieg, dazu: m.dazu, offen: m.offen });
       this.events.emit('faehigkeit', this.faehigkeitAngabe());
     });
     // Jemand im Gebiet steigt auf (auch man selbst): Funkeln an der Figur.
@@ -622,7 +651,21 @@ export class SpielSzene extends Phaser.Scene {
       this.ich.laeuft = false;
       this.oberflaeche().dialogZeigen(m.name ?? '', m.seiten);
     });
-    n.bei('gegner_treffer', (m) => this.aufblitzen(this.gegner.get(m.id)?.sprite));
+    n.bei('gegner_treffer', (m) => {
+      const g = this.gegner.get(m.id);
+      this.aufblitzen(g?.sprite);
+      if (m.krit && g) {
+        this.krits++;
+        this.aufschrift(g.x, g.y + 16, 'Krit!', '#ffd84a');
+      }
+    });
+    // Ein Treffer prallt an jemandem ab (Kampfstil, Rausch, Schutzaura).
+    n.bei('abgeprallt', (m) => {
+      const f = m.id === this.meineId ? this.ich : this.andere.get(m.id);
+      if (!f) return;
+      this.abgewehrt++;
+      this.aufschrift(f.x, f.y, 'Abgewehrt', '#bfe0ff');
+    });
     n.bei('gegner_tot', (m) => {
       const g = this.gegner.get(m.id);
       if (g) g.sprite.setVisible(false);
@@ -667,6 +710,7 @@ export class SpielSzene extends Phaser.Scene {
         if (s.leben < this.leben) this.aufblitzen(this.ich.koerper);
         this.leben = s.leben;
         this.ich.unverwundbar = s.unv;
+        this.ich.effekt = s.e ?? '';
         this.ich.tot = s.tot;
         if (s.tot) this.fenster.schliessen();
         continue;
@@ -680,7 +724,7 @@ export class SpielSzene extends Phaser.Scene {
         f.y = s.y;
         this.andere.set(s.id, f);
       }
-      Object.assign(f, { zielX: s.x, zielY: s.y, richtung: s.r, laeuft: s.l, unverwundbar: s.unv, tot: s.tot });
+      Object.assign(f, { zielX: s.x, zielY: s.y, richtung: s.r, laeuft: s.l, unverwundbar: s.unv, tot: s.tot, effekt: s.e ?? '' });
     }
     for (const [id, f] of this.andere)
       if (!gesehen.has(id)) {
@@ -714,6 +758,10 @@ export class SpielSzene extends Phaser.Scene {
       e.duckt = g.z === 'laden';
       if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
       else if (!e.sprite.anims.isPlaying) e.sprite.play(g.art);
+      // Betäubt: bläulich grau, solange es dauert.
+      if (g.bt) e.sprite.setTint(0x9098c8);
+      else if (e.betaeubt) e.sprite.clearTint();
+      e.betaeubt = !!g.bt;
       e.sprite.setVisible(!g.tot);
       e.schatten.setVisible(!g.tot);
     }
@@ -802,6 +850,7 @@ export class SpielSzene extends Phaser.Scene {
     // Krämerin wieder an, und der Laden ging sofort wieder auf.
     if (this.fenster.offen || jetzt - this.fensterZu < 200) {
       this.ansprechGewuenscht = this.hiebGewuenscht = this.faehigkeitGewuenscht = false;
+      this.aktionGewuenscht = null;
       this.getippt = null;
     }
     if (this.fenster.offen) {
@@ -813,6 +862,7 @@ export class SpielSzene extends Phaser.Scene {
     if (this.dialogOffen) {
       if (this.ansprechGewuenscht || this.hiebGewuenscht) this.dialogOffen = this.oberflaeche().weiter();
       this.ansprechGewuenscht = this.hiebGewuenscht = this.faehigkeitGewuenscht = false;
+      this.aktionGewuenscht = null;
       this.getippt = null;
       this.hinweis.setVisible(false);
       ich.laeuft = false;
@@ -838,8 +888,11 @@ export class SpielSzene extends Phaser.Scene {
             (ich.richtung === 'oben' && iy < 0) || (ich.richtung === 'unten' && iy > 0);
           if (!passt) ich.richtung = iy ? (iy < 0 ? 'oben' : 'unten') : ix < 0 ? 'links' : 'rechts';
           const l = Math.hypot(ix, iy);
-          dx = (ix / l) * this.tempo * dt;
-          dy = (iy / l) * this.tempo * dt;
+          // Schritt des Windes: eine Weile schneller (der Server erlaubt es,
+          // sein Weg-Guthaben reicht bis zum Tempo des Rückstoßes).
+          const tempo = this.tempo * (jetzt < this.sprintBis ? this.sprintFaktor ?? 1 : 1);
+          dx = (ix / l) * tempo * dt;
+          dy = (iy / l) * tempo * dt;
         } else if (this.getippt) ich.richtung = this.getippt;
         const ding = this.welt.dingVor(ich.x, ich.y, ich.richtung);
         if (this.ansprechGewuenscht && ding) {
@@ -851,11 +904,21 @@ export class SpielSzene extends Phaser.Scene {
           dx = dy = 0;
         }
         if (this.hiebGewuenscht && jetzt >= this.naechsterHieb) {
-          ich.hieb(ich.richtung, ws.hiebDauer);
-          this.naechsterHieb = jetzt + ws.hiebDauer + ws.hiebPause;
+          // Schneller zuschlagen (Kampfkunst): der Abstand kommt aus den Werten.
+          const abstand = this.charakter?.werte.hiebAbstand ?? ws.hiebDauer + ws.hiebPause;
+          ich.hieb(ich.richtung, Math.min(ws.hiebDauer, abstand));
+          this.naechsterHieb = jetzt + abstand;
           this.netz.senden({ t: 'hieb', r: ich.richtung });
           laeuft = false;
           dx = dy = 0;
+        }
+        const a = this.aktionGewuenscht && this.charakter?.werte.aktionen?.find((x) => x.taste === this.aktionGewuenscht);
+        if (a && jetzt >= (this.aktionBereit[a.id] ?? 0)) {
+          this.positionSenden(jetzt, false);
+          this.netz.senden({ t: 'aktion', id: a.id });
+          this.aktionBereit[a.id] = jetzt + a.abklingzeit;
+          if (a.art === 'sprint') [this.sprintBis, this.sprintFaktor] = [jetzt + a.dauer, a.tempoFaktor];
+          this.events.emit('faehigkeit', this.faehigkeitAngabe());
         }
         const f = this.charakter?.werte.faehigkeit;
         if (this.faehigkeitGewuenscht && f && jetzt >= this.faehigkeitBereit) {
@@ -880,6 +943,7 @@ export class SpielSzene extends Phaser.Scene {
     // Ein Druck während des Hiebs zählt nicht für den nächsten — sonst
     // schlägt die Figur nach, ohne dass man es will.
     this.hiebGewuenscht = false;
+    this.aktionGewuenscht = null;
     this.ansprechGewuenscht = false;
     this.faehigkeitGewuenscht = false;
     this.getippt = null;
@@ -898,6 +962,7 @@ export class SpielSzene extends Phaser.Scene {
   rudern(jetzt, dt) {
     const ich = this.ich, t = this.tasten, wb = this.w.boot ?? { tempo: 150, beschleunigung: 1.6 };
     this.hiebGewuenscht = this.ansprechGewuenscht = this.faehigkeitGewuenscht = false;
+    this.aktionGewuenscht = null;
     const ix = (t.RIGHT.isDown || t.D.isDown ? 1 : 0) - (t.LEFT.isDown || t.A.isDown ? 1 : 0);
     const iy = (t.DOWN.isDown || t.S.isDown ? 1 : 0) - (t.UP.isDown || t.W.isDown ? 1 : 0);
     const l = Math.hypot(ix, iy) || 1;

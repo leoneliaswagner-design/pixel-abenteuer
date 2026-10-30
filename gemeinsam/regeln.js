@@ -41,24 +41,72 @@ export function stufenFortschritt(erfahrung, stufen) {
 // Stufen Eigenes lernen, kommt mit den Homebrew-Klassen dazu.
 const erreicht = (liste, stufe) => (liste ?? []).filter((s) => stufe >= s).length;
 
+// Was eine Klasse bis zu einer Stufe gelernt hat: ihre „stufen" und die
+// ihres Pfads (ab „pfadAb"), in Stufenfolge. Jede Fähigkeit hat „boni"
+// (passiv, werden zusammengezählt) oder eine „aktion" (eigene Taste).
+export function gelernteFaehigkeiten(klasse, stufe, pfad) {
+  const aus = (liste) => Object.entries(liste ?? {}).flatMap(([ab, fs]) => (stufe >= Number(ab) ? fs.map((f) => ({ ...f, ab: Number(ab) })) : []));
+  return [...aus(klasse?.stufen), ...aus(klasse?.pfade?.[pfad]?.stufen)].sort((a, b) => a.ab - b.ab);
+}
+
+// Offene Entscheidungen beim Aufstieg: ein Pfad (einmal, ab „pfadAb") und
+// Attributspunkte (zwei je Stufe in „attributAb", wie die ASI in D&D).
+export function offeneWahl(klasse, stufe, pfad, attributPlus = {}) {
+  const verteilt = Object.values(attributPlus).reduce((n, v) => n + v, 0);
+  return {
+    pfad: !!(klasse?.pfade && stufe >= (klasse.pfadAb ?? 3) && !klasse.pfade[pfad]),
+    punkte: Math.max(0, 2 * (klasse?.attributAb ?? []).filter((s) => stufe >= s).length - verteilt),
+  };
+}
+export const ATTRIBUT_HOECHSTENS = 20;
+
 // ausruestung: die angelegten Gegenstände (aus gegenstaende.json) mit ihren
 // „boni" — schaden, leben (halbe Herzen), tempo, faehigkeit.
-export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe = 1, stufen = null) {
+// pfad und attributPlus ({staerke: 2 …}) kommen aus dem Spielstand.
+export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe = 1, stufen = null, pfad = null, attributPlus = {}) {
   const attribute = {};
-  for (const a of ATTRIBUTE) attribute[a] = (klasse.attribute?.[a] ?? 10) + (spezies.boni?.[a] ?? 0);
+  for (const a of ATTRIBUTE) attribute[a] = Math.min(ATTRIBUT_HOECHSTENS + 4, (klasse.attribute?.[a] ?? 10) + (spezies.boni?.[a] ?? 0) + (attributPlus?.[a] ?? 0));
+  const gelernt = gelernteFaehigkeiten(klasse, stufe, pfad);
+  // Passive Boni aus dem Gelernten zusammenzählen (Zahlen addieren sich).
+  const p = {};
+  for (const g of gelernt) for (const [k, v] of Object.entries(g.boni ?? {})) p[k] = (p[k] ?? 0) + v;
   const mod = Object.fromEntries(ATTRIBUTE.map((a) => [a, modifikator(attribute[a])]));
   const f = klasse.faehigkeit ?? null;
-  const plus = (b) => ausruestung.reduce((n, g) => n + (g?.boni?.[b] ?? 0), 0);
+  const plus = (b) => ausruestung.reduce((n, g) => n + (g?.boni?.[b] ?? 0), 0) + (p[b] ?? 0);
+  // Aktive Fähigkeiten: länger mit „aktionDauer", schneller geladen mit
+  // „aktionAbkling" (beides in Prozent).
+  const aktionen = gelernt.filter((g) => g.aktion).map((g) => ({
+    id: g.id, name: g.name, ...g.aktion,
+    dauer: g.aktion.dauer && Math.round(g.aktion.dauer * (1 + (p.aktionDauer ?? 0) / 100)),
+    abklingzeit: Math.round(g.aktion.abklingzeit * (1 - Math.min(80, p.aktionAbkling ?? 0) / 100)),
+  }));
+  // Hiebe: „hiebTempo" in Prozent kürzer, aber nie kürzer als 80 % des
+  // Schwungs selbst — sonst begänne der nächste, bevor der erste vorbei ist.
+  const hiebAbstand = Math.max(Math.round((grund.hiebDauer ?? 260) * 0.8), Math.round(((grund.hiebDauer ?? 260) + (grund.hiebPause ?? 120)) * (1 - (p.hiebTempo ?? 0) / 100)));
   return {
     attribute,
     mod,
     // Halbe Herzen: Grund plus Konstitutions-Modifikator, mindestens zwei Herzen.
     maxLeben: Math.max(4, grund.leben + mod.konstitution) + plus('leben') + 2 * erreicht(stufen?.herzAb, stufe),
     // Geschick macht schneller: 4 % je Punkt Modifikator.
-    tempo: Math.round(grund.geschwindigkeit * (1 + 0.04 * mod.geschick)) + plus('tempo'),
+    tempo: Math.round(grund.geschwindigkeit * (1 + 0.04 * mod.geschick + (p.tempoProzent ?? 0) / 100)) + plus('tempo'),
     schaden: 1 + bonus(mod.staerke) + plus('schaden') + erreicht(stufen?.schadenAb, stufe),
-    faehigkeit: f && { ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe) },
+    faehigkeit: f && {
+      ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe),
+      abklingzeit: Math.round(f.abklingzeit * (1 - Math.min(80, p.qAbkling ?? 0) / 100)),
+    },
     vorteile: klasse.vorteile ?? [],
+    stufe,
+    pfad: klasse.pfade?.[pfad] ? pfad : null,
+    gelernt: gelernt.map((g) => ({ id: g.id, name: g.name, text: g.text, ab: g.ab, aktiv: !!g.aktion })),
+    aktionen,
+    hiebAbstand,
+    // Was im Kampf zählt — Wahrscheinlichkeiten 0…1, Zeiten in ms.
+    kampf: {
+      schutz: Math.min(0.75, p.schutz ?? 0), ausweichen: Math.min(0.75, p.ausweichen ?? 0), krit: Math.min(0.75, p.krit ?? 0),
+      kritFaktor: 2 + (p.kritFaktor ?? 0), betaeuben: p.betaeuben ?? 0, verlangsamen: p.verlangsamen ?? 0, standfest: !!p.standfest,
+      zaeh: p.zaeh ?? 0, erholung: p.erholung ?? 0, aura: p.aura ?? 0, haltung: p.haltung ?? 0, schreck: p.schreck ?? 0,
+    },
   };
 }
 

@@ -89,6 +89,14 @@
   stärkere Fähigkeit (5, 11, 17). Anzeige „St. n" mit Balken, „Stufe n!"
   und Funkeln beim Aufstieg. Prüfstand `stufen.mjs`.
 
+- **Krieger** (30.10.2026): die erste Homebrew-Klasse, ersetzt den Kämpfer.
+  Alle 15 Stufen-Fähigkeiten und die drei Pfade (Barbar, Schwertkämpfer,
+  Martial Artist) aus Foundry, fürs Echtzeit-Spiel übersetzt: Abprallen,
+  Ausweichen, Krit, Betäuben, Verlangsamen, Rausch, Zweiter Atem, Sprint,
+  Leerer Körper, Schutzaura, Unerbittlich, Unbeugsam. Pfadwahl auf Stufe 3
+  und Attributspunkte (4, 6, 8, 12, 14, 16, 19) im Charakterfenster (C).
+  Tasten F/R/T. Prüfstand `krieger.mjs`.
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -113,9 +121,12 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   die acht Klassen mit ihren Fähigkeiten je Stufe, Pfadwahl auf Stufe 3,
-   Attributspunkte auf 4, 8, 12, 16, 19. Erst dann ersetzen sie die fünf
-   bisherigen Klassen. Die Spezies aus Foundry (18) ersetzen die vier.
+   Krieger steht. Offen: Drachenreiter, Bogenschütze, Dieb, Arzt, Koch,
+   Musiker, Gelehrter — nach demselben Muster in `klassen.json`. Danach
+   fallen Schurke, Magier, Kleriker, Waldläufer weg. Die Spezies aus
+   Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
+   abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
+   schnellere Abklingzeiten).
 10. **Weitere Risse** — welche Orte, sagt die Kampagne. Offen auch: was
    passiert, wenn alle Risse zu sind (die Stadt „gerettet")? Die Leute in
    Riftside kennen bisher nur die Fischergasse; Texte für die Seilergasse

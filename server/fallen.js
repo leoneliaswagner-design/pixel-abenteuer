@@ -45,7 +45,7 @@ export class Fallen {
         for (const s of hier)
           if (!s.tot && jetzt >= s.unverwundbarBis && fussKachel(s) === f.kachel)
             // Der Stoß geht von der Kachelmitte weg — man fliegt dorthin zurück, woher man kam.
-            g.spiel.spielerTreffen(s, { x: f.x, y: f.y + 6 + (s.y - 8 < f.y ? 4 : -4), w: { schaden: this.w.stacheln.schaden } }, jetzt);
+            g.spiel.spielerTreffen(s, { x: f.x, y: f.y + 6 + (s.y - 8 < f.y ? 4 : -4), w: { schaden: this.w.stacheln.schaden } }, jetzt, 'falle');
       } else if (f.art === 'pfeile') {
         const p = this.w.pfeile;
         if (f.schussBei && jetzt >= f.schussBei) {
@@ -131,7 +131,7 @@ export class Fallen {
       if (s.tot || jetzt < s.unverwundbarBis) continue;
       if (Math.abs(s.x - kg.x) > w.radius || Math.abs(s.y - 8 - kg.y) > w.radius) continue;
       // Getroffen wird man nach vorn, in Rollrichtung — weg von der Kugel.
-      g.spiel.spielerTreffen(s, { x: s.x, y: s.y - 12, w: { schaden: w.schaden } }, jetzt);
+      g.spiel.spielerTreffen(s, { x: s.x, y: s.y - 12, w: { schaden: w.schaden } }, jetzt, 'falle');
     }
   }
 

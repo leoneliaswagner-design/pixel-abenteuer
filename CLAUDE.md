@@ -75,6 +75,14 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
+- **Klassen-Fähigkeiten** (zuerst der Krieger, intern `kaempfer`): in
+  `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
+  (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
+  macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
+  `gelernt`, `hiebAbstand`. Pfad (`s.pfad`) und Attributspunkte
+  (`s.attributPlus`) stehen im Spielstand; offene Wahl rechnet `offeneWahl()`.
+  Glück läuft über `spiel.zufall` — Prüfstände setzen `ZUFALL=0.99` (nie)
+  bzw. geben in server-regeln einen eigenen Wurf vor.
 - **Fallen und Steinkugel** (server/fallen.js): Punkte `falle` (stacheln,
   pfeile, platte) und `kugel_start`/`kugel_ende`; Zahlen in `werte.fallen`.
   Der Stand schickt `fallen` als Liste in Ortsreihenfolge und `kugel`. Die
@@ -110,6 +118,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   ein dritter Spieler nimmt das Idol, der zweite sieht den Riss vergehen.
 - `node pruefstand/stufen.mjs` — Idol bringt zwei Spielern Stufe 3: Schrift,
   Erfahrungsbalken und fünftes Herz am Bildpunkt, Stufe nach dem Neuladen.
+- `node pruefstand/krieger.mjs` — Pfad und Attributspunkte im
+  Charakterfenster (C), Leiste Q/F/R, Kampfrausch beim anderen rot am
+  Bildpunkt, Fenster bei 360 Punkten.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

@@ -3,7 +3,16 @@
 import { readFileSync, writeFileSync, mkdtempSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Spiel } from '../server/spiel.js';
+import { Spiel as EchtesSpiel } from '../server/spiel.js';
+
+// Ohne Glück: kein Abprallen, Ausweichen oder kritischer Treffer, außer ein
+// Prüfblock gibt seinen eigenen Zufall vor (der Krieger prallte sonst in jedem
+// zehnten Lauf an einem Schleim ab, und eine Prüfung fiel aus).
+class Spiel extends EchtesSpiel {
+  constructor(karten, werte, optionen = {}) {
+    super(karten, werte, { zufall: () => 0.99, ...optionen });
+  }
+}
 import { Spielstand } from '../server/spielstand.js';
 import { bewege } from '../gemeinsam/welt.js';
 import { ZUSATZDATEN, kaufpreis, stufeFuer, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
@@ -983,6 +992,187 @@ const arena = (art, abstand) => {
   uhr += 300;
   sp.nachricht(ana2.id, { t: 'ansprechen', r: 'oben' });
   pruefe(bo2.erfahrung === vor + 60 && bo2.gebiet !== 'tempel', `das Idol: ${bo2.erfahrung - vor} Erfahrung auch für Bo in ${bo2.gebiet}`);
+}
+
+// ---------- Krieger: Fähigkeiten je Stufe, Pfade, Attributspunkte ----------
+{
+  let wurf = 0.99;
+  const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
+  let sp = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei), zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const lauf = (ms) => {
+    for (let i = 0; i < ms; i += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+    }
+  };
+  const pk = [], pm = [];
+  const kurt = mitCharakter(sp, 'Kurt', (m) => pk.push(m));
+  const mia = mitCharakter(sp, 'Mia', (m) => pm.push(m), 'magier');
+  const aufStufe = (wer, n) => {
+    wer.erfahrung = t[n - 1] - 1;
+    sp.erfahrungGeben(wer, 1);
+  };
+  const wald = sp.gebiete.get('wald');
+  const schleim = { x: 0, y: 0, w: { schaden: 1 } };
+  const treffen = (wer, art = 'nah') => {
+    Object.assign(schleim, { x: wer.x, y: wer.y - 20 });
+    wer.unverwundbarBis = 0;
+    wer.leben = 6;
+    pk.length = pm.length = 0;
+    sp.spielerTreffen(wer, schleim, uhr, art);
+    return 6 - wer.leben;
+  };
+  pruefe(kurt.werte.gelernt.map((g) => g.id).join(',') === 'kampfstil,kriegsdisziplin' && kurt.werte.aktionen[0]?.taste === 'F',
+    `Krieger Stufe 1: ${kurt.werte.gelernt.map((g) => g.name).join(', ')}`);
+  // Kampfstil: 10 % prallen ab — mit Wurf 0,05 prallt es ab, mit 0,5 nicht.
+  wurf = 0.05;
+  const ab = treffen(kurt);
+  pruefe(ab === 0 && pk.some((m) => m.t === 'abgeprallt'), 'Kampfstil: ein Treffer prallt ab (Wurf 0,05 unter 10 %)');
+  wurf = 0.5;
+  pruefe(treffen(kurt) === 1, 'mit Wurf 0,5 trifft der Schleim');
+  // Stufe 2: Gefahrensinn — gegen Fallen 35 %, gegen Nahkampf weiter 10 %.
+  const tempo1 = kurt.werte.tempo;
+  aufStufe(kurt, 2);
+  wurf = 0.3;
+  pruefe(treffen(kurt, 'falle') === 0 && treffen(kurt, 'nah') === 1 && kurt.werte.tempo > tempo1,
+    `Stufe 2: Falle weicht aus, Schleim trifft; Tempo ${tempo1} → ${kurt.werte.tempo}`);
+  // Kriegsdisziplin (F): +1 Schaden für 6 s, dann Abklingzeit.
+  wurf = 0.99;
+  const g = wald.gegner[0];
+  const schlag = () => {
+    Object.assign(g, { tot: false, leben: 50, getroffenBis: 0 });
+    const vor = g.leben;
+    Object.assign(kurt, { x: g.x, y: g.y + 20, richtung: 'oben' });
+    kurt.naechsterHieb = 0;
+    sp.hieb(kurt, { r: 'oben' });
+    return vor - g.leben;
+  };
+  const normal = schlag();
+  sp.aktion(kurt, { id: 'kriegsdisziplin' });
+  uhr += 300;
+  const imRausch = schlag();
+  const zweites = kurt.aktionBereit.kriegsdisziplin;
+  sp.aktion(kurt, { id: 'kriegsdisziplin' });
+  pruefe(imRausch === normal + 1 && kurt.aktionBereit.kriegsdisziplin === zweites, `Kriegsdisziplin: Hieb ${normal} → ${imRausch}; zweimal hintereinander geht nicht`);
+  uhr += 7000;
+  pruefe(schlag() === normal, 'nach 6 s ist die Kriegsdisziplin vorbei');
+  // Pfad: auf Stufe 2 nicht, auf 3 einmal.
+  sp.pfadWaehlen(kurt, 'barbar');
+  const zuFrueh = kurt.pfad;
+  aufStufe(kurt, 3);
+  const offen3 = pk.find((m) => m.t === 'erfahrung')?.offen;
+  sp.pfadWaehlen(kurt, 'gibtsnicht');
+  sp.pfadWaehlen(kurt, 'barbar');
+  sp.pfadWaehlen(kurt, 'martial');
+  pruefe(!zuFrueh && offen3?.pfad && kurt.pfad === 'barbar' && kurt.werte.aktionen.some((a) => a.id === 'kampfrausch' && a.taste === 'R'),
+    `Pfad: auf Stufe 2 gesperrt, auf 3 offen, Barbar gewählt (Wechsel danach nicht mehr): ${kurt.werte.aktionen.map((a) => a.taste + ' ' + a.name).join(', ')}`);
+  // Kampfrausch: die Hälfte prallt ab.
+  wurf = 0.4;
+  const ohneRausch = treffen(kurt);
+  sp.aktion(kurt, { id: 'kampfrausch' });
+  pruefe(ohneRausch === 1 && treffen(kurt) === 0, 'Kampfrausch: Wurf 0,4 trifft ohne, prallt mit Rausch ab');
+  // Attributspunkte auf Stufe 4: zwei Stück.
+  aufStufe(kurt, 4);
+  const st0 = kurt.werte.attribute.staerke;
+  for (let i = 0; i < 3; i++) sp.attributSetzen(kurt, 'staerke');
+  sp.attributSetzen(kurt, 'gibtsnicht');
+  pruefe(kurt.werte.attribute.staerke === st0 + 2 && kurt.attributPlus.staerke === 2, `Stufe 4: zwei Punkte auf Stärke (${st0} → ${kurt.werte.attribute.staerke}), der dritte geht nicht`);
+  // Schutzaura auf Stufe 6: Mia neben Kurt prallt ab, weit weg nicht.
+  aufStufe(kurt, 6);
+  sp.wechseln(mia, 'wald', 'von_hoehle');
+  sp.wechseln(kurt, 'wald', 'von_hoehle');
+  Object.assign(mia, { x: kurt.x + 40, y: kurt.y });
+  wurf = 0.05;
+  const nah = treffen(mia);
+  // Eine freie Stelle weit weg (mehr als drei Kacheln).
+  const weit = [[300, 0], [-300, 0], [-160, 0], [0, -200], [200, 150], [-200, 150]].map(([dx, dy]) => ({ x: kurt.x + dx, y: kurt.y + dy })).find((o) => sp.gebiete.get('wald').welt.frei(o.x, o.y));
+  Object.assign(mia, weit);
+  const fern = weit ? treffen(mia) : -1;
+  pruefe(nah === 0 && fern === 1, `Schutzaura: Mia neben Kurt ${nah} Schaden, weit weg ${fern}`);
+  // Stufe 9: Unerbittlich. Stufe 13: standfest. Stufe 17: Präsenz und Krit.
+  aufStufe(kurt, 9);
+  wurf = 0.99;
+  kurt.unverwundbarBis = 0;
+  kurt.leben = 1;
+  sp.spielerTreffen(kurt, schleim, uhr);
+  const ersterTod = kurt.leben;
+  uhr += 2000;
+  kurt.unverwundbarBis = 0;
+  kurt.leben = 1;
+  sp.spielerTreffen(kurt, schleim, uhr);
+  pruefe(ersterTod === 1 && kurt.tot, `Unerbittlich: der erste tödliche Treffer lässt ${ersterTod}, der zweite gleich danach nicht`);
+  Object.assign(kurt, { tot: false, leben: 6 });
+  aufStufe(kurt, 13);
+  treffen(kurt);
+  const stoss = pk.find((m) => m.t === 'getroffen');
+  pruefe(stoss && stoss.vx === 0 && stoss.vy === 0, 'Unbeugsam: kein Rückstoß mehr');
+  aufStufe(kurt, 17);
+  uhr += 60000;
+  const nahe = wald.gegner.find((x) => !x.tot);
+  Object.assign(kurt, { x: nahe.x, y: nahe.y + 30 });
+  sp.aktion(kurt, { id: 'kriegsdisziplin' });
+  pruefe(uhr < (nahe.betaeubtBis ?? 0), 'Einschüchternde Präsenz: der Schleim neben Kurt erstarrt');
+  uhr += 30000;
+  const grund17 = schlag();
+  wurf = 0;
+  uhr += 1000;
+  const krit = schlag();
+  wurf = 0.99;
+  pruefe(krit === grund17 * 3, `Brutaler kritischer Treffer: ${krit} Schaden statt ${grund17} (dreifach)`);
+  // Betäubt: steht still und tut nichts.
+  const b = wald.gegner.find((x) => !x.tot);
+  // stossBis 0: sonst flog er noch vom letzten Hieb zurück.
+  Object.assign(b, { betaeubtBis: uhr + 1000, stossBis: 0 });
+  const bx = b.x, by = b.y;
+  const neben = mitCharakter(sp, 'Neben', () => {});
+  sp.wechseln(neben, 'wald', 'von_hoehle');
+  Object.assign(neben, { x: b.x, y: b.y + 8, unverwundbarBis: 0, leben: 6 });
+  lauf(500);
+  pruefe(b.x === bx && b.y === by && neben.leben === 6, 'ein betäubter Schleim bewegt sich nicht und tut niemandem etwas');
+  // Spielstand: Pfad und Attributspunkte bleiben.
+  for (const x of [kurt, mia, neben]) sp.verlassen(x.id);
+  sp = new Spiel(karten, werteWald, { jetzt: () => uhr, spielstand: new Spielstand(datei) });
+  const k2 = mitCharakter(sp, 'Kurt', () => {});
+  pruefe(k2.pfad === 'barbar' && k2.attributPlus.staerke === 2 && k2.werte.kampf.krit > 0, `nach dem Neustart: Pfad ${k2.pfad}, Stärke +${k2.attributPlus.staerke}`);
+}
+// Die anderen Pfade.
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const mk = (name, pfad, stufe) => {
+    const x = mitCharakter(sp, name, () => {});
+    x.erfahrung = t[2];
+    sp.erfahrungGeben(x, 1);
+    sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    return x;
+  };
+  const schwert = mk('Sven', 'schwertkaempfer', 18);
+  const kampf = mk('Mo', 'martial', 18);
+  const normal = mitCharakter(sp, 'Nora', () => {});
+  pruefe(kampf.werte.hiebAbstand < normal.werte.hiebAbstand && kampf.werte.aktionen.map((a) => a.taste).join('') === 'FRT',
+    `Martial Artist: Hieb alle ${kampf.werte.hiebAbstand} statt ${normal.werte.hiebAbstand} ms, Tasten ${kampf.werte.aktionen.map((a) => a.taste).join(', ')}`);
+  // Zweiter Atem und Überlebender.
+  schwert.leben = 2;
+  sp.aktion(schwert, { id: 'zweiteratem' });
+  const nachAtem = schwert.leben;
+  schwert.leben = 2;
+  for (let i = 0; i < 100; i++) {
+    uhr += 50;
+    sp.schritt(0.05);
+  }
+  pruefe(nachAtem === 6 && schwert.leben === 3, `Zweiter Atem: 2 → ${nachAtem}; Überlebender: in 5 s ein halbes Herz (${schwert.leben})`);
+  // Betäubender Schlag mit Wurf 0.
+  const wald = sp.gebiete.get('wald');
+  const g = wald.gegner[0];
+  Object.assign(g, { tot: false, leben: 50, getroffenBis: 0 });
+  Object.assign(kampf, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+  wurf = 0.15;
+  sp.hieb(kampf, { r: 'oben' });
+  pruefe(uhr < (g.betaeubtBis ?? 0), 'Betäubender Schlag: der Schleim ist betäubt (Wurf 0,15 unter 20 %)');
 }
 
 // --- An die Wand heran, egal bei welcher Bildrate ---

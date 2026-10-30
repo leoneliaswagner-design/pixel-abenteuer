@@ -22,7 +22,7 @@ const steg = riftside.layers[2].objects.find((o) => o.name === 'ankunft' && o.pr
 const ort = { gebiet: 'riftside', x: steg.x, y: steg.y + 8 };
 const datei = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
 writeFileSync(datei, JSON.stringify({ version: 1, welt: {}, spieler: { kim: { name: 'Kim', farbe: 'blau', klasse: 'waldlaeufer', spezies: 'mensch', richtung: 'unten', ...ort, leben: 8, ankunft: ort, inventar: {} } } }));
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: datei, TAGESZEIT: '0.5' } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: datei, TAGESZEIT: '0.5' } });
 let log = '';
 await new Promise((gut, schlecht) => {
   const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);

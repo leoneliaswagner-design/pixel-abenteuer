@@ -99,7 +99,9 @@ export class Gebiet {
     for (const g of this.gegner) {
       if (g.tot || jetzt < g.getroffenBis) continue;
       if (!imRechteck(f, g.x, g.y - 6, 8)) continue;
-      this.gegnerTreffen(g, s, jetzt, s.werte?.schaden ?? 1);
+      // Je Gegner neu gewürfelt: ein kritischer Treffer trifft einen, nicht alle.
+      const h = s.werte ? this.spiel.hiebSchaden(s, jetzt) : { schaden: 1 };
+      this.gegnerTreffen(g, s, jetzt, h.schaden, h);
     }
     for (const i of this.welt.kachelnIn(f)) {
       if (!this.welt.istSchneidbar(i)) continue;
@@ -113,8 +115,11 @@ export class Gebiet {
 
   // s ist, wer trifft — oder ein Geschoss: gebraucht werden x, y und
   // richtung für den Rückstoß, und id für die Beute.
-  gegnerTreffen(g, s, jetzt, schaden = 1) {
+  // wirkung: { krit, betaeuben (ms), verlangsamen (ms) } aus einem Hieb.
+  gegnerTreffen(g, s, jetzt, schaden = 1, wirkung = {}) {
     g.leben -= schaden;
+    if (wirkung.betaeuben) g.betaeubtBis = jetzt + wirkung.betaeuben;
+    if (wirkung.verlangsamen) g.langsamBis = jetzt + wirkung.verlangsamen;
     g.getroffenBis = jetzt + 250;
     const [rx, ry] = richtungZu(s.x, s.y - 8, g.x, g.y - 6, RICHTUNGEN[s.richtung]);
     g.vx = rx * g.w.stossGeschwindigkeit;
@@ -123,7 +128,7 @@ export class Gebiet {
     // Ein Treffer unterbricht den Sprung des Wolfs.
     g.phase = null;
     if (g.leben > 0) {
-      this.anAlle({ t: 'gegner_treffer', id: g.id });
+      this.anAlle({ t: 'gegner_treffer', id: g.id, krit: !!wirkung.krit, schaden });
       return;
     }
     g.tot = true;
@@ -188,7 +193,7 @@ export class Gebiet {
           // den fliegt er durch — wie das Blinken nach einem Treffer.
           const s = this.spieler().find((s) => !s.tot && jetzt >= s.unverwundbarBis && Math.hypot(s.x - p.x, s.y - 10 - p.y) < 12);
           if (s) {
-            this.spiel.spielerTreffen(s, { x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 6, w: { schaden: p.schaden } }, jetzt);
+            this.spiel.spielerTreffen(s, { x: p.x - p.vx * 0.05, y: p.y - p.vy * 0.05 + 6, w: { schaden: p.schaden } }, jetzt, 'geschoss');
             weg = 'treffer';
           }
         } else {
@@ -226,6 +231,8 @@ export class Gebiet {
       this.anAlle({ t: 'gegner_neu', id: g.id });
       return;
     }
+    // Betäubt: steht still und tut niemandem etwas.
+    if (jetzt < (g.betaeubtBis ?? 0) && jetzt >= g.stossBis) return;
     let vx, vy;
     const ziel = jetzt < g.stossBis ? null : naechster(g, hier);
     if (jetzt < g.stossBis) {
@@ -247,6 +254,8 @@ export class Gebiet {
         vy = g.vy;
       }
     }
+    // Lähmende Wunden: halb so schnell (nur aus eigener Kraft, nicht im Rückstoß).
+    if (jetzt < (g.langsamBis ?? 0) && jetzt >= g.stossBis) [vx, vy] = [vx * 0.5, vy * 0.5];
     const neu = bewege(this.welt, g.x, g.y, vx * dt, vy * dt);
     if (neu.gestossen && jetzt >= g.stossBis) g.wechselBei = 0;
     // Ein Sprung gegen die Wand ist zu Ende.
@@ -271,11 +280,13 @@ export class Gebiet {
       spieler: this.spieler().map((s) => ({
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
+        // Was man an der Figur sieht: Rausch (rot), Leerer Körper (durchscheinend), Sprint.
+        e: (jetzt < s.rauschBis ? 'r' : '') + (jetzt < s.leereBis ? 'l' : '') + (jetzt < s.sprintBis ? 's' : ''),
       })),
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0) })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
       ...this.fallen.stand(jetzt),
     };

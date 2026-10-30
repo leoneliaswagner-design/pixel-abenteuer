@@ -37,7 +37,7 @@ async function mitServer(tageszeit, spieler, fn) {
     return [name.toLowerCase(), { name, farbe: ['gruen', 'rot'][i], klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', ...ort, leben: 8, ankunft: ort, inventar: {} }];
   }));
   writeFileSync(datei, JSON.stringify({ version: 1, welt: {}, spieler: eintraege }));
-  const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(port), SPIELSTAND: datei, TAGESZEIT: String(tageszeit) } });
+  const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(port), SPIELSTAND: datei, TAGESZEIT: String(tageszeit) } });
   let log = '';
   await new Promise((gut, schlecht) => {
     const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);

@@ -27,7 +27,10 @@ const karten = Object.fromEntries(werte.gebiete.map((g) => [g, lies(`inhalte/kar
 // SPIELSTAND=… lässt sich eine andere Datei wählen — eine pro Kampagne,
 // oder eine Wegwerf-Datei für die Prüfstände.
 const spielstand = new Spielstand(process.env.SPIELSTAND || join(wurzel, 'spielstaende', 'spielstand.json'));
-const spiel = new Spiel(karten, werte, { spielstand });
+// ZUFALL=0.99: kein Abprallen, Ausweichen oder kritischer Treffer — für
+// Prüfstände, die einen Treffer erwarten. ZUFALL=0: alles davon gelingt.
+const zufall = process.env.ZUFALL ? () => Number(process.env.ZUFALL) : Math.random;
+const spiel = new Spiel(karten, werte, { spielstand, zufall });
 console.log(`Spielstand: ${spielstand.pfad} (${Object.keys(spielstand.daten.spieler).length} bekannte Spieler)`);
 
 const ARTEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.json': 'application/json', '.svg': 'image/svg+xml' };

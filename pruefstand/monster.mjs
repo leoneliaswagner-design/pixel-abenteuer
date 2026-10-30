@@ -23,7 +23,7 @@ const spieler = (name, farbe, o) => ({ name, farbe, klasse: 'kaempfer', spezies:
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
 writeFileSync(spielstand, JSON.stringify({ version: 1, welt: {}, spieler: { ida: spieler('Ida', 'gruen', ort(4, 11)), wolfgang: spieler('Wolfgang', 'rot', ort(22, 16)) } }));
 
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: spielstand } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: spielstand } });
 let log = '';
 await new Promise((gut, schlecht) => {
   const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);

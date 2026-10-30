@@ -295,6 +295,40 @@ probe client/szenen/Spiel.js "      this.maxLeben = m.werte.maxLeben;
       this.events.emit('stufe'" "      this.events.emit('stufe'" pruefstand/stufen.mjs \
   "Browser zeigt die neuen Herzen erst nach dem Neuladen"
 
+# Krieger: Fähigkeiten je Stufe, Pfade, Attribute, Kampfeffekte
+probe server/spiel.js "    if (this.zufall() < this.schutzGegen(s, art, jetzt)) {" "    if (false) {" pruefstand/server-regeln.mjs \
+  "nichts prallt ab"
+probe server/spiel.js "    if (art === 'geschoss' || art === 'falle') p += k.ausweichen;" "" pruefstand/server-regeln.mjs \
+  "Gefahrensinn hilft nicht gegen Fallen"
+probe server/spiel.js "    if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;" "" pruefstand/server-regeln.mjs \
+  "Kriegsdisziplin bringt keinen Schaden"
+probe server/spiel.js "    if (!a || s.tot || jetzt < (s.aktionBereit[a.id] ?? 0) || gebiet.meer) return;" "    if (!a || s.tot || gebiet.meer) return;" pruefstand/server-regeln.mjs \
+  "aktive Fähigkeiten ohne Abklingzeit"
+probe server/spiel.js "    if (!offeneWahl(k, s.stufe, s.pfad, s.attributPlus).pfad || !Object.hasOwn(k.pfade ?? {}, pfad ?? '')) return;" "    if (!Object.hasOwn(k.pfade ?? {}, pfad ?? '')) return;" pruefstand/server-regeln.mjs \
+  "Pfad lässt sich zu früh und mehrmals wählen"
+probe server/spiel.js "    if (!ATTRIBUTE.includes(attribut) || !(offeneWahl(k, s.stufe, s.pfad, s.attributPlus).punkte > 0)) return;" "    if (!ATTRIBUTE.includes(attribut)) return;" pruefstand/server-regeln.mjs \
+  "beliebig viele Attributspunkte"
+probe server/spiel.js "      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung, pfad: s.pfad, attributPlus: s.attributPlus," "      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung," pruefstand/server-regeln.mjs \
+  "Spielstand vergisst Pfad und Attribute"
+probe server/spiel.js "    if (s.leben <= 0 && zaeh && jetzt >= s.zaehBereit) {" "    if (s.leben <= 0 && zaeh) {" pruefstand/server-regeln.mjs \
+  "Unerbittlich ohne Pause"
+probe server/spiel.js "    const stoss = s.werte?.kampf.standfest ? 0 : ws.stossGeschwindigkeit;" "    const stoss = ws.stossGeschwindigkeit;" pruefstand/server-regeln.mjs \
+  "Unbeugsam wird trotzdem zurückgestoßen"
+probe server/gebiet.js "    if (jetzt < (g.betaeubtBis ?? 0) && jetzt >= g.stossBis) return;" "" pruefstand/server-regeln.mjs \
+  "betäubte Gegner laufen weiter"
+probe server/spiel.js "    if (krit) schaden *= k.kritFaktor;" "" pruefstand/server-regeln.mjs \
+  "kritische Treffer ohne Wirkung"
+probe server/spiel.js "    const aura = Math.max(0, ...this.gebiete" "    const aura = 0 * Math.max(0, ...this.gebiete" pruefstand/server-regeln.mjs \
+  "Schutzaura wirkt nicht"
+probe gemeinsam/regeln.js "  return [...aus(klasse?.stufen), ...aus(klasse?.pfade?.[pfad]?.stufen)]" "  return [...aus(klasse?.stufen)]" pruefstand/krieger.mjs \
+  "der gewählte Pfad bringt nichts"
+probe client/figur.js "    if (rot) this.koerper.setTint(0xff6a50);" "" pruefstand/krieger.mjs \
+  "Rausch ist beim anderen nicht zu sehen"
+probe client/szenen/Spiel.js "    for (const taste of ['F', 'R', 'T']) this.input.keyboard.on" "    for (const taste of []) this.input.keyboard.on" pruefstand/krieger.mjs \
+  "Tasten F, R, T tun nichts"
+probe client/fenster.js "    if (offen.pfad) {" "    if (false) {" pruefstand/krieger.mjs \
+  "das Charakterfenster bietet keine Pfade an"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

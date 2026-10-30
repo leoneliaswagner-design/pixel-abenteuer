@@ -39,7 +39,7 @@ writeFileSync(spielstand, JSON.stringify({
   },
 }));
 
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: spielstand } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: spielstand } });
 let log = '';
 await new Promise((gut, schlecht) => {
   const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);

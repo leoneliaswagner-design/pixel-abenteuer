@@ -124,7 +124,13 @@ export class Figur {
         this.koerper.setFrame(z * 4);
       }
     }
-    if (!this.tot) this.koerper.setAlpha(this.unverwundbar && Math.floor(jetzt / 70) % 2 ? 0.25 : 1);
+    // Leerer Körper: durchscheinend statt Blinken. Rausch: rot getönt —
+    // für alle sichtbar, der Stand schickt es mit („e").
+    const leer = this.effekt?.includes('l'), rot = this.effekt?.includes('r');
+    if (!this.tot) this.koerper.setAlpha(leer ? 0.35 : this.unverwundbar && Math.floor(jetzt / 70) % 2 ? 0.25 : 1);
+    if (rot) this.koerper.setTint(0xff6a50);
+    else if (this.getoent) this.koerper.clearTint();
+    this.getoent = rot;
     this.schild?.setPosition(Math.round(x), Math.round(y - 48));
   }
 

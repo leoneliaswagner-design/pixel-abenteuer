@@ -25,7 +25,7 @@ if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wu
 // Eigener Wegwerf-Spielstand: der Prüfstand darf nie die echte Kampagne
 // anfassen — und soll mit leerer Welt beginnen.
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT), SPIELSTAND: spielstand, STARTGEBIET: 'wald' } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: spielstand, STARTGEBIET: 'wald' } });
 let serverLog = '';
 server.stdout.on('data', (d) => (serverLog += d));
 server.stderr.on('data', (d) => (serverLog += d));

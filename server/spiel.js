@@ -6,7 +6,7 @@
 // Laufen bei 80 ms Ping zäh an. Der Server prüft sie aber (Tempo und Wände)
 // und schickt eine Korrektur, wenn sie nicht stimmen kann.
 import { RICHTUNGEN, erfuellt, hiebFlaeche, imRechteck } from '../gemeinsam/welt.js';
-import { PLAETZE, darfTragen, kaufpreis, passtHinein, stufeFuer, stufenFortschritt, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
+import { ATTRIBUTE, ATTRIBUT_HOECHSTENS, PLAETZE, darfTragen, kaufpreis, offeneWahl, passtHinein, stufeFuer, stufenFortschritt, verkaufspreis, werteBerechnen } from '../gemeinsam/regeln.js';
 import { Gebiet, richtungZu } from './gebiet.js';
 
 const FARBEN = ['gruen', 'rot', 'blau', 'lila'];
@@ -18,9 +18,12 @@ export const fluechtigerStand = () => ({ daten: { version: 1, spieler: {}, welt:
 
 export class Spiel {
   // karten: { gebietsname: tiled-json }
-  constructor(karten, werte, { jetzt = () => Date.now(), spielstand = fluechtigerStand() } = {}) {
+  // zufall: für Abprallen, Ausweichen, kritische Treffer — Prüfstände geben
+  // eine feste Zahl vor, sonst wären ihre Ergebnisse Glückssache.
+  constructor(karten, werte, { jetzt = () => Date.now(), spielstand = fluechtigerStand(), zufall = Math.random } = {}) {
     this.w = werte;
     this.jetzt = jetzt;
+    this.zufall = zufall;
     this.spielstand = spielstand;
     this.spieler = new Map();
     this.naechsteId = 1;
@@ -65,7 +68,7 @@ export class Spiel {
   // eine Rüstung ablegt, hat danach nicht mehr Leben als Herzen.
   werteNeu(s) {
     const an = PLAETZE.map((p) => this.gegenstaende[s.ausruestung[p]]).filter(Boolean);
-    s.werte = werteBerechnen(this.klassen[s.klasse], this.spezies[s.spezies], this.w.spieler, an, s.stufe ?? 1, this.w.stufen);
+    s.werte = werteBerechnen(this.klassen[s.klasse], this.spezies[s.spezies], this.w.spieler, an, s.stufe ?? 1, this.w.stufen, s.pfad, s.attributPlus);
     s.leben = Math.min(s.leben, s.werte.maxLeben);
   }
 
@@ -106,6 +109,11 @@ export class Spiel {
       // Die Stufe wird aus der Erfahrung gerechnet, nicht gespeichert: so
       // passt sie auch dann, wenn jemand die Tabelle in werte.json ändert.
       erfahrung: Math.max(0, Number(alt?.erfahrung) || 0),
+      // Pfad und verteilte Attributspunkte. Nur, was es gibt — ein
+      // umbenannter Pfad im Spielstand darf nichts kaputt machen.
+      pfad: typeof alt?.pfad === 'string' ? alt.pfad : null,
+      attributPlus: Object.fromEntries(ATTRIBUTE.filter((a) => Number.isInteger(alt?.attributPlus?.[a]) && alt.attributPlus[a] > 0).map((a) => [a, alt.attributPlus[a]])),
+      aktionBereit: {}, rauschBis: 0, rauschBoni: null, sprintBis: 0, leereBis: 0, zaehBereit: 0, erholtBei: 0, stehtSeit: jetzt,
       // Nur, was es (noch) gibt und an den richtigen Platz gehört — ein
       // umbenannter Gegenstand im Spielstand soll nichts kaputt machen.
       ausruestung: Object.fromEntries(PLAETZE.filter((p) => this.gegenstand(alt?.ausruestung?.[p])?.platz === p).map((p) => [p, alt.ausruestung[p]])),
@@ -139,7 +147,96 @@ export class Spiel {
   }
 
   stufenAngabe(s) {
-    return { stufe: s.stufe, erfahrung: s.erfahrung, fortschritt: stufenFortschritt(s.erfahrung, this.w.stufen) };
+    return {
+      stufe: s.stufe, erfahrung: s.erfahrung, fortschritt: stufenFortschritt(s.erfahrung, this.w.stufen),
+      pfad: s.werte?.pfad ?? null, attributPlus: s.attributPlus, offen: offeneWahl(this.klassen[s.klasse], s.stufe, s.pfad, s.attributPlus),
+    };
+  }
+
+  // Neue Werte an den Spieler — nach Erfahrung, Pfad- oder Attributswahl.
+  werteSenden(s, extra = {}) {
+    s.senden({ t: 'erfahrung', dazu: 0, aufstieg: false, ...extra, werte: s.werte, leben: s.leben, ...this.stufenAngabe(s) });
+  }
+
+  // Pfad wählen: einmal, ab der Stufe der Klasse („pfadAb").
+  pfadWaehlen(s, pfad) {
+    const k = this.klassen[s.klasse];
+    if (!offeneWahl(k, s.stufe, s.pfad, s.attributPlus).pfad || !Object.hasOwn(k.pfade ?? {}, pfad ?? '')) return;
+    s.pfad = pfad;
+    this.werteNeu(s);
+    this.werteSenden(s);
+    this.anAlle({ t: 'nachricht', text: `${s.name} geht den Weg: ${k.pfade[pfad].name}.` });
+    this.merken(s);
+  }
+
+  // Einen Attributspunkt setzen, solange welche offen sind.
+  attributSetzen(s, attribut) {
+    const k = this.klassen[s.klasse];
+    if (!ATTRIBUTE.includes(attribut) || !(offeneWahl(k, s.stufe, s.pfad, s.attributPlus).punkte > 0)) return;
+    if (s.werte.attribute[attribut] >= ATTRIBUT_HOECHSTENS) return;
+    s.attributPlus[attribut] = (s.attributPlus[attribut] ?? 0) + 1;
+    const vorher = s.werte.maxLeben;
+    this.werteNeu(s);
+    // Mehr Konstitution, mehr Herzen: die neuen sind gleich voll.
+    s.leben = Math.min(s.werte.maxLeben, s.leben + Math.max(0, s.werte.maxLeben - vorher));
+    this.werteSenden(s);
+    this.merken(s);
+  }
+
+  // Eine aktive Fähigkeit (Tasten F, R, T). Was sie tut, steht in
+  // klassen.json unter „aktion"; der Server zählt die Abklingzeit.
+  aktion(s, m) {
+    const a = s.werte?.aktionen?.find((x) => x.id === m.id);
+    const jetzt = this.jetzt();
+    const gebiet = this.gebiete.get(s.gebiet);
+    if (!a || s.tot || jetzt < (s.aktionBereit[a.id] ?? 0) || gebiet.meer) return;
+    s.aktionBereit[a.id] = jetzt + a.abklingzeit;
+    if (a.art === 'rausch') {
+      s.rauschBis = jetzt + a.dauer;
+      s.rauschBoni = a.boni ?? {};
+    } else if (a.art === 'heilen') {
+      s.leben = Math.min(this.maxLeben(s), s.leben + (a.menge ?? 2));
+      gebiet.anAlle({ t: 'heilung', von: s.id, ziele: [s.id] });
+    } else if (a.art === 'sprint') s.sprintBis = jetzt + a.dauer;
+    else if (a.art === 'leere') {
+      s.leereBis = jetzt + a.dauer;
+      s.unverwundbarBis = Math.max(s.unverwundbarBis, s.leereBis);
+    }
+    // Einschüchternde Präsenz: wer eine Fähigkeit startet, lässt Gegner
+    // in der Nähe erstarren.
+    const schreck = s.werte.kampf.schreck;
+    if (schreck) for (const g of gebiet.gegner) if (!g.tot && Math.hypot(g.x - s.x, g.y - s.y) < 96) g.betaeubtBis = jetzt + schreck;
+    gebiet.anAlle({ t: 'aktion', id: s.id, art: a.art, dauer: a.dauer ?? 0 });
+  }
+
+  // Der Schaden eines Hiebs: Grundwert, Rausch, Kampfhaltung (wer kurz
+  // stillstand), dann vielleicht kritisch. Dazu, was er beim Gegner auslöst.
+  hiebSchaden(s, jetzt) {
+    const k = s.werte.kampf;
+    let schaden = s.werte.schaden;
+    if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;
+    if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
+    const krit = k.krit > 0 && this.zufall() < k.krit;
+    if (krit) schaden *= k.kritFaktor;
+    return {
+      schaden, krit,
+      betaeuben: k.betaeuben > 0 && this.zufall() < k.betaeuben ? 1500 : 0,
+      verlangsamen: k.verlangsamen,
+    };
+  }
+
+  // Wie wahrscheinlich ein Treffer abprallt: eigener Schutz, Rausch, die
+  // Schutzaura eines Mitspielers in der Nähe (die stärkste zählt), gegen
+  // Fallen und Geschosse dazu das Ausweichen.
+  schutzGegen(s, art, jetzt) {
+    const k = s.werte?.kampf;
+    if (!k) return 0;
+    let p = k.schutz;
+    if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
+    const aura = Math.max(0, ...this.gebiete.get(s.gebiet).spieler().filter((x) => x !== s && !x.tot && Math.hypot(x.x - s.x, x.y - s.y) <= 96).map((x) => x.werte?.kampf.aura ?? 0));
+    p += aura;
+    if (art === 'geschoss' || art === 'falle') p += k.ausweichen;
+    return Math.min(0.9, p);
   }
 
   // Erfahrung für einen Spieler. Beim Aufstieg: Werte neu, Herzen voll,
@@ -305,6 +402,10 @@ export class Spiel {
     else if (m.t === 'kaufen') this.kaufen(s, m.art);
     else if (m.t === 'verkaufen') this.verkaufen(s, m.art);
     else if (m.t === 'weltkarte') this.weltkarte(s);
+    else if (m.t === 'aktion') this.aktion(s, m);
+    // Aus dem Charakterfenster kommt die Wahl als „art" (wie bei Gegenständen).
+    else if (m.t === 'pfad') this.pfadWaehlen(s, m.pfad ?? m.art);
+    else if (m.t === 'attribut') this.attributSetzen(s, m.attribut ?? m.art);
     else if (m.t === 'bereit') s.unverwundbarBis = Math.min(s.unverwundbarBis, this.jetzt() + this.w.spieler.schonfrist);
   }
 
@@ -328,6 +429,8 @@ export class Spiel {
       return;
     }
     s.budget -= weg;
+    // Für die Kampfhaltung: seit wann die Figur auf der Stelle steht.
+    if (weg > 0.5) s.stehtSeit = jetzt;
     s.x = x;
     s.y = y;
     if (gebiet.meer) this.sichten(s, jetzt);
@@ -384,7 +487,7 @@ export class Spiel {
     if (s.tot || jetzt < s.naechsterHieb || this.gebiete.get(s.gebiet).meer) return;
     const ws = this.w.spieler;
     if (RICHTUNGEN[m.r]) s.richtung = m.r;
-    s.naechsterHieb = jetzt + ws.hiebDauer + ws.hiebPause;
+    s.naechsterHieb = jetzt + (s.werte?.hiebAbstand ?? ws.hiebDauer + ws.hiebPause);
     const gebiet = this.gebiete.get(s.gebiet);
     gebiet.anAlle({ t: 'hieb', id: s.id, r: s.richtung }, s.id);
     gebiet.hieb(s, jetzt);
@@ -608,17 +711,35 @@ export class Spiel {
     }
   }
 
-  spielerTreffen(s, g, jetzt) {
+  // art: 'nah' (Gegner berührt), 'geschoss' oder 'falle' — gegen die
+  // letzten beiden hilft Ausweichen.
+  spielerTreffen(s, g, jetzt, art = 'nah') {
     const ws = this.w.spieler;
+    // Abgeprallt: kein Schaden, aber kurz unverwundbar — sonst prallte derselbe
+    // Schleim im nächsten Takt gleich noch einmal an.
+    if (this.zufall() < this.schutzGegen(s, art, jetzt)) {
+      s.unverwundbarBis = jetzt + 400;
+      this.gebiete.get(s.gebiet).anAlle({ t: 'abgeprallt', id: s.id });
+      return;
+    }
     s.leben = Math.max(0, s.leben - g.w.schaden);
     s.unverwundbarBis = jetzt + ws.unverwundbar;
+    // Unerbittlich: ein tödlicher Treffer lässt ein halbes Herz, mit Pause.
+    const zaeh = s.werte?.kampf.zaeh;
+    if (s.leben <= 0 && zaeh && jetzt >= s.zaehBereit) {
+      s.leben = 1;
+      s.zaehBereit = jetzt + zaeh;
+      this.gebiete.get(s.gebiet).anAlle({ t: 'nachricht', text: `${s.name} gibt nicht auf!` });
+    }
     const [rx, ry] = richtungZu(g.x, g.y - 6, s.x, s.y - 8, [0, 1]);
     // Den Rückstoß rechnet der Browser des Getroffenen selbst — er bewegt
-    // seine Figur ja ohnehin. Das Weg-Guthaben oben lässt ihn zu.
-    s.senden({ t: 'getroffen', vx: rx * ws.stossGeschwindigkeit, vy: ry * ws.stossGeschwindigkeit, dauer: ws.stossDauer });
+    // seine Figur ja ohnehin. Das Weg-Guthaben oben lässt ihn zu. Wer
+    // standfest ist, bekommt nur das Wackeln, keinen Stoß.
+    const stoss = s.werte?.kampf.standfest ? 0 : ws.stossGeschwindigkeit;
+    s.senden({ t: 'getroffen', vx: rx * stoss, vy: ry * stoss, dauer: stoss ? ws.stossDauer : 0 });
     // Etwas länger als der Stoß selbst: die letzten Positionen davon sind
     // noch unterwegs, wenn er beim Browser schon vorbei ist.
-    s.stossBis = jetzt + ws.stossDauer + 250;
+    if (stoss) s.stossBis = jetzt + ws.stossDauer + 250;
     if (s.leben > 0) return;
     s.tot = true;
     s.wiederBei = jetzt + ws.wiederbelebung;
@@ -641,7 +762,18 @@ export class Spiel {
   schritt(dt) {
     const jetzt = this.jetzt();
     for (const g of this.gebiete.values()) g.schritt(dt, jetzt);
-    for (const s of this.spieler.values()) if (s.tot && jetzt >= s.wiederBei) this.wiederbeleben(s, jetzt);
+    for (const s of this.spieler.values()) {
+      if (s.tot && jetzt >= s.wiederBei) this.wiederbeleben(s, jetzt);
+      // Überlebender: mit höchstens halben Herzen langsam heilen.
+      const e = s.werte?.kampf.erholung;
+      if (e && !s.tot && !s.waehlt && s.leben <= this.maxLeben(s) / 2) {
+        if (!s.erholtBei) s.erholtBei = jetzt + e;
+        else if (jetzt >= s.erholtBei) {
+          s.leben = Math.min(this.maxLeben(s), s.leben + 1);
+          s.erholtBei = jetzt + e;
+        }
+      } else s.erholtBei = 0;
+    }
     if (jetzt - this.zuletztGespeichert >= SPEICHER_ABSTAND) {
       for (const s of this.spieler.values()) this.merken(s);
       this.speichern();
@@ -670,7 +802,7 @@ export class Spiel {
       name: s.name, farbe: s.farbe, richtung: s.richtung,
       gebiet: tot ? s.ankunft.gebiet : s.gebiet, x: tot ? s.ankunft.x : s.x, y: tot ? s.ankunft.y : s.y,
       leben: tot ? this.maxLeben(s) : s.leben, ankunft: s.ankunft, inventar: s.inventar, ausruestung: s.ausruestung,
-      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung,
+      klasse: s.klasse, spezies: s.spezies, erfahrung: s.erfahrung, pfad: s.pfad, attributPlus: s.attributPlus,
     };
     this.geaendert = true;
   }

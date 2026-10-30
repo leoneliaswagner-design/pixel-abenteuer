@@ -1,37 +1,550 @@
 {
   "kaempfer": {
-    "name": "Kämpfer",
-    "beschreibung": "Schwer gerüstet und stark. Stürmt mit dem Schild voran und stößt Gegner zurück.",
-    "attribute": { "staerke": 15, "geschick": 13, "konstitution": 14, "intelligenz": 8, "weisheit": 12, "charisma": 10 },
-    "faehigkeit": { "art": "ansturm", "name": "Schildstoß", "abklingzeit": 2500, "weite": 46, "schaden": 1, "attribut": "staerke" },
-    "vorteile": []
+    "name": "Krieger",
+    "beschreibung": "Veteran ohne Magie: robust, wandelbar, schlägt mit jeder Stufe härter. Stürmt mit dem Schild voran.",
+    "attribute": {
+      "staerke": 15,
+      "geschick": 13,
+      "konstitution": 14,
+      "intelligenz": 8,
+      "weisheit": 12,
+      "charisma": 10
+    },
+    "faehigkeit": {
+      "art": "ansturm",
+      "name": "Schildstoß",
+      "abklingzeit": 2500,
+      "weite": 46,
+      "schaden": 1,
+      "attribut": "staerke"
+    },
+    "vorteile": [],
+    "attributAb": [
+      4,
+      6,
+      8,
+      12,
+      14,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "kampfstil",
+          "name": "Kampfstil: Verteidigung",
+          "quelle": "Fighting Style",
+          "text": "10 % der Treffer prallen an dir ab.",
+          "boni": {
+            "schutz": 0.1
+          }
+        },
+        {
+          "id": "kriegsdisziplin",
+          "name": "Kriegsdisziplin",
+          "quelle": "Kriegsdisziplin",
+          "text": "Taste F: 6 Sekunden lang +1 Schaden. Lädt 30 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "rausch",
+            "dauer": 6000,
+            "abklingzeit": 30000,
+            "boni": {
+              "schaden": 1
+            }
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "gefahrensinn",
+          "name": "Gefahrensinn",
+          "quelle": "Danger Sense",
+          "text": "Fallen und Geschosse verfehlen dich zu 25 %.",
+          "boni": {
+            "ausweichen": 0.25
+          }
+        },
+        {
+          "id": "schnell",
+          "name": "Schnelle Bewegung",
+          "quelle": "Fast Movement",
+          "text": "10 % schneller.",
+          "boni": {
+            "tempoProzent": 10
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "angriff2",
+          "name": "Zusätzlicher Angriff",
+          "quelle": "Extra Attack",
+          "text": "+1 Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        }
+      ],
+      "6": [
+        {
+          "id": "schutzaura",
+          "name": "Schutzaura",
+          "quelle": "Aura of Protection",
+          "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab.",
+          "boni": {
+            "aura": 0.1
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "ausweichen",
+          "name": "Ausweichen",
+          "quelle": "Evasion",
+          "text": "Fallen und Geschosse verfehlen dich zu weiteren 15 %.",
+          "boni": {
+            "ausweichen": 0.15
+          }
+        },
+        {
+          "id": "talent",
+          "name": "Verlässliches Talent",
+          "quelle": "Reliable Talent",
+          "text": "Aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "aktionAbkling": 20
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "unerbittlich",
+          "name": "Unerbittlich",
+          "quelle": "Relentless Rage",
+          "text": "Ein tödlicher Treffer lässt dir ein halbes Herz — einmal pro Minute.",
+          "boni": {
+            "zaeh": 60000
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "angriff3",
+          "name": "Zusätzlicher Angriff (2)",
+          "quelle": "Extra Attack",
+          "text": "+1 Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        }
+      ],
+      "13": [
+        {
+          "id": "unbeugsam",
+          "name": "Unbeugsam",
+          "quelle": "Indomitable",
+          "text": "Treffer stoßen dich nicht mehr zurück.",
+          "boni": {
+            "standfest": 1
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "ausdauernd",
+          "name": "Ausdauernd",
+          "quelle": "Persistent Rage",
+          "text": "Aktive Fähigkeiten wirken doppelt so lange.",
+          "boni": {
+            "aktionDauer": 100
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "krit",
+          "name": "Überlegener kritischer Treffer",
+          "quelle": "Superior Critical",
+          "text": "15 % der Hiebe treffen doppelt.",
+          "boni": {
+            "krit": 0.15
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "laehmend",
+          "name": "Lähmende Wunden",
+          "quelle": "Impairing Wounds",
+          "text": "Wen du triffst, der ist 2 Sekunden lang halb so schnell.",
+          "boni": {
+            "verlangsamen": 2000
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "angriff4",
+          "name": "Zusätzlicher Angriff (3)",
+          "quelle": "Extra Attack",
+          "text": "+1 Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        },
+        {
+          "id": "champion",
+          "name": "Urgewaltiger Champion",
+          "quelle": "Primal Champion",
+          "text": "Zwei Herzen mehr und +1 Schaden.",
+          "boni": {
+            "leben": 4,
+            "schaden": 1
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "barbar": {
+        "name": "Barbar",
+        "text": "Rohe Wut: Rausch, kritische Treffer, Gegner erstarren vor Angst.",
+        "stufen": {
+          "3": [
+            {
+              "id": "kampfrausch",
+              "name": "Kampfrausch",
+              "quelle": "Rage",
+              "text": "Taste R: 8 Sekunden +1 Schaden, und die Hälfte der Treffer prallt ab. Lädt 40 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "rausch",
+                "dauer": 8000,
+                "abklingzeit": 40000,
+                "boni": {
+                  "schaden": 1,
+                  "schutz": 0.5
+                }
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "instinkt",
+              "name": "Wilder Instinkt",
+              "quelle": "Feral Instinct, Danger Sense",
+              "text": "10 % schneller, Fallen und Geschosse verfehlen dich zu weiteren 15 %.",
+              "boni": {
+                "tempoProzent": 10,
+                "ausweichen": 0.15
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "brutal",
+              "name": "Brutaler kritischer Treffer",
+              "quelle": "Brutal Critical",
+              "text": "10 % der Hiebe treffen kritisch, und kritische Treffer machen dreifachen Schaden.",
+              "boni": {
+                "krit": 0.1,
+                "kritFaktor": 1
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "anhaltend",
+              "name": "Anhaltender Rausch",
+              "quelle": "Persistent Rage",
+              "text": "Aktive Fähigkeiten wirken doppelt so lange.",
+              "boni": {
+                "aktionDauer": 100
+              }
+            },
+            {
+              "id": "totem",
+              "name": "Totemgeist",
+              "quelle": "Totem Spirit",
+              "text": "Ein Herz mehr.",
+              "boni": {
+                "leben": 2
+              }
+            }
+          ],
+          "17": [
+            {
+              "id": "praesenz",
+              "name": "Einschüchternde Präsenz",
+              "quelle": "Intimidating Presence",
+              "text": "Wenn du eine aktive Fähigkeit startest, erstarren Gegner um dich 2 Sekunden.",
+              "boni": {
+                "schreck": 2000
+              }
+            }
+          ]
+        }
+      },
+      "schwertkaempfer": {
+        "name": "Schwertkämpfer",
+        "text": "Haltung und Technik: wer steht, trifft härter; hält durch.",
+        "stufen": {
+          "3": [
+            {
+              "id": "haltung",
+              "name": "Kampfhaltung",
+              "quelle": "Battle Stance",
+              "text": "Wer einen Moment stillsteht, schlägt mit +1 Schaden zu.",
+              "boni": {
+                "haltung": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "verteidigung",
+              "name": "Verteidigungsmeister",
+              "quelle": "Defensive Combat Master",
+              "text": "15 % der Treffer prallen ab.",
+              "boni": {
+                "schutz": 0.15
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "sprintmeister",
+              "name": "Sprintmeister",
+              "quelle": "Dash Master",
+              "text": "10 % schneller, der Schildstoß lädt 30 % schneller.",
+              "boni": {
+                "tempoProzent": 10,
+                "qAbkling": 30
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "duell",
+              "name": "Duellmeister",
+              "quelle": "Duel Master",
+              "text": "15 % der Hiebe treffen doppelt.",
+              "boni": {
+                "krit": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "zweiteratem",
+              "name": "Zweiter Atem",
+              "quelle": "Second Wind",
+              "text": "Taste R: heilt zwei Herzen. Lädt 45 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "heilen",
+                "menge": 4,
+                "abklingzeit": 45000
+              }
+            },
+            {
+              "id": "ueberlebender",
+              "name": "Überlebender",
+              "quelle": "Survivor",
+              "text": "Mit höchstens halben Herzen heilst du alle 4 Sekunden ein halbes.",
+              "boni": {
+                "erholung": 4000
+              }
+            }
+          ]
+        }
+      },
+      "martial": {
+        "name": "Martial Artist",
+        "text": "Schnelle Fäuste: schneller zuschlagen, betäuben, verschwinden.",
+        "stufen": {
+          "3": [
+            {
+              "id": "kampfkunst",
+              "name": "Kampfkunst",
+              "quelle": "Martial Arts",
+              "text": "Hiebe kommen 30 % schneller.",
+              "boni": {
+                "hiebTempo": 30
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "windschritt",
+              "name": "Schritt des Windes",
+              "quelle": "Step of the Wind, Ki",
+              "text": "Taste R: 3 Sekunden lang 60 % schneller. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "sprint",
+                "dauer": 3000,
+                "tempoFaktor": 1.6,
+                "abklingzeit": 12000
+              }
+            },
+            {
+              "id": "ausweichen_m",
+              "name": "Ausweichen",
+              "quelle": "Evasion",
+              "text": "Fallen und Geschosse verfehlen dich zu weiteren 20 %.",
+              "boni": {
+                "ausweichen": 0.2
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "betaeuben",
+              "name": "Betäubender Schlag",
+              "quelle": "Stunning Strike",
+              "text": "20 % der Hiebe betäuben den Gegner 1,5 Sekunden.",
+              "boni": {
+                "betaeuben": 0.2
+              }
+            },
+            {
+              "id": "schlaghagel",
+              "name": "Schlaghagel",
+              "quelle": "Flurry of Blows, Open Hand Technique",
+              "text": "Hiebe kommen weitere 15 % schneller.",
+              "boni": {
+                "hiebTempo": 15
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "ungeruestet",
+              "name": "Ungerüstete Bewegung und Verteidigung",
+              "quelle": "Unarmored Movement, Unarmored Defense, Improved Critical",
+              "text": "10 % schneller, 10 % der Treffer prallen ab, 10 % der Hiebe treffen doppelt.",
+              "boni": {
+                "tempoProzent": 10,
+                "schutz": 0.1,
+                "krit": 0.1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "leererkoerper",
+              "name": "Leerer Körper",
+              "quelle": "Empty Body",
+              "text": "Taste T: 3 Sekunden unverwundbar und durchscheinend. Lädt 60 Sekunden.",
+              "aktion": {
+                "taste": "T",
+                "art": "leere",
+                "dauer": 3000,
+                "abklingzeit": 60000
+              }
+            },
+            {
+              "id": "kischlaege",
+              "name": "Ki-Schläge",
+              "quelle": "Ki-Empowered Strikes",
+              "text": "+1 Schaden.",
+              "boni": {
+                "schaden": 1
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "schurke": {
     "name": "Schurke",
     "beschreibung": "Flink und gerissen. Wirft Dolche und knackt Schlösser ohne Schlüssel.",
-    "attribute": { "staerke": 8, "geschick": 15, "konstitution": 13, "intelligenz": 12, "weisheit": 10, "charisma": 14 },
-    "faehigkeit": { "art": "geschoss", "name": "Dolchwurf", "abklingzeit": 900, "geschoss": "dolch", "tempo": 260, "reichweite": 170, "schaden": 1, "attribut": "geschick" },
-    "vorteile": ["schloesser"]
+    "attribute": {
+      "staerke": 8,
+      "geschick": 15,
+      "konstitution": 13,
+      "intelligenz": 12,
+      "weisheit": 10,
+      "charisma": 14
+    },
+    "faehigkeit": {
+      "art": "geschoss",
+      "name": "Dolchwurf",
+      "abklingzeit": 900,
+      "geschoss": "dolch",
+      "tempo": 260,
+      "reichweite": 170,
+      "schaden": 1,
+      "attribut": "geschick"
+    },
+    "vorteile": [
+      "schloesser"
+    ]
   },
   "magier": {
     "name": "Magier",
     "beschreibung": "Gelehrt und mächtig. Schleudert Feuerbälle und liest magische Schriften.",
-    "attribute": { "staerke": 8, "geschick": 13, "konstitution": 14, "intelligenz": 15, "weisheit": 12, "charisma": 10 },
-    "faehigkeit": { "art": "geschoss", "name": "Feuerball", "abklingzeit": 2200, "geschoss": "feuerball", "tempo": 170, "reichweite": 200, "schaden": 2, "attribut": "intelligenz" },
-    "vorteile": ["magie"]
+    "attribute": {
+      "staerke": 8,
+      "geschick": 13,
+      "konstitution": 14,
+      "intelligenz": 15,
+      "weisheit": 12,
+      "charisma": 10
+    },
+    "faehigkeit": {
+      "art": "geschoss",
+      "name": "Feuerball",
+      "abklingzeit": 2200,
+      "geschoss": "feuerball",
+      "tempo": 170,
+      "reichweite": 200,
+      "schaden": 2,
+      "attribut": "intelligenz"
+    },
+    "vorteile": [
+      "magie"
+    ]
   },
   "kleriker": {
     "name": "Kleriker",
     "beschreibung": "Diener der Götter. Heilt sich und alle Gefährten in der Nähe.",
-    "attribute": { "staerke": 13, "geschick": 8, "konstitution": 14, "intelligenz": 10, "weisheit": 15, "charisma": 12 },
-    "faehigkeit": { "art": "heilung", "name": "Heilendes Wort", "abklingzeit": 8000, "umkreis": 80, "heilung": 2, "attribut": "weisheit" },
+    "attribute": {
+      "staerke": 13,
+      "geschick": 8,
+      "konstitution": 14,
+      "intelligenz": 10,
+      "weisheit": 15,
+      "charisma": 12
+    },
+    "faehigkeit": {
+      "art": "heilung",
+      "name": "Heilendes Wort",
+      "abklingzeit": 8000,
+      "umkreis": 80,
+      "heilung": 2,
+      "attribut": "weisheit"
+    },
     "vorteile": []
   },
   "waldlaeufer": {
     "name": "Waldläufer",
     "beschreibung": "Jäger der Wildnis. Schießt Pfeile über weite Strecken.",
-    "attribute": { "staerke": 12, "geschick": 15, "konstitution": 13, "intelligenz": 8, "weisheit": 14, "charisma": 10 },
-    "faehigkeit": { "art": "geschoss", "name": "Pfeil", "abklingzeit": 700, "geschoss": "pfeil", "tempo": 330, "reichweite": 260, "schaden": 1, "attribut": "geschick" },
+    "attribute": {
+      "staerke": 12,
+      "geschick": 15,
+      "konstitution": 13,
+      "intelligenz": 8,
+      "weisheit": 14,
+      "charisma": 10
+    },
+    "faehigkeit": {
+      "art": "geschoss",
+      "name": "Pfeil",
+      "abklingzeit": 700,
+      "geschoss": "pfeil",
+      "tempo": 330,
+      "reichweite": 260,
+      "schaden": 1,
+      "attribut": "geschick"
+    },
     "vorteile": []
   }
 }

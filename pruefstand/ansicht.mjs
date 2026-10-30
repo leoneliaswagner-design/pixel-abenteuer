@@ -27,7 +27,7 @@ try {
     const spielstand = join(mkdtempSync(join(tmpdir(), 'ansicht-')), 'stand.json');
     const ort = { gebiet: auftrag.gebiet, x: auftrag.x * 32 + 16, y: auftrag.y * 32 + 24 };
     writeFileSync(spielstand, JSON.stringify({ version: 1, welt: {}, spieler: { blick: { name: 'Blick', farbe: 'gruen', klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', ...ort, leben: 6, ankunft: ort } } }));
-    const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, PORT: String(PORT + n), SPIELSTAND: spielstand } });
+    const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT + n), SPIELSTAND: spielstand } });
     await new Promise((gut) => server.stdout.on('data', (d) => String(d).includes(`:${PORT + n}`) && gut()));
     const p = await browser.newPage({ viewport: { width: 960, height: 540 } });
     await p.goto(`http://localhost:${PORT + n}/`);
