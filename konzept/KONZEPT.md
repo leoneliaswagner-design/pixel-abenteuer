@@ -97,6 +97,16 @@ Acht Homebrew-Klassen mit Stufen 1–20 und Pfaden: Krieger, Drachenreiter,
 Bogenschütze, Dieb, Arzt, Koch, Musiker, Gelehrter — Übersicht in
 [`klassen.md`](klassen.md), Original `Klassen_Teil_1_Kapitel_3.docx`.
 
+### Aus Foundry (30.10.2026)
+
+`foundry/homebrew.json` ist ein bereinigter Auszug aus dem Foundry-Ordner
+„Homebrew Krams" (Makro-Export des Spielleiters): 8 Klassen mit ihren
+Fähigkeiten je Stufe, 31 Pfade, „Die Macht" als eigene Klasse (Stufe 1–20,
+2 Machtpunkte je Stufe, 72 Fähigkeiten), 18 Spezies, 13 Hintergründe und
+einige Gegenstände (u. a. Konzeptstein). Unter `fehlende_verweise` steht,
+was die Klassen anderswo in Foundry holen — Krieger, Drachenreiter und
+Teile des Gelehrten fehlen im Export.
+
 ### Konzeptsteine (statt Teufelsfrüchten)
 
 - Steine, die je **ein Konzept verkörpern** und dem Träger die Kontrolle
