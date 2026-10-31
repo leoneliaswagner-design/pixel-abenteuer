@@ -2367,5 +2367,621 @@
         }
       }
     }
+  },
+  "musiker": {
+    "name": "Musiker",
+    "beschreibung": "Stimmungslenker: Lieder stärken die ganze Gruppe, Klang stößt Gegner zurück oder macht sie träge.",
+    "attribute": {
+      "staerke": 9,
+      "geschick": 14,
+      "konstitution": 12,
+      "intelligenz": 11,
+      "weisheit": 11,
+      "charisma": 16
+    },
+    "faehigkeit": {
+      "art": "klang",
+      "name": "Klangstoß",
+      "abklingzeit": 1800,
+      "umkreis": 56,
+      "schaden": 1,
+      "attribut": "charisma"
+    },
+    "vorteile": [],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "talent_m",
+          "name": "Musikalisches Talent",
+          "quelle": "Musikalisches Talent",
+          "text": "Das Publikum liebt dich: bei Händlern 10 % bessere Preise.",
+          "boni": {
+            "feilschen": 10
+          }
+        },
+        {
+          "id": "tapfere",
+          "name": "Lied der Tapferen",
+          "quelle": "Klangwirkung",
+          "text": "Taste F: 12 Sekunden lang schlagen alle Mitspieler bis drei Kacheln um dich mit +1 Schaden zu (und du). Lädt 20 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "lied",
+            "dauer": 12000,
+            "umkreis": 96,
+            "boni": {
+              "schaden": 1
+            },
+            "abklingzeit": 20000
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "lethargie",
+          "name": "Lied der Lethargie",
+          "quelle": "Kompositionen",
+          "text": "Taste T: Gegner bis drei Kacheln um dich sind 4 Sekunden halb so schnell. Lädt 15 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "lethargie",
+            "dauer": 4000,
+            "umkreis": 96,
+            "abklingzeit": 15000
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "klangstoss2",
+          "name": "Klangstoß",
+          "quelle": "Klangstoss",
+          "text": "Der Klangstoß macht +1 Schaden.",
+          "boni": {
+            "faehigkeit": 1
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "klangwirkung2",
+          "name": "Erweiterte Klangwirkung",
+          "quelle": "Erweiterte Klangwirkung",
+          "text": "Solange dein Lied klingt, prallen an den Zuhörern 10 % der Treffer ab.",
+          "boni": {
+            "liedSchutz": 0.1
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "stimmung",
+          "name": "Stimmungswechsel",
+          "quelle": "Stimmungswechsel",
+          "text": "Aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "aktionAbkling": 20
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "resonanz",
+          "name": "Klangresonanz",
+          "quelle": "Klangresonanz",
+          "text": "Wenn dein Lied beginnt, heilen alle Zuhörer ein halbes Herz.",
+          "boni": {
+            "liedHeil": 1
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "improvisation_m",
+          "name": "Improvisation",
+          "quelle": "Improvisation",
+          "text": "Lieder klingen anderthalbmal so lange.",
+          "boni": {
+            "aktionDauer": 50
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "klangstoss3",
+          "name": "Zusätzlicher Klangstoß",
+          "quelle": "Zusätzlicher Klangstoss",
+          "text": "Der Klangstoß lädt 30 % schneller.",
+          "boni": {
+            "qAbkling": 30
+          }
+        }
+      ],
+      "13": [
+        {
+          "id": "trommel",
+          "name": "Kriegstrommel und Klangbrücke",
+          "quelle": "Accelerating Wardrum, Klangbrücke",
+          "text": "Deine Lieder reichen doppelt so weit.",
+          "boni": {
+            "liedWeit": 100
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "publikum",
+          "name": "Publikumsergreifend",
+          "quelle": "Publikumsergreifend",
+          "text": "Das Lied der Lethargie betäubt zu Beginn 1 Sekunde.",
+          "boni": {
+            "lethargieBetaeubt": 1000
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "meisterhaft",
+          "name": "Meisterhafte Aufführung",
+          "quelle": "Meisterhafte Aufführung",
+          "text": "Dein Lied gibt noch +1 Schaden mehr.",
+          "boni": {
+            "liedSchaden": 1
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "klangwelle",
+          "name": "Klangwelle",
+          "quelle": "Klangwelle",
+          "text": "Der Klangstoß reicht doppelt so weit.",
+          "boni": {
+            "klangWeit": 100
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "harmonie",
+          "name": "Harmonische Meisterschaft",
+          "quelle": "Harmonische Meisterschaft",
+          "text": "Aktive Fähigkeiten laden 25 % schneller.",
+          "boni": {
+            "aktionAbkling": 25
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "legende_m",
+          "name": "Legendäre Performance",
+          "quelle": "Legendäre Performance",
+          "text": "Dein Lied gibt +1 Schaden und 10 % Schutz mehr und klingt doppelt so lange.",
+          "boni": {
+            "liedSchaden": 1,
+            "liedSchutz": 0.1,
+            "aktionDauer": 100
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "schauspieler": {
+        "name": "Schauspieler",
+        "text": "Rollen und Gefühle: unbemerkt bleiben, Gegner in Angst versetzen.",
+        "stufen": {
+          "3": [
+            {
+              "id": "maske",
+              "name": "Maskenspiel",
+              "quelle": "Maskenspiel",
+              "text": "Solange du stillstehst, bemerken Gegner dich erst aus halber Entfernung.",
+              "boni": {
+                "tarnung": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "inszenierung",
+              "name": "Emotionale Inszenierung",
+              "quelle": "Emotionale Inszenierung",
+              "text": "Taste R: Angst — alle Gegner bis vier Kacheln verlieren 3 Sekunden jede Spur. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "ablenken",
+                "dauer": 3000,
+                "anzahl": 99,
+                "umkreis": 128,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "rollenwechsel",
+              "name": "Rollenwechsel",
+              "quelle": "Rollenwechsel",
+              "text": "Aktive Fähigkeiten laden 20 % schneller.",
+              "boni": {
+                "aktionAbkling": 20
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "buehne",
+              "name": "Bühnenkontrolle",
+              "quelle": "Bühnenkontrolle",
+              "text": "Die Inszenierung erreicht alle Gegner im ganzen Gebiet.",
+              "boni": {
+                "ablenkWeit": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "star",
+              "name": "Der wahre Star",
+              "quelle": "Der wahre Star",
+              "text": "Alle schauen auf dich: an dir prallen 15 % der Treffer ab, an Mitspielern nahe bei dir ebenso viele.",
+              "boni": {
+                "schutz": 0.15,
+                "aura": 0.15
+              }
+            }
+          ]
+        }
+      },
+      "wandbrecher": {
+        "name": "Wandbrecher",
+        "text": "Bestimmt die Musik der Szene: epische Stimmung, angehaltene Gegner.",
+        "stufen": {
+          "3": [
+            {
+              "id": "stimmungskontrolle",
+              "name": "Musikalische Stimmungskontrolle",
+              "quelle": "Musikalische Stimmungskontrolle",
+              "text": "Episch: dein Lied gibt +1 Schaden mehr.",
+              "boni": {
+                "liedSchaden": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "publikum_w",
+              "name": "Publikum adressieren",
+              "quelle": "Publikum adressieren",
+              "text": "Taste R: die Szene steht still — alle Gegner bis vier Kacheln sind 2 Sekunden betäubt. Lädt 20 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "lethargie",
+                "dauer": 2000,
+                "umkreis": 128,
+                "betaeuben": 2000,
+                "abklingzeit": 20000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "tonart",
+              "name": "Tonartwechsel",
+              "quelle": "Tonartwechsel",
+              "text": "Aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "klangregie",
+              "name": "Klangregie",
+              "quelle": "Klangregie",
+              "text": "Solange dein Lied klingt, prallen an den Zuhörern weitere 10 % ab.",
+              "boni": {
+                "liedSchutz": 0.1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "komponist",
+              "name": "Komponist der Welt",
+              "quelle": "Komponist der Welt",
+              "text": "Deine Lieder reichen dreimal so weit.",
+              "boni": {
+                "liedWeit": 200
+              }
+            }
+          ]
+        }
+      },
+      "kriegsdirigent": {
+        "name": "Kriegsdirigent",
+        "text": "Takt für die Schlacht: Angriffsbefehl, Hymne, Aura.",
+        "stufen": {
+          "3": [
+            {
+              "id": "kampftakt",
+              "name": "Kampftakt-Rhythmus",
+              "quelle": "Kampftakt-Rhythmus",
+              "text": "Dein Lied gibt +1 Schaden mehr.",
+              "boni": {
+                "liedSchaden": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "angriffsbefehl",
+              "name": "Taktischer Einsatz",
+              "quelle": "Taktischer Einsatz",
+              "text": "Taste R: Angriffsbefehl — alle Mitspieler bis drei Kacheln schlagen 8 Sekunden lang mit +1 Schaden zu. Lädt 20 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "mahl",
+                "umkreis": 96,
+                "menge": 0,
+                "dauer": 8000,
+                "boni": {
+                  "schaden": 1
+                },
+                "abklingzeit": 20000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "befehlstakt",
+              "name": "Befehlender Takt",
+              "quelle": "Befehlender Takt",
+              "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab.",
+              "boni": {
+                "aura": 0.1
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "kriegshymne",
+              "name": "Kriegshymne",
+              "quelle": "Kriegshymne",
+              "text": "Solange dein Lied klingt, prallen an den Zuhörern 15 % der Treffer ab.",
+              "boni": {
+                "liedSchutz": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "feldherr",
+              "name": "Feldherr der Klänge",
+              "quelle": "Feldherr der Klänge",
+              "text": "Deine Lieder reichen doppelt so weit und geben +1 Schaden mehr.",
+              "boni": {
+                "liedWeit": 100,
+                "liedSchaden": 1
+              }
+            }
+          ]
+        }
+      },
+      "geschichtenerzaehler": {
+        "name": "Geschichtenerzähler",
+        "text": "Erzählungen, die Mut machen und heilen.",
+        "stufen": {
+          "3": [
+            {
+              "id": "erzaehlung",
+              "name": "Inspirierende Erzählung",
+              "quelle": "Inspirierende Erzählung",
+              "text": "Wenn dein Lied beginnt, heilen die Zuhörer ein halbes Herz mehr.",
+              "boni": {
+                "liedHeil": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "legendenspur",
+              "name": "Legendenspur",
+              "quelle": "Legendenspur",
+              "text": "Lieder klingen anderthalbmal so lange.",
+              "boni": {
+                "aktionDauer": 50
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "epos",
+              "name": "Epos des Augenblicks",
+              "quelle": "Epos des Augenblicks",
+              "text": "Taste R: alle Mitspieler bis drei Kacheln — 10 Sekunden lang prallen 25 % der Treffer ab. Lädt 25 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "mahl",
+                "umkreis": 96,
+                "menge": 0,
+                "dauer": 10000,
+                "boni": {
+                  "schutz": 0.25
+                },
+                "abklingzeit": 25000
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "chronist",
+              "name": "Chronist der Taten",
+              "quelle": "Chronist der Taten",
+              "text": "Aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "weltenerzaehler",
+              "name": "Erzähler der Welt",
+              "quelle": "Erzähler der Welt",
+              "text": "Dein Lied heilt zu Beginn noch ein halbes Herz mehr und gibt +1 Schaden.",
+              "boni": {
+                "liedHeil": 1,
+                "liedSchaden": 1
+              }
+            }
+          ]
+        }
+      },
+      "strassenmusiker": {
+        "name": "Straßenmusiker",
+        "text": "Spielt ohne Pause: schnellere Lieder, eine Klangflut, die heilt.",
+        "stufen": {
+          "3": [
+            {
+              "id": "taktbeherrschung",
+              "name": "Taktbeherrschung",
+              "quelle": "Taktbeherrschung",
+              "text": "Aktive Fähigkeiten laden 20 % schneller.",
+              "boni": {
+                "aktionAbkling": 20
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "parallel",
+              "name": "Parallelkomposition",
+              "quelle": "Parallelkomposition",
+              "text": "Dein Lied gibt +1 Schaden mehr.",
+              "boni": {
+                "liedSchaden": 1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "klangflut",
+              "name": "Klangflut",
+              "quelle": "Klangflut",
+              "text": "Taste R: alle Mitspieler bis drei Kacheln heilen ein Herz. Lädt 15 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "mahl",
+                "umkreis": 96,
+                "menge": 2,
+                "dauer": 1,
+                "boni": {},
+                "abklingzeit": 15000
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "perfektesspiel",
+              "name": "Perfektes Spiel",
+              "quelle": "Perfektes Spiel",
+              "text": "Wenn dein Lied beginnt, heilen die Zuhörer ein halbes Herz mehr.",
+              "boni": {
+                "liedHeil": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "saiten",
+              "name": "Legende der Saiten",
+              "quelle": "Legende der Saiten",
+              "text": "Deine Lieder reichen doppelt so weit und klingen doppelt so lange.",
+              "boni": {
+                "liedWeit": 100,
+                "aktionDauer": 100
+              }
+            }
+          ]
+        }
+      },
+      "virtuose": {
+        "name": "Virtuose",
+        "text": "Glanznummern: Gegner abgelenkt, träge im Klang, das Publikum zahlt.",
+        "stufen": {
+          "3": [
+            {
+              "id": "ablenkungsnummer",
+              "name": "Ablenkungsnummer",
+              "quelle": "Ablenkungsnummer",
+              "text": "Taste R: der nächste Gegner verliert dich 4 Sekunden aus den Augen. Lädt 6 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "ablenken",
+                "dauer": 4000,
+                "anzahl": 1,
+                "umkreis": 128,
+                "abklingzeit": 6000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "improspiel",
+              "name": "Improvisiertes Spiel",
+              "quelle": "Improvisiertes Spiel",
+              "text": "10 % deiner Treffer sind kritisch.",
+              "boni": {
+                "krit": 0.1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "menschenfaenger",
+              "name": "Menschenfänger",
+              "quelle": "Menschenfänger",
+              "text": "Bei Händlern weitere 15 % bessere Preise.",
+              "boni": {
+                "feilschen": 15
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "strassenlegende",
+              "name": "Straßenlegende",
+              "quelle": "Strassenlegende",
+              "text": "Solange dein Lied klingt, sind Gegner darin halb so schnell.",
+              "boni": {
+                "liedLangsam": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "klangtrickster",
+              "name": "Klangtrickster",
+              "quelle": "Klangtrickster",
+              "text": "Gegner bemerken dich erst aus halber Entfernung, auch im Laufen.",
+              "boni": {
+                "tarnungLaufen": 1
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

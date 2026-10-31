@@ -426,6 +426,32 @@ probe server/spiel.js "      const ziele = gebiet.spieler().filter((p) => !p.tot
 probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/koch.mjs \
   "Figuren ohne Klassenbild (keine Kochmütze)"
 
+# Musiker
+probe server/spiel.js "    if (jetzt < (s.liedBis ?? 0)) schaden += s.liedBoni?.schaden ?? 0;" "" pruefstand/server-regeln.mjs \
+  "das Lied stärkt den Hieb nicht"
+probe server/spiel.js "      + (jetzt < (s.mahlBis ?? 0) ? s.mahlBoni?.schaden ?? 0 : 0) + (jetzt < (s.liedBis ?? 0) ? s.liedBoni?.schaden ?? 0 : 0);" "      + (jetzt < (s.mahlBis ?? 0) ? s.mahlBoni?.schaden ?? 0 : 0);" pruefstand/server-regeln.mjs \
+  "das Lied stärkt Pfeile nicht"
+probe server/spiel.js "    if (jetzt < (s.liedBis ?? 0)) p += s.liedBoni?.schutz ?? 0;" "" pruefstand/server-regeln.mjs \
+  "Klangwirkung schützt nicht"
+probe server/spiel.js "      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= umkreis);
+      const boni = { schaden: (a.boni?.schaden ?? 0) + k.liedSchaden" "      const ziele = gebiet.spieler().filter((p) => !p.tot);
+      const boni = { schaden: (a.boni?.schaden ?? 0) + k.liedSchaden" pruefstand/server-regeln.mjs \
+  "das Lied reicht übers ganze Gebiet"
+probe server/spiel.js "      if (k.liedHeil) this.heilen(s, ziele, k.liedHeil, jetzt);" "" pruefstand/server-regeln.mjs \
+  "Inspirierende Erzählung heilt nicht"
+probe server/spiel.js "        if (starr) g.betaeubtBis = Math.max(g.betaeubtBis ?? 0, jetzt + starr);" "" pruefstand/server-regeln.mjs \
+  "Publikum adressieren hält niemanden an"
+probe server/spiel.js "        if (!rundum && (g.x - s.x) * dx + (g.y - s.y) * dy < -8) continue;" "" pruefstand/server-regeln.mjs \
+  "Klangstoß trifft auch hinter einem"
+probe server/spiel.js "schutz: (a.boni?.schutz ?? 0) + k.mahlSchutz };" "schutz: k.mahlSchutz };" pruefstand/server-regeln.mjs \
+  "Epos des Augenblicks schützt nicht"
+probe server/gebiet.js " + (jetzt < (s.liedBis ?? 0) ? 'n' : '')," "," pruefstand/musiker.mjs \
+  "der Stand meldet das Lied nicht"
+probe client/figur.js "    this.note.setVisible(lied);" "    this.note.setVisible(false);" pruefstand/musiker.mjs \
+  "die Note ist nicht zu sehen"
+probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/musiker.mjs \
+  "Figuren ohne Klassenbild (kein Barett)"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

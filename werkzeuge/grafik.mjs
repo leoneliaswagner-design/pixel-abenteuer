@@ -812,6 +812,7 @@ const KLASSEN = {
   kleriker: (t) => ({ tunika: t, haar: P.haare, kopf: { art: 'kapuze', farben: ['#ece6d6', '#ffffff', '#b8ae98'] }, symbol: P.gold }),
   waldlaeufer: (t) => ({ tunika: t, haar: '#a0602a', kopf: { art: 'kapuze', farben: ['#4a6a2a', '#6a8a3a', '#2e4618'] }, koecher: true }),
   koch: (t) => ({ tunika: t, haar: '#7a4a24', bart: 'schnurr', bartFarbe: '#5a3418', kopf: { art: 'kochmuetze' }, schuerze: '#f4f0e6' }),
+  musiker: (t) => ({ tunika: t, haar: '#c88a3a', kopf: { art: 'barett', farben: ['#8a2a4a', '#b04a6a', '#5a1a30'], feder: '#f0d060' }, schal: '#f0d060' }),
 };
 for (const [klasse, aussehen] of Object.entries(KLASSEN))
   for (const [farbe, t] of Object.entries(TUNIKEN)) figurenBlatt(aussehen(t)).speichern(ziel + `held-${klasse}-${farbe}.png`);

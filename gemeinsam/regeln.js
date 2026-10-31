@@ -135,6 +135,9 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       mahlPlus: p.mahlPlus ?? 0, mahlSchutz: p.mahlSchutz ?? 0, mahlSchaden: p.mahlSchaden ?? 0, mahlUmkreis: p.mahlUmkreis ?? 0, mahlVoll: !!p.mahlVoll,
       curryPlus: p.curryPlus ?? 0, curryWeit: p.curryWeit ?? 0, gewuerzBetaeubt: p.gewuerzBetaeubt ?? 0, gewuerzWeit: p.gewuerzWeit ?? 0, gewuerzPlus: p.gewuerzPlus ?? 0,
       beuteHerz: p.beuteHerz ?? 0,
+      // Musiker: das Lied (stärkt alle im Umkreis), Lethargie, Klangstoß.
+      liedSchutz: p.liedSchutz ?? 0, liedHeil: p.liedHeil ?? 0, liedWeit: p.liedWeit ?? 0, liedSchaden: p.liedSchaden ?? 0, liedLangsam: !!p.liedLangsam,
+      lethargieBetaeubt: p.lethargieBetaeubt ?? 0, klangWeit: p.klangWeit ?? 0,
     },
   };
 }

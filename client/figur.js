@@ -58,6 +58,10 @@ export class Figur {
     this.schild = name
       ? szene.add.text(0, 0, name, { fontFamily: SCHRIFT, fontSize: '8px', color: FARBWERTE[farbe], stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(5000)
       : null;
+    // Note über dem Kopf, solange ein Lied des Musikers nachklingt. Gemalt
+    // statt als Zeichen — die Pixelschrift hat kein ♪.
+    this.note = szene.add.graphics().setVisible(false).setDepth(5000);
+    this.note.fillStyle(0xffd84a).fillCircle(-2, 0, 2.5).fillRect(0, -9, 1.5, 9).fillRect(0, -9, 5, 2).fillRect(3.5, -9, 1.5, 5);
   }
 
   // Auf See sitzt die Figur im Ruderboot: man sieht sie nur bis zum Gürtel
@@ -132,10 +136,13 @@ export class Figur {
     else if (this.getoent) this.koerper.clearTint();
     this.getoent = rot;
     this.schild?.setPosition(Math.round(x), Math.round(y - 48));
+    const lied = !this.tot && !!this.effekt?.includes('n');
+    this.note.setVisible(lied);
+    if (lied) this.note.setPosition(Math.round(x + 10), Math.round(y - 52 + Math.sin(jetzt / 200) * 2));
   }
 
   zerstoeren() {
     this.szene.tweens.killTweensOf(this.schwert);
-    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot]) t?.destroy();
+    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot, this.note]) t?.destroy();
   }
 }

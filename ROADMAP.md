@@ -124,6 +124,16 @@
   voll auf 20. Pfade Gewürzmeister (Würzattacke blendet und betäubt),
   Wildniskoch (Essen werfen, mehr Herzen), Festmahlkoch (stärkeres Mahl,
   Aura, Himmlisches Festmahl fürs ganze Gebiet). Prüfstand `koch.mjs`.
+- **Musiker** (31.10.2026): Barett mit Feder. Klangstoß (Q: trifft und stößt
+  die Gegner vor ihm weg, mit Klangwelle rundum), Lied der Tapferen (F: alle
+  im Umkreis +1 Schaden, auch Pfeile; goldene Note über den Beschwingten),
+  Lied der Lethargie (T: Gegner langsam, mit Publikumsmagnet erst starr).
+  Stufen: Klangwirkung (Lied schützt), Resonanz (Lied heilt), Trommel
+  (weiter), Legende. Pfade Schauspieler (Angst), Wandbrecher (Szene steht
+  still), Kriegsdirigent (Angriffsbefehl, Aura), Geschichtenerzähler (Epos:
+  Schutz), Straßenmusiker (Klangflut heilt), Virtuose (Ablenkung, Lied
+  verlangsamt). Mahl-Boni können jetzt auch Schutz (`boni.schutz`).
+  Prüfstand `musiker.mjs`.
 - **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
   beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
 
@@ -151,8 +161,8 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger, Bogenschütze, Dieb, Arzt, Koch stehen. Offen: Drachenreiter,
-   Musiker, Gelehrter — nach demselben Muster in `klassen.json`. Danach
+   Krieger, Bogenschütze, Dieb, Arzt, Koch, Musiker stehen. Offen:
+   Drachenreiter, Gelehrter — nach demselben Muster in `klassen.json`. Danach
    fällt der Magier weg. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →

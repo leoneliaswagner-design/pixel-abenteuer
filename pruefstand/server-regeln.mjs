@@ -1583,6 +1583,113 @@ const arena = (art, abstand) => {
   pruefe(satt2 === vorher + 2 && ben.leben === vorL, `Festmahlkoch-Mahl: Hieb ${vorher} → ${satt2}, ein Treffer prallt ab (Wurf 0,4)`);
 }
 
+// ---------- Musiker ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const mk = (name, stufe, pfad, klasse = 'musiker') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    x.unverwundbarBis = 0;
+    return x;
+  };
+  const still = (g) => Object.assign(g, { tot: false, leben: 50, getroffenBis: 0, stossBis: 0, betaeubtBis: 0, verwirrtBis: 0, langsamBis: 0, markiertBis: 0, giftBei: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6, zielId: 'x' });
+  const mia = mk('Mia', 2);
+  const ben = mk('Ben', 1, null, 'kaempfer');
+  pruefe(mia.werte.faehigkeit.name === 'Klangstoß' && mia.werte.aktionen.map((a) => a.taste).join('') === 'FT', `Musiker Stufe 2: Q ${mia.werte.faehigkeit.name}, ${mia.werte.aktionen.map((a) => a.taste + ' ' + a.name).join(', ')}`);
+  const g = wald.gegner[0];
+  const hau = (wer) => {
+    still(g);
+    Object.assign(wer, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+    sp.hieb(wer, { r: 'oben' });
+    return 50 - g.leben;
+  };
+  // Lied der Tapferen: Ben nah dabei schlägt härter, Cleo weit weg nicht.
+  const vorher = hau(ben);
+  const cleo = mk('Cleo', 1, null, 'kaempfer');
+  Object.assign(ben, { x: mia.x + 40, y: mia.y });
+  Object.assign(cleo, { x: mia.x + 200, y: mia.y });
+  sp.aktion(mia, { id: 'tapfere' });
+  const beschwingt = hau(ben), cleoHieb = hau(cleo);
+  uhr += 13000;
+  const verklungen = hau(ben);
+  pruefe(beschwingt === vorher + 1 && cleoHieb === vorher && verklungen === vorher, `Lied der Tapferen: Ben ${vorher} → ${beschwingt}, Cleo weit weg ${cleoHieb}, nach 12 s wieder ${verklungen}`);
+  sp.verlassen(cleo.id);
+  // Das Lied stärkt auch Pfeile.
+  const bo = mk('Bo', 1, null, 'waldlaeufer');
+  Object.assign(bo, { x: mia.x + 20, y: mia.y, richtung: 'oben' });
+  sp.faehigkeit(bo, { r: 'oben' });
+  const pfeil1 = [...wald.geschosse.values()].find((p) => p.von === bo.id)?.schaden;
+  wald.geschosse.clear();
+  mia.aktionBereit = {};
+  sp.aktion(mia, { id: 'tapfere' });
+  bo.faehigkeitBereit = 0;
+  sp.faehigkeit(bo, { r: 'oben' });
+  const pfeil2 = [...wald.geschosse.values()].find((p) => p.von === bo.id)?.schaden;
+  wald.geschosse.clear();
+  pruefe(pfeil1 > 0 && pfeil2 === pfeil1 + 1, `Lied stärkt Pfeile: ${pfeil1} → ${pfeil2}`);
+  sp.verlassen(bo.id);
+  uhr += 13000;
+  // Lied der Lethargie: nah langsam, weit weg nicht.
+  const [nah, fern] = wald.gegner;
+  Object.assign(still(nah), { x: mia.x + 60, y: mia.y });
+  Object.assign(still(fern), { x: mia.x + 200, y: mia.y });
+  sp.aktion(mia, { id: 'lethargie' });
+  pruefe(uhr < nah.langsamBis && !(uhr < fern.langsamBis) && !(uhr < nah.betaeubtBis), 'Lied der Lethargie: der nahe Schleim ist langsam (nicht starr), der ferne nicht');
+  // Klangstoß: vorn getroffen und weggestoßen, hinten nicht.
+  Object.assign(still(nah), { x: mia.x, y: mia.y - 40 });
+  Object.assign(still(fern), { x: mia.x, y: mia.y + 40 });
+  mia.faehigkeitBereit = 0;
+  sp.faehigkeit(mia, { r: 'oben' });
+  pruefe(nah.leben < 50 && uhr < nah.stossBis && fern.leben === 50, `Klangstoß: vorn ${50 - nah.leben} Schaden und weggestoßen, hinten ${50 - fern.leben}`);
+  sp.verlassen(mia.id);
+  // Klangwirkung (Stufe 6): das Lied schützt. Wurf 0,15: Bens Kampfstil
+  // (0,1) allein reicht nicht, mit dem Lied (0,1) prallt es ab.
+  const mus6 = mk('Mus', 6);
+  Object.assign(ben, { x: mus6.x + 30, y: mus6.y });
+  const trifft = () => {
+    wurf = 0.15;
+    const l = (ben.leben = 4);
+    ben.unverwundbarBis = 0;
+    sp.spielerTreffen(ben, { x: ben.x, y: ben.y - 20, w: { schaden: 1 } }, uhr);
+    wurf = 0.99;
+    return ben.leben < l;
+  };
+  const ohne = trifft();
+  sp.aktion(mus6, { id: 'tapfere' });
+  const mit = trifft();
+  pruefe(ohne && !mit, 'Klangwirkung: mit dem Lied prallt ein Treffer ab (Wurf 0,15), ohne nicht');
+  sp.verlassen(mus6.id);
+  uhr += 13000;
+  // Geschichtenerzähler: das Lied heilt beim Anstimmen.
+  const erz = mk('Erz', 3, 'geschichtenerzaehler');
+  Object.assign(ben, { x: erz.x + 30, y: erz.y, leben: 2 });
+  sp.aktion(erz, { id: 'tapfere' });
+  pruefe(ben.leben === 3, `Inspirierende Erzählung: das Lied heilt Ben 2 → ${ben.leben}`);
+  sp.verlassen(erz.id);
+  // Epos des Augenblicks (R, Geschichtenerzähler 10): Schutz aus dem „mahl"
+  // mit boni.schutz — vorher ging nur der Schaden des Koch-Mahls durch.
+  uhr += 13000;
+  const epos = mk('Epos', 10, 'geschichtenerzaehler');
+  Object.assign(ben, { x: epos.x + 30, y: epos.y });
+  const vorEpos = trifft();
+  sp.aktion(epos, { id: 'epos' });
+  pruefe(vorEpos && !trifft(), 'Epos des Augenblicks: ein Treffer prallt ab (Wurf 0,15), vorher nicht');
+  sp.verlassen(epos.id);
+  // Wandbrecher: Publikum adressieren (R) hält die Gegner an.
+  const wb = mk('Wand', 7, 'wandbrecher');
+  Object.assign(still(nah), { x: wb.x + 60, y: wb.y });
+  sp.aktion(wb, { id: 'publikum_w' });
+  pruefe(uhr < nah.betaeubtBis && uhr < nah.langsamBis, 'Publikum adressieren: der Schleim steht still');
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

@@ -18,7 +18,7 @@ const STIEFEL = ['#6b4426', '#8c5d37'];
 //   tunika   [grund, hell, dunkel]   hose [grund, dunkel]
 //   haar, frisur ('kurz' | 'lang' | 'glatze'), bart (null | 'schnurr' | 'voll'), bartFarbe
 //   kopf     null | { art: 'helm', farbe, dunkel, busch } | { art: 'kapuze', farben: [g, h, d] }
-//            | { art: 'hut', farben: [g, h, d] } | { art: 'kochmuetze' }
+//            | { art: 'hut', farben: [g, h, d] } | { art: 'kochmuetze' } | { art: 'barett', farben: [g, h, d], feder }
 //   robe, schal, symbol, schultern, schuerze, koecher (Farben oder true)
 export function figur(o, richtung, bild) {
   const b = new Bild(BREITE, HOEHE);
@@ -119,7 +119,7 @@ function kopfVorneHinten(b, o, hinten) {
     b.ellipse(16, 9, 7, 3.5, k.farben[0], (x, y) => y <= 9);
   }
   if (hinten) {
-    if (!k || k.art === 'hut' || k.art === 'kochmuetze') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
+    if (!k || k.art === 'hut' || k.art === 'kochmuetze' || k.art === 'barett') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
     if (o.frisur === 'glatze') b.rechteck(9, 13, 14, 4, o.haar);
   } else {
     // Gesicht: zwei Augen, ein Lichtpunkt, rote Wangen.
@@ -146,6 +146,7 @@ function kopfVorneHinten(b, o, hinten) {
   }
   if (k?.art === 'hut') hut(b, k.farben, 16);
   if (k?.art === 'kochmuetze') kochmuetze(b, 16);
+  if (k?.art === 'barett') barett(b, k, 16);
 }
 
 function haarVorne(b, o) {
@@ -181,6 +182,17 @@ function kochmuetze(b, mitte) {
   b.ellipse(mitte - 2, 1.5, 2.5, 1, '#ffffff');
   b.rechteck(mitte - 6, 7, 12, 3, '#ece8de');
   b.rechteck(mitte - 6, 9, 12, 1, '#c8c2b4');
+}
+
+// Barett des Musikers: flach und schief nach rechts gezogen, mit langer
+// Feder — von weitem das, woran man ihn erkennt (Kochmütze, Helm, Hut sind
+// schon vergeben).
+function barett(b, { farben: [g, hl, d], feder }, mitte) {
+  b.ellipse(mitte + 1.5, 6, 9, 3.5, g);
+  b.ellipse(mitte, 5, 5, 1.5, hl);
+  b.rechteck(mitte - 7, 8, 14, 2, d);
+  // Feder: schräg nach hinten oben, mit hellem Kiel.
+  for (let i = 0; i < 9; i++) b.rechteck(mitte - 4 - i, 5 - Math.round(i * 0.55), 2, 2, i % 3 ? feder : '#ffffff');
 }
 
 function koecherHinten(b) {
@@ -248,6 +260,7 @@ function seite(b, o, s, holt) {
   }
   if (k?.art === 'hut') hut(b, k.farben, 15);
   if (k?.art === 'kochmuetze') kochmuetze(b, 15);
+  if (k?.art === 'barett') barett(b, k, 15);
   if (o.schultern) b.rechteck(12, 21, 6, 3, o.schultern);
 
   // Der sichtbare Arm: pendelt vor und zurück; beim Ausholen nach vorn.

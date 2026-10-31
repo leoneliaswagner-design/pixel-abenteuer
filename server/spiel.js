@@ -210,7 +210,7 @@ export class Spiel {
       // Ein Mahl für alle in der Nähe: heilt und stärkt eine Weile.
       const k = s.werte.kampf;
       const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= a.umkreis * (1 + k.mahlUmkreis / 100));
-      const boni = { schaden: (a.boni?.schaden ?? 0) + k.mahlSchaden, schutz: k.mahlSchutz };
+      const boni = { schaden: (a.boni?.schaden ?? 0) + k.mahlSchaden, schutz: (a.boni?.schutz ?? 0) + k.mahlSchutz };
       for (const p of ziele) {
         p.leben = Math.min(this.maxLeben(p), k.mahlVoll ? this.maxLeben(p) : p.leben + a.menge + k.mahlPlus);
         [p.mahlBis, p.mahlBoni] = [jetzt + a.dauer, boni];
@@ -236,6 +236,27 @@ export class Spiel {
         g.verwirrtBis = jetzt + a.dauer;
       }
       gebiet.anAlle({ t: 'mixtur', x: s.x + dx * 32, y: s.y + dy * 32, r: 40, farbe: 'gewuerz' });
+    } else if (a.art === 'lied') {
+      // Ein Lied für alle im Umkreis (auch den Musiker): stärkt, solange es
+      // nachklingt; mit Resonanz heilt es beim Anstimmen.
+      const k = s.werte.kampf, umkreis = a.umkreis * (1 + k.liedWeit / 100);
+      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= umkreis);
+      const boni = { schaden: (a.boni?.schaden ?? 0) + k.liedSchaden, schutz: (a.boni?.schutz ?? 0) + k.liedSchutz };
+      for (const p of ziele) [p.liedBis, p.liedBoni] = [jetzt + a.dauer, boni];
+      if (k.liedHeil) this.heilen(s, ziele, k.liedHeil, jetzt);
+      // Virtuose: die Gegner im Umkreis werden schwerfällig.
+      if (k.liedLangsam) for (const g of gebiet.gegner) if (!g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= umkreis) g.langsamBis = jetzt + a.dauer;
+      gebiet.anAlle({ t: 'mixtur', x: s.x, y: s.y, r: umkreis, farbe: 'lied' });
+    } else if (a.art === 'lethargie') {
+      // Lied der Lethargie: die Gegner rundum werden langsam, mit
+      // Publikumsmagnet (oder dem Wandbrecher) erst einmal starr.
+      const k = s.werte.kampf, starr = a.betaeuben ?? k.lethargieBetaeubt;
+      for (const g of gebiet.gegner) {
+        if (g.tot || Math.hypot(g.x - s.x, g.y - s.y) > a.umkreis) continue;
+        g.langsamBis = jetzt + a.dauer;
+        if (starr) g.betaeubtBis = Math.max(g.betaeubtBis ?? 0, jetzt + starr);
+      }
+      gebiet.anAlle({ t: 'mixtur', x: s.x, y: s.y, r: a.umkreis, farbe: 'lethargie' });
     } else if (a.art === 'festmahl') {
       const ziele = gebiet.spieler().filter((p) => !p.tot);
       for (const p of ziele) p.leben = this.maxLeben(p);
@@ -342,7 +363,9 @@ export class Spiel {
   schiessen(s, gebiet, schuss, jetzt) {
     const k = s.werte.kampf, ruhe = this.ruhig(s, jetzt);
     const [dx, dy] = RICHTUNGEN[s.richtung];
-    const schaden = schuss.schaden + (jetzt < s.rauschBis ? s.rauschBoni?.faehigkeit ?? 0 : 0) + (ruhe ? k.ruheSchuss : 0);
+    // Mahl und Lied stärken auch Pfeile — sonst hätte die Bogenschützin nichts vom Lied.
+    const schaden = schuss.schaden + (jetzt < s.rauschBis ? s.rauschBoni?.faehigkeit ?? 0 : 0) + (ruhe ? k.ruheSchuss : 0)
+      + (jetzt < (s.mahlBis ?? 0) ? s.mahlBoni?.schaden ?? 0 : 0) + (jetzt < (s.liedBis ?? 0) ? s.liedBoni?.schaden ?? 0 : 0);
     const n = schuss.pfeile ?? 1;
     for (let i = 0; i < n; i++) {
       // Mehrere Pfeile fliegen nebeneinander, quer zur Richtung versetzt.
@@ -365,6 +388,8 @@ export class Spiel {
     if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;
     // Satt vom Mahl des Kochs.
     if (jetzt < (s.mahlBis ?? 0)) schaden += s.mahlBoni?.schaden ?? 0;
+    // Beflügelt vom Lied des Musikers.
+    if (jetzt < (s.liedBis ?? 0)) schaden += s.liedBoni?.schaden ?? 0;
     if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
     // Sprungangriff: wer gerade gelaufen ist.
     if (k.laufSchlag && jetzt - s.stehtSeit < 300) schaden += k.laufSchlag;
@@ -387,6 +412,7 @@ export class Spiel {
     let p = k.schutz;
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
     if (jetzt < (s.mahlBis ?? 0)) p += s.mahlBoni?.schutz ?? 0;
+    if (jetzt < (s.liedBis ?? 0)) p += s.liedBoni?.schutz ?? 0;
     p += this.ruhig(s, jetzt) ? k.ruheSchutz : jetzt - s.stehtSeit < 300 ? k.laufSchutz : 0;
     // Lebender Schatten: nachts und an dunklen Orten.
     if (jetzt < (s.heilSchutzBis ?? 0)) p += s.heilSchutz;
@@ -909,6 +935,16 @@ export class Spiel {
       s.unverwundbarBis = Math.max(s.unverwundbarBis, jetzt + dauer + 100);
       const vorn = hiebFlaeche(s.x + dx * f.weite / 2, s.y + dy * f.weite / 2, s.richtung, { hiebReichweite: f.weite / 2 + 20, hiebBreite: 32 });
       for (const g of gebiet.gegner) if (!g.tot && imRechteck(vorn, g.x, g.y - 6, 8)) gebiet.gegnerTreffen(g, s, jetzt, f.staerke);
+    } else if (f.art === 'klang') {
+      // Klangstoß: trifft alle vor dem Musiker (mit Klangwelle rundum) und
+      // stößt sie von ihm weg.
+      const umkreis = f.umkreis * (1 + s.werte.kampf.klangWeit / 100), rundum = s.werte.kampf.klangWeit > 0;
+      for (const g of gebiet.gegner) {
+        if (g.tot || Math.hypot(g.x - s.x, g.y - s.y) > umkreis) continue;
+        if (!rundum && (g.x - s.x) * dx + (g.y - s.y) * dy < -8) continue;
+        gebiet.gegnerTreffen(g, s, jetzt, f.staerke);
+      }
+      gebiet.anAlle({ t: 'mixtur', x: s.x, y: s.y, r: umkreis, farbe: 'klang' });
     }
   }
 

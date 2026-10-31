@@ -290,6 +290,7 @@ node pruefstand/bogen.mjs           # Bogenschütze markiert, Menü: neu beginne
 node pruefstand/dieb.mjs            # Falle des Taktikers, Ablenkung beim anderen sichtbar
 node pruefstand/arzt.mjs            # Diagnose-Balken, Heilsalbe beim anderen
 node pruefstand/koch.mjs            # Koch wählen, Kochmütze beim anderen, Mahl
+node pruefstand/musiker.mjs         # Musiker wählen, Barett beim anderen, Lied mit Note
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
