@@ -1947,5 +1947,425 @@
         }
       }
     }
+  },
+  "koch": {
+    "name": "Koch",
+    "beschreibung": "Versorger und Trickser: Gerichte heilen und stärken die Gruppe, Messer und scharfes Curry halten Gegner auf Abstand.",
+    "attribute": {
+      "staerke": 12,
+      "geschick": 13,
+      "konstitution": 14,
+      "intelligenz": 10,
+      "weisheit": 15,
+      "charisma": 10
+    },
+    "faehigkeit": {
+      "art": "geschoss",
+      "name": "Messerwurf",
+      "abklingzeit": 900,
+      "geschoss": "dolch",
+      "tempo": 250,
+      "reichweite": 160,
+      "schaden": 1,
+      "attribut": "geschick"
+    },
+    "vorteile": [],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "kochkunst",
+          "name": "Kochkunst",
+          "quelle": "Kochkunst",
+          "text": "Taste F: ein Mahl für alle bis zwei Kacheln um dich — heilt ein Herz und gibt 20 Sekunden lang +1 Schaden. Lädt 25 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "mahl",
+            "umkreis": 64,
+            "menge": 2,
+            "dauer": 20000,
+            "boni": {
+              "schaden": 1
+            },
+            "abklingzeit": 25000
+          }
+        },
+        {
+          "id": "kuechenwaffen",
+          "name": "Küchenwaffen",
+          "quelle": "Küchenwaffen",
+          "text": "Pfanne und Messer liegen dir: +1 Schaden.",
+          "boni": {
+            "schaden": 1
+          }
+        },
+        {
+          "id": "krug",
+          "name": "Unerschöpflicher Krug",
+          "quelle": "Alchemy Jug",
+          "text": "Herzen, die du aufhebst, heilen ein halbes Herz mehr.",
+          "boni": {
+            "herzPlus": 1
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "curry",
+          "name": "Explosives Curry",
+          "quelle": "Spezialrezepte",
+          "text": "Taste T: wirft Curry drei Kacheln weit — Gegner dort nehmen 2 Schaden und sind 2 Sekunden halb so schnell. Lädt 10 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "curry",
+            "weite": 96,
+            "radius": 40,
+            "schaden": 2,
+            "verlangsamen": 2000,
+            "abklingzeit": 10000
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "servieren",
+          "name": "Schnelles Servieren",
+          "quelle": "Schnelles Servieren",
+          "text": "Aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "aktionAbkling": 20
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "feinschmecker",
+          "name": "Feinschmecker-Sinne",
+          "quelle": "Feinschmecker-Sinne",
+          "text": "Du riechst, wie es um Gegner steht: über jedem ein Lebensbalken.",
+          "boni": {
+            "diagnose": 1
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "verstaerkt",
+          "name": "Verstärkte Rezepte",
+          "quelle": "Verstärkte Rezepte",
+          "text": "Das Mahl heilt ein Herz mehr, und alles wirkt doppelt so lange.",
+          "boni": {
+            "mahlPlus": 2,
+            "aktionDauer": 100
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "verteidigung_k",
+          "name": "Kulinarische Verteidigung",
+          "quelle": "Kulinarische Verteidigung",
+          "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab.",
+          "boni": {
+            "aura": 0.1
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "heimatkueche",
+          "name": "Geruch der Heimatküche",
+          "quelle": "Geruch der Heimatküche",
+          "text": "Wer dein Mahl isst, an dem prallen solange 20 % der Treffer ab.",
+          "boni": {
+            "mahlSchutz": 0.2
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "angriff_k",
+          "name": "Zusätzlicher Angriff",
+          "quelle": "Zusätzlicher Angriff",
+          "text": "Mehr Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        }
+      ],
+      "13": [
+        {
+          "id": "feinschnitt",
+          "name": "Feinschnitt und Flammenbeherrschung",
+          "quelle": "Feinschnitt & Flammenbeherrschung",
+          "text": "Messer machen +1 Schaden und laden 20 % schneller.",
+          "boni": {
+            "faehigkeit": 1,
+            "qAbkling": 20
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "duftaura",
+          "name": "Duftende Aura",
+          "quelle": "Duftende Aura",
+          "text": "Der Duft lenkt ab: 15 % der Treffer gegen dich prallen ab.",
+          "boni": {
+            "schutz": 0.15
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "signature",
+          "name": "Signature Dish",
+          "quelle": "Signature Dish",
+          "text": "Das Mahl heilt noch ein Herz mehr.",
+          "boni": {
+            "mahlPlus": 2
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "meisterkoch",
+          "name": "Meisterkoch",
+          "quelle": "Meisterkoch",
+          "text": "Aktive Fähigkeiten laden 25 % schneller.",
+          "boni": {
+            "aktionAbkling": 25
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "legendaer_k",
+          "name": "Legendäre Küche",
+          "quelle": "Legendäre Küche",
+          "text": "Das Curry trifft eine doppelt so große Fläche und brennt +1 mehr.",
+          "boni": {
+            "curryPlus": 1,
+            "curryWeit": 100
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "koenig",
+          "name": "König der Küche",
+          "quelle": "König der Küche",
+          "text": "Das Mahl heilt voll.",
+          "boni": {
+            "mahlVoll": 1
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "gewuerzmeister": {
+        "name": "Gewürzmeister",
+        "text": "Gewürze als Waffe: Chili in die Augen, Gegner taumeln.",
+        "stufen": {
+          "3": [
+            {
+              "id": "wuerzattacke",
+              "name": "Würzattacke",
+              "quelle": "Würzattacken",
+              "text": "Taste R: Chili ins Gesicht — Gegner bis zweieinhalb Kacheln vor dir nehmen 2 Schaden und sehen 2 Sekunden niemanden. Lädt 8 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "gewuerz",
+                "umkreis": 80,
+                "schaden": 2,
+                "dauer": 2000,
+                "abklingzeit": 8000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "blendend",
+              "name": "Blendende Aromen",
+              "quelle": "Blendende Aromen",
+              "text": "Die Würzattacke betäubt zusätzlich 1,5 Sekunden.",
+              "boni": {
+                "gewuerzBetaeubt": 1500
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "wuerzfokus",
+              "name": "Würzfokus",
+              "quelle": "Würzfokus",
+              "text": "Aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "wuerzsturm",
+              "name": "Aromatische Meisterschaft",
+              "quelle": "Aromatische Meisterschaft",
+              "text": "Die Würzattacke reicht doppelt so weit, rundum.",
+              "boni": {
+                "gewuerzWeit": 100
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "geschmack",
+              "name": "Legendärer Geschmack",
+              "quelle": "Legendärer Geschmack",
+              "text": "Die Würzattacke macht +2 Schaden.",
+              "boni": {
+                "gewuerzPlus": 2
+              }
+            }
+          ]
+        }
+      },
+      "wildniskoch": {
+        "name": "Wildniskoch",
+        "text": "Kocht unterwegs mit dem, was da ist — wirft Essen quer übers Feld.",
+        "stufen": {
+          "3": [
+            {
+              "id": "schnellkueche",
+              "name": "Schnellküche",
+              "quelle": "Schnellküche",
+              "text": "10 % schneller.",
+              "boni": {
+                "tempoProzent": 10
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "improvisiert",
+              "name": "Improvisierte Zutaten",
+              "quelle": "Improvisierte Zutaten",
+              "text": "Besiegte Gegner lassen öfter ein Herz fallen.",
+              "boni": {
+                "beuteHerz": 0.25
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "fliegendekueche",
+              "name": "Fliegende Küche",
+              "quelle": "Fliegende Küche",
+              "text": "Taste R: wirft eine Portion drei Kacheln weit; alle Mitspieler dort heilen ein Herz. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "mixtur",
+                "weite": 96,
+                "radius": 48,
+                "menge": 2,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "strassenkueche",
+              "name": "Straßenküchenmeister",
+              "quelle": "Strassenküchenmeister",
+              "text": "10 % schneller, aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "tempoProzent": 10,
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "improvisation_k",
+              "name": "Meister der Improvisation",
+              "quelle": "Meister der Improvisation",
+              "text": "Geworfene Portionen treffen eine doppelt so große Fläche, und das Mahl heilt ein halbes Herz mehr.",
+              "boni": {
+                "mixturRadius": 100,
+                "mahlPlus": 1
+              }
+            }
+          ]
+        }
+      },
+      "festmahlkoch": {
+        "name": "Festmahlkoch",
+        "text": "Großes Essen für alle: stärkere Mahle, Aura, ein Festmahl fürs ganze Gebiet.",
+        "stufen": {
+          "3": [
+            {
+              "id": "delikat",
+              "name": "Delikate Gerichte",
+              "quelle": "Delikate Gerichte",
+              "text": "Wer dein Mahl isst, schlägt mit noch +1 Schaden zu.",
+              "boni": {
+                "mahlSchaden": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "aura_k",
+              "name": "Kulinarische Aura",
+              "quelle": "Kulinarische Aura",
+              "text": "Mitspieler bis drei Kacheln um dich: 15 % ihrer Treffer prallen ab.",
+              "boni": {
+                "aura": 0.15
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "buffet",
+              "name": "Feinschmecker-Buffet",
+              "quelle": "Feinschmecker-Buffet",
+              "text": "Das Mahl erreicht Mitspieler in doppelter Entfernung.",
+              "boni": {
+                "mahlUmkreis": 100
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "festmahl",
+              "name": "Himmlisches Festmahl",
+              "quelle": "Himmlisches Festmahl",
+              "text": "Taste R: alle Mitspieler im ganzen Gebiet heilen voll. Lädt 2 Minuten.",
+              "aktion": {
+                "taste": "R",
+                "art": "festmahl",
+                "abklingzeit": 120000
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "koenig_f",
+              "name": "König der Küche",
+              "quelle": "König der Küche",
+              "text": "Die Aura wird stärker (weitere 10 %), und alles wirkt doppelt so lange.",
+              "boni": {
+                "aura": 0.1,
+                "aktionDauer": 100
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

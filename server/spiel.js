@@ -206,6 +206,40 @@ export class Spiel {
         art: f.geschoss, tempo: f.tempo, reichweite: Math.round(f.reichweite * (a.reichweiteFaktor ?? 1)), schaden: f.staerke + (a.schadenPlus ?? 0),
         pfeile: 1 + s.werte.kampf.mehrPfeile, durchschlag: a.durchschlag ?? 0, betaeuben: a.betaeuben ?? 0, krit: s.werte.kampf.schussKrit,
       }, jetzt);
+    } else if (a.art === 'mahl') {
+      // Ein Mahl für alle in der Nähe: heilt und stärkt eine Weile.
+      const k = s.werte.kampf;
+      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= a.umkreis * (1 + k.mahlUmkreis / 100));
+      const boni = { schaden: (a.boni?.schaden ?? 0) + k.mahlSchaden, schutz: k.mahlSchutz };
+      for (const p of ziele) {
+        p.leben = Math.min(this.maxLeben(p), k.mahlVoll ? this.maxLeben(p) : p.leben + a.menge + k.mahlPlus);
+        [p.mahlBis, p.mahlBoni] = [jetzt + a.dauer, boni];
+      }
+      gebiet.anAlle({ t: 'heilung', von: s.id, ziele: ziele.map((p) => p.id) });
+    } else if (a.art === 'curry') {
+      // Explosives Curry: fliegt ein Stück und brennt dort.
+      if (RICHTUNGEN[m.r]) s.richtung = m.r;
+      const k = s.werte.kampf, [dx, dy] = RICHTUNGEN[s.richtung];
+      const mx = s.x + dx * a.weite, my = s.y + dy * a.weite, r = a.radius * (1 + k.curryWeit / 100);
+      for (const g of gebiet.gegner)
+        if (!g.tot && Math.hypot(g.x - mx, g.y - my) <= r) gebiet.gegnerTreffen(g, { id: s.id, x: mx, y: my }, jetzt, a.schaden + k.curryPlus, { verlangsamen: a.verlangsamen, ohneStoss: true });
+      gebiet.anAlle({ t: 'mixtur', x: mx, y: my, r, farbe: 'curry' });
+    } else if (a.art === 'gewuerz') {
+      // Würzattacke: Chili ins Gesicht der Gegner vor einem (rundum, wenn weit).
+      const k = s.werte.kampf, [dx, dy] = RICHTUNGEN[s.richtung];
+      const umkreis = a.umkreis * (1 + k.gewuerzWeit / 100);
+      for (const g of gebiet.gegner) {
+        if (g.tot || Math.hypot(g.x - s.x, g.y - s.y) > umkreis) continue;
+        const vorn = (g.x - s.x) * dx + (g.y - s.y) * dy >= -8;
+        if (!vorn && !k.gewuerzWeit) continue;
+        gebiet.gegnerTreffen(g, { id: s.id, x: s.x, y: s.y }, jetzt, a.schaden + k.gewuerzPlus, { betaeuben: k.gewuerzBetaeubt, ohneStoss: true });
+        g.verwirrtBis = jetzt + a.dauer;
+      }
+      gebiet.anAlle({ t: 'mixtur', x: s.x + dx * 32, y: s.y + dy * 32, r: 40, farbe: 'gewuerz' });
+    } else if (a.art === 'festmahl') {
+      const ziele = gebiet.spieler().filter((p) => !p.tot);
+      for (const p of ziele) p.leben = this.maxLeben(p);
+      gebiet.anAlle({ t: 'heilung', von: s.id, ziele: ziele.map((p) => p.id) });
     } else if (a.art === 'behandeln') {
       // Feldbehandlung: wer in der Nähe am meisten fehlt (man selbst zählt mit).
       const k = s.werte.kampf;
@@ -329,6 +363,8 @@ export class Spiel {
     const k = s.werte.kampf;
     let schaden = s.werte.schaden;
     if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;
+    // Satt vom Mahl des Kochs.
+    if (jetzt < (s.mahlBis ?? 0)) schaden += s.mahlBoni?.schaden ?? 0;
     if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
     // Sprungangriff: wer gerade gelaufen ist.
     if (k.laufSchlag && jetzt - s.stehtSeit < 300) schaden += k.laufSchlag;
@@ -350,6 +386,7 @@ export class Spiel {
     if (!k) return 0;
     let p = k.schutz;
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
+    if (jetzt < (s.mahlBis ?? 0)) p += s.mahlBoni?.schutz ?? 0;
     p += this.ruhig(s, jetzt) ? k.ruheSchutz : jetzt - s.stehtSeit < 300 ? k.laufSchutz : 0;
     // Lebender Schatten: nachts und an dunklen Orten.
     if (jetzt < (s.heilSchutzBis ?? 0)) p += s.heilSchutz;

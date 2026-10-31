@@ -131,6 +131,10 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       heilPlus: p.heilPlus ?? 0, heilSchutz: p.heilSchutz ?? 0, heilVoll: !!p.heilVoll, diagnose: !!p.diagnose, chirurg: p.chirurg ?? 0,
       retter: Math.round((p.retter ?? 0) * (1 - Math.min(80, p.retterAbkling ?? 0) / 100)), retterSchild: p.retterSchild ?? 0, stabilisieren: !!p.stabilisieren,
       mixturSchaden: p.mixturSchaden ?? 0, mixturSchutz: p.mixturSchutz ?? 0, mixturRadius: p.mixturRadius ?? 0, giftSpringt: !!p.giftSpringt, giftSchaden: 1 + (p.giftSchaden ?? 0),
+      // Koch: das Mahl (heilt, stärkt eine Weile), Curry, Würzattacke.
+      mahlPlus: p.mahlPlus ?? 0, mahlSchutz: p.mahlSchutz ?? 0, mahlSchaden: p.mahlSchaden ?? 0, mahlUmkreis: p.mahlUmkreis ?? 0, mahlVoll: !!p.mahlVoll,
+      curryPlus: p.curryPlus ?? 0, curryWeit: p.curryWeit ?? 0, gewuerzBetaeubt: p.gewuerzBetaeubt ?? 0, gewuerzWeit: p.gewuerzWeit ?? 0, gewuerzPlus: p.gewuerzPlus ?? 0,
+      beuteHerz: p.beuteHerz ?? 0,
     },
   };
 }

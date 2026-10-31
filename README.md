@@ -289,6 +289,7 @@ node pruefstand/krieger.mjs         # Pfadwahl, Attributspunkte, Kampfrausch bei
 node pruefstand/bogen.mjs           # Bogenschütze markiert, Menü: neu beginnen, verlassen
 node pruefstand/dieb.mjs            # Falle des Taktikers, Ablenkung beim anderen sichtbar
 node pruefstand/arzt.mjs            # Diagnose-Balken, Heilsalbe beim anderen
+node pruefstand/koch.mjs            # Koch wählen, Kochmütze beim anderen, Mahl
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo

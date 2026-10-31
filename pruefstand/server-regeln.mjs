@@ -350,7 +350,7 @@ const post6 = [];
 const neuer = spiel6.beitreten('Wahl', (m) => post6.push(m));
 const anderer = mitCharakter(spiel6, 'Zeuge', () => {});
 spiel6.nachricht(anderer.id, { t: 'bereit' });
-pruefe(neuer.waehlt && post6[0].charakter === null && Object.keys(post6[0].auswahl.klassen).length === 5,
+pruefe(neuer.waehlt && post6[0].charakter === null && Object.keys(post6[0].auswahl.klassen).length === Object.keys(werte.klassen).length,
   `ohne Spielstand: erst Klasse wählen (${Object.keys(post6[0].auswahl.klassen).join(', ')})`);
 spiel6.takt(0.05);
 pruefe(!wald6.stand(uhr).spieler.some((x) => x.id === neuer.id), 'wer noch wählt, ist für die anderen nicht da');
@@ -1507,6 +1507,80 @@ const arena = (art, abstand) => {
   const sprang = g2.giftBei > uhr;
   lauf(1200);
   pruefe(sprang && g2.leben < 50, `Ansteckende Wirkung: das Gift springt auf den Nachbarn (${50 - g2.leben} Schaden)`);
+}
+
+// ---------- Koch ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const mk = (name, stufe, pfad, klasse = 'koch') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    x.unverwundbarBis = 0;
+    return x;
+  };
+  const still = (g) => Object.assign(g, { tot: false, leben: 50, getroffenBis: 0, stossBis: 0, betaeubtBis: 0, verwirrtBis: 0, langsamBis: 0, markiertBis: 0, giftBei: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6, zielId: 'x' });
+  const kim = mk('Kim', 2);
+  const ben = mk('Ben', 1, null, 'kaempfer');
+  pruefe(kim.werte.faehigkeit.name === 'Messerwurf' && kim.werte.aktionen.map((a) => a.taste).join('') === 'FT', `Koch Stufe 2: Q ${kim.werte.faehigkeit.name}, ${kim.werte.aktionen.map((a) => a.taste + ' ' + a.name).join(', ')}`);
+  // Mahl: Ben neben Kim heilt und schlägt 20 s lang härter.
+  const g = wald.gegner[0];
+  const hau = (wer) => {
+    still(g);
+    Object.assign(wer, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+    sp.hieb(wer, { r: 'oben' });
+    return 50 - g.leben;
+  };
+  const vorher = hau(ben);
+  Object.assign(ben, { x: kim.x + 30, y: kim.y, leben: 2 });
+  sp.aktion(kim, { id: 'kochkunst' });
+  const geheilt = ben.leben;
+  const satt = hau(ben);
+  uhr += 21000;
+  const spaeter = hau(ben);
+  pruefe(geheilt === 4 && satt === vorher + 1 && spaeter === vorher, `Mahl: Ben 2 → ${geheilt}, Hieb ${vorher} → ${satt}, nach 20 s wieder ${spaeter}`);
+  // Curry: brennt und verlangsamt dort, wo es landet.
+  const c = wald.gegner[1];
+  Object.assign(kim, { richtung: 'oben' });
+  Object.assign(still(c), { x: kim.x, y: kim.y - 96 });
+  sp.aktion(kim, { id: 'curry', r: 'oben' });
+  pruefe(c.leben === 50 - 2 && uhr < c.langsamBis, `Explosives Curry: ${50 - c.leben} Schaden, der Schleim ist verlangsamt`);
+  sp.verlassen(kim.id);
+  // Gewürzmeister: Würzattacke vorn ja, hinten nein; auf 7 betäubt sie.
+  const gew = mk('Gew', 7, 'gewuerzmeister');
+  const [vorn, hinten] = wald.gegner;
+  Object.assign(still(vorn), { x: gew.x, y: gew.y - 50 });
+  Object.assign(still(hinten), { x: gew.x, y: gew.y + 50 });
+  gew.richtung = 'oben';
+  sp.aktion(gew, { id: 'wuerzattacke' });
+  pruefe(vorn.leben === 48 && hinten.leben === 50 && uhr < vorn.verwirrtBis && uhr < vorn.betaeubtBis, `Würzattacke: vorn ${50 - vorn.leben} Schaden, betäubt und blind; hinten ${50 - hinten.leben}`);
+  sp.verlassen(gew.id);
+  // Festmahlkoch: Festmahl heilt alle im Gebiet, auch weit weg.
+  const fest = mk('Fest', 15, 'festmahlkoch');
+  Object.assign(ben, { x: fest.x - 160, y: fest.y, leben: 1 });
+  sp.aktion(fest, { id: 'festmahl' });
+  pruefe(ben.leben === ben.werte.maxLeben, `Himmlisches Festmahl: Ben fünf Kacheln weg 1 → ${ben.leben}`);
+  // Mahl mit Delikaten Gerichten (+1) und Heimatküche (Schutz).
+  sp.aktion(fest, { id: 'kochkunst' });
+  Object.assign(ben, { x: fest.x + 30, y: fest.y });
+  fest.aktionBereit = {};
+  sp.aktion(fest, { id: 'kochkunst' });
+  const satt2 = hau(ben);
+  // Wurf 0,4: Bens Kampfstil (0,1) und die Auren des Kochs (0,1 + 0,15)
+  // allein reichen nicht, erst mit dem Schutz aus dem Mahl (0,2) prallt es ab.
+  wurf = 0.4;
+  const vorL = ben.leben;
+  ben.unverwundbarBis = 0;
+  sp.spielerTreffen(ben, { x: ben.x, y: ben.y - 20, w: { schaden: 1 } }, uhr);
+  wurf = 0.99;
+  pruefe(satt2 === vorher + 2 && ben.leben === vorL, `Festmahlkoch-Mahl: Hieb ${vorher} → ${satt2}, ein Treffer prallt ab (Wurf 0,4)`);
 }
 
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------

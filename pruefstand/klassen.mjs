@@ -93,7 +93,10 @@ try {
   });
   z.karten = wahl.karten;
   z.bilder = wahl.breiten.length;
-  pruefe(wahl.karten === 9, `Wahl zeigt ${wahl.karten} Karten (5 Klassen, 4 Spezies)`);
+  // Aus den Daten gezählt, nicht fest: mit jeder neuen Klasse (Koch …) wird es eine Karte mehr.
+  const anzahl = (n) => Object.keys(JSON.parse(readFileSync(join(wurzel, `inhalte/daten/${n}.json`), 'utf8'))).length;
+  const [nk, ns] = [anzahl('klassen'), anzahl('spezies')];
+  pruefe(wahl.karten === nk + ns, `Wahl zeigt ${wahl.karten} Karten (${nk} Klassen, ${ns} Spezies)`);
   pruefe(wahl.breiten.length >= 6 && wahl.breiten.every((b) => b === 128), `Klassenbilder geladen (${wahl.breiten.join(', ')} px breit)`);
   pruefe(wahl.ueberstand <= 0 && wahl.knopfErreichbar, `am Handy nichts rechts abgeschnitten (Überstand ${wahl.ueberstand} px), Seite scrollt`);
   await mia.evaluate(() => {

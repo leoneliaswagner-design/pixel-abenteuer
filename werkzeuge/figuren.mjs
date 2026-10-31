@@ -18,7 +18,7 @@ const STIEFEL = ['#6b4426', '#8c5d37'];
 //   tunika   [grund, hell, dunkel]   hose [grund, dunkel]
 //   haar, frisur ('kurz' | 'lang' | 'glatze'), bart (null | 'schnurr' | 'voll'), bartFarbe
 //   kopf     null | { art: 'helm', farbe, dunkel, busch } | { art: 'kapuze', farben: [g, h, d] }
-//            | { art: 'hut', farben: [g, h, d] }
+//            | { art: 'hut', farben: [g, h, d] } | { art: 'kochmuetze' }
 //   robe, schal, symbol, schultern, schuerze, koecher (Farben oder true)
 export function figur(o, richtung, bild) {
   const b = new Bild(BREITE, HOEHE);
@@ -119,7 +119,7 @@ function kopfVorneHinten(b, o, hinten) {
     b.ellipse(16, 9, 7, 3.5, k.farben[0], (x, y) => y <= 9);
   }
   if (hinten) {
-    if (!k || k.art === 'hut') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
+    if (!k || k.art === 'hut' || k.art === 'kochmuetze') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
     if (o.frisur === 'glatze') b.rechteck(9, 13, 14, 4, o.haar);
   } else {
     // Gesicht: zwei Augen, ein Lichtpunkt, rote Wangen.
@@ -145,6 +145,7 @@ function kopfVorneHinten(b, o, hinten) {
     if (!hinten) b.rechteck(15, 11, 2, 5, k.dunkel);
   }
   if (k?.art === 'hut') hut(b, k.farben, 16);
+  if (k?.art === 'kochmuetze') kochmuetze(b, 16);
 }
 
 function haarVorne(b, o) {
@@ -169,6 +170,17 @@ function hut(b, [g, hl, d], mitte) {
   }
   b.rechteck(mitte + 3, 0, 4, 2, hl);
   b.rechteck(mitte - 4, 7, 8, 1, SCHNALLE);
+}
+
+// Kochmütze: ein weißer Bausch über einem schmalen Band, oben gefältelt.
+function kochmuetze(b, mitte) {
+  b.ellipse(mitte, 3.5, 7, 4.5, '#fbfaf6');
+  b.ellipse(mitte - 4, 4.5, 3, 3, '#fbfaf6');
+  b.ellipse(mitte + 4, 4.5, 3, 3, '#fbfaf6');
+  for (const x of [mitte - 3, mitte + 2]) b.rechteck(x, 2, 1, 5, '#dcd8ce');
+  b.ellipse(mitte - 2, 1.5, 2.5, 1, '#ffffff');
+  b.rechteck(mitte - 6, 7, 12, 3, '#ece8de');
+  b.rechteck(mitte - 6, 9, 12, 1, '#c8c2b4');
 }
 
 function koecherHinten(b) {
@@ -235,6 +247,7 @@ function seite(b, o, s, holt) {
     b.rechteck(8, 11, 16, 2, k.dunkel);
   }
   if (k?.art === 'hut') hut(b, k.farben, 15);
+  if (k?.art === 'kochmuetze') kochmuetze(b, 15);
   if (o.schultern) b.rechteck(12, 21, 6, 3, o.schultern);
 
   // Der sichtbare Arm: pendelt vor und zurück; beim Ausholen nach vorn.

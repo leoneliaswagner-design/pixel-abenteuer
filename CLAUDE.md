@@ -75,7 +75,7 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
-- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`): in
+- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`, Koch = `koch`): in
   `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
   (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
   macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
@@ -89,7 +89,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   der Folge F, R, T. Hinterhalt/Überraschung (Dieb) hängen an `g.zielId`
   (wen der Gegner gerade jagt; null = überrascht). Heilen durch Spieler
   geht über `spiel.heilen()`, Wiederbeleben am Ort über `vorOrtBeleben()`;
-  der Lebensretter greift in `spielerTreffen` vor dem Tod.
+  der Lebensretter greift in `spielerTreffen` vor dem Tod. Das Mahl des Kochs
+  ist ein Zeit-Bonus am Spieler (`s.mahlBis`, `s.mahlBoni`). Eine neue Klasse
+  braucht ein Aussehen in `KLASSEN` (grafik.mjs) und `npm run grafik`, sonst
+  trägt sie die Kapuze in Spielerfarbe.
 - **Menü** (Esc oder Knopf ≡): Verlassen lädt die Seite neu (der Server
   speichert wie bei jedem Gehen). `neu_anfangen` löscht den eigenen Eintrag
   im Spielstand (`s.geloescht`: `merken` schreibt ihn nicht zurück),
@@ -140,6 +143,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   anderen), Dieb lenkt ab (gelbes Fragezeichen beim anderen), Leiste Q/F/R.
 - `node pruefstand/arzt.mjs` — Lebensbalken über Gegnern nur beim Arzt
   (Bildpunkte), Heilsalbe platzt beim anderen grün, seine Herzen steigen.
+- `node pruefstand/koch.mjs` — Neue wählt den Koch im Browser, der andere
+  sieht die Kochmütze (Bildpunkte), Mahl heilt ihn.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

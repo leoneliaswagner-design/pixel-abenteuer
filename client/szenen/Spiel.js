@@ -672,9 +672,11 @@ export class SpielSzene extends Phaser.Scene {
         this.aufschrift(g.x, g.y + 16, 'Krit!', '#ffd84a');
       }
     });
-    // Eine geworfene Mixtur (Alchemist): ein grüner Kreis, wo sie platzt.
+    // Eine geworfene Mixtur (Alchemist, Wildniskoch): ein grüner Kreis, wo sie
+    // platzt; Curry orange, Chili rot (Koch).
     n.bei('mixtur', (m) => {
-      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0.35).setDepth(6000).setStrokeStyle(2, 0xc8ffb0);
+      const [fuell, rand] = { curry: [0xf0a030, 0xffe080], gewuerz: [0xe04030, 0xffa080] }[m.farbe] ?? [0x7ee070, 0xc8ffb0];
+      const k = this.add.circle(m.x, m.y - 8, m.r, fuell, 0.35).setDepth(6000).setStrokeStyle(2, rand);
       this.mixturen++;
       this.tweens.add({ targets: k, alpha: 0, scale: 1.2, duration: 600, onComplete: () => k.destroy() });
     });

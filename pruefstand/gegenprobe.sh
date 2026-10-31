@@ -407,8 +407,24 @@ probe server/gebiet.js "        if (n) [n.giftBei, n.giftVon] = [jetzt + 1000, g
   "Gift springt nicht über"
 probe client/szenen/Spiel.js "      const diagnose = this.charakter?.werte.kampf?.diagnose && g.sprite.visible && g.lebenMax;" "      const diagnose = g.sprite.visible && g.lebenMax;" pruefstand/arzt.mjs \
   "jeder sieht die Lebensbalken, nicht nur der Arzt"
-probe client/szenen/Spiel.js "      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0.35)" "      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0)" pruefstand/arzt.mjs \
+probe client/szenen/Spiel.js "      const k = this.add.circle(m.x, m.y - 8, m.r, fuell, 0.35)" "      const k = this.add.circle(m.x, m.y - 8, m.r, fuell, 0)" pruefstand/arzt.mjs \
   "die Mixtur ist nicht zu sehen"
+
+# Koch
+probe server/spiel.js "    if (jetzt < (s.mahlBis ?? 0)) schaden += s.mahlBoni?.schaden ?? 0;" "" pruefstand/server-regeln.mjs \
+  "das Mahl stärkt nicht"
+probe server/spiel.js "    if (jetzt < (s.mahlBis ?? 0)) p += s.mahlBoni?.schutz ?? 0;" "" pruefstand/server-regeln.mjs \
+  "Heimatküche schützt nicht"
+probe server/spiel.js "        if (!g.tot && Math.hypot(g.x - mx, g.y - my) <= r) gebiet.gegnerTreffen(g, { id: s.id, x: mx, y: my }, jetzt, a.schaden + k.curryPlus, { verlangsamen: a.verlangsamen, ohneStoss: true });" "" pruefstand/server-regeln.mjs \
+  "Curry trifft niemanden"
+probe server/spiel.js "        if (!vorn && !k.gewuerzWeit) continue;" "" pruefstand/server-regeln.mjs \
+  "Würzattacke trifft auch hinter einem"
+probe server/spiel.js "      const ziele = gebiet.spieler().filter((p) => !p.tot);
+      for (const p of ziele) p.leben = this.maxLeben(p);" "      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= 64);
+      for (const p of ziele) p.leben = this.maxLeben(p);" pruefstand/server-regeln.mjs \
+  "Festmahl erreicht nur die Nächsten"
+probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/koch.mjs \
+  "Figuren ohne Klassenbild (keine Kochmütze)"
 
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi

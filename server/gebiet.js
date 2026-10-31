@@ -174,7 +174,8 @@ export class Gebiet {
     g.markiertBis = 0;
     this.anAlle({ t: 'gegner_tot', id: g.id, x: g.x, y: g.y });
     this.spiel.beute(s.id, g, this);
-    this.vielleichtHerz(g.x, g.y, g.w.herzChance);
+    // Improvisierte Zutaten (Wildniskoch): wer ihn besiegt, findet öfter ein Herz.
+    this.vielleichtHerz(g.x, g.y, g.w.herzChance + (k?.beuteHerz ?? 0));
   }
 
   vielleichtHerz(x, y, chance) {

@@ -1,9 +1,9 @@
 // Der Arzt mit echten Browsern:
 //   Alma (Ärztin, Stufe 7, Alchemistin) und Ben (Krieger, verletzt) stehen im
 //   Inselwald. Unten links bei Alma: Q Erste Hilfe, F Feldbehandlung,
-//   R Heilsalbe. Alma sieht über dem Schleim einen Lebensbalken (Diagnose,
-//   rot am Bildpunkt), Ben nicht. Alma wirft die Heilsalbe zu Ben: bei Ben
-//   platzt ein grüner Kreis, und seine Herzen steigen.
+//   R Heilsalbe. Alma wirft die Heilsalbe zu Ben: bei Ben platzt ein grüner
+//   Kreis, und seine Herzen steigen. Dann sieht Alma über dem Schleim einen
+//   Lebensbalken (Diagnose, rot am Bildpunkt), Ben nicht.
 //
 //   node pruefstand/arzt.mjs          (baut vorher mit vite)
 //   OHNE_BAU=1 node pruefstand/arzt.mjs
@@ -111,19 +111,8 @@ try {
   let za = await zustand(alma);
   pruefe(za.stufenAnzeige.zeilen.join('|') === 'Q Erste Hilfe|F Feldbehandlung|R Heilsalbe', `Alma: ${za.stufenAnzeige.zeilen.join(', ')}`);
 
-  // --- Diagnose: Alma sieht Lebensbalken, Ben nicht ---
-  const imBild = async (p) => {
-    const z = await zustand(p);
-    const v = await p.evaluate(() => { const w = window.__spiel.szene.cameras.main.worldView; return { x: w.x, y: w.y, b: w.width, h: w.height }; });
-    return z.gegner.filter((g) => g.sichtbar && g.x > v.x + 20 && g.x < v.x + v.b - 20 && g.y > v.y + 40 && g.y < v.y + v.h);
-  };
-  const ga = (await imBild(alma))[0];
-  const rot = 'r > 190 && g < 100 && b < 100';
-  const balkenAlma = ga ? await zaehle(alma, ga.x - 10, ga.y - 30, 20, 4, rot) : -1;
-  const gb = (await imBild(benSeite))[0];
-  const balkenBen = gb ? await zaehle(benSeite, gb.x - 10, gb.y - 30, 20, 4, rot) : -1;
-  pruefe(ga?.balken > 0 && balkenAlma > 20 && gb && gb.balken === null && balkenBen < 5, `Diagnose: über dem Schleim bei Alma ${balkenAlma} rote Bildpunkte, bei Ben ${balkenBen}`);
-
+  // Erst die Heilsalbe (Alma steht noch vor Ben), dann geht sie für die
+  // Diagnose zum Schleim — umgekehrt flog die Salbe ins Leere.
   // --- Heilsalbe zu Ben ---
   const lebenVor = (await zustand(benSeite)).ich.leben;
   const gruen = 'g > 180 && r > 100 && r < 200 && b < 170';
@@ -139,6 +128,40 @@ try {
   const zb = await zustand(benSeite);
   pruefe(zb.mixturen === 1 && gruenIm > gruenVor + 100, `bei Ben platzt die Mixtur: ${gruenVor} → ${gruenIm} grüne Bildpunkte`);
   pruefe(zb.ich.leben > lebenVor, `Bens Herzen: ${lebenVor} → ${zb.ich.leben} halbe`);
+  // --- Diagnose: Alma sieht Lebensbalken, Ben nicht ---
+  const imBild = async (p) => {
+    const z = await zustand(p);
+    const v = await p.evaluate(() => { const w = window.__spiel.szene.cameras.main.worldView; return { x: w.x, y: w.y, b: w.width, h: w.height }; });
+    return z.gegner.filter((g) => g.sichtbar && g.x > v.x + 20 && g.x < v.x + v.b - 20 && g.y > v.y + 40 && g.y < v.y + v.h);
+  };
+  // Der Schleim wandert: Alma geht heran, bis er nah ist, wartet, bis die
+  // Kamera steht, und misst dann. Wandert er dabei aus dem Bild, noch einmal
+  // (in der vollen Runde fehlte er zweimal, einmal stand die Kamera noch nicht).
+  // Genau die Farbe des Balkens (0xe04848): ein bloßes „rot" zählte den Kopf
+  // des Schleims mit, der knapp unter dem Balken sitzt.
+  const rot = 'Math.abs(r - 224) < 24 && Math.abs(g - 72) < 24 && Math.abs(b - 72) < 24';
+  let ga = null, balkenAlma = -1;
+  for (let versuch = 0; versuch < 5 && balkenAlma <= 20; versuch++) {
+    for (let i = 0; i < 20; i++) {
+      const z = await zustand(alma);
+      const g = z.gegner.filter((x) => x.sichtbar).sort((a, b) => Math.hypot(a.x - z.ich.x, a.y - z.ich.y) - Math.hypot(b.x - z.ich.x, b.y - z.ich.y))[0];
+      if (!g || Math.hypot(g.x - z.ich.x, g.y - z.ich.y) < 100) break;
+      const dx = g.x - z.ich.x, dy = g.y - z.ich.y;
+      const taste = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'ArrowRight' : 'ArrowLeft') : dy > 0 ? 'ArrowDown' : 'ArrowUp';
+      await alma.keyboard.down(taste);
+      await warte(200);
+      await alma.keyboard.up(taste);
+    }
+    await warte(700);
+    ga = (await imBild(alma))[0];
+    balkenAlma = ga ? await zaehle(alma, ga.x - 14, ga.y - 33, 28, 10, rot) : -1;
+  }
+  // Ben: kein Balken über irgendeinem Gegner; ist einer in seinem Bild, auch am Bildpunkt.
+  const gb = (await imBild(benSeite))[0];
+  const balkenBen = gb ? await zaehle(benSeite, gb.x - 14, gb.y - 33, 28, 10, rot) : 0;
+  const keinerBeiBen = (await zustand(benSeite)).gegner.every((g) => g.balken === null);
+  pruefe(ga?.balken > 0 && balkenAlma > 20 && keinerBeiBen && balkenBen < 5, `Diagnose: über dem Schleim bei Alma ${balkenAlma} rote Bildpunkte, bei Ben keine Balken (${gb ? balkenBen + ' am Bildpunkt' : 'kein Schleim in seinem Bild'})`);
+
 } finally {
   await browser.close();
   server.kill();
