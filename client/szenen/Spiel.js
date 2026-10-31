@@ -149,6 +149,8 @@ export class SpielSzene extends Phaser.Scene {
 
     this.andere = new Map();
     this.gegner = new Map();
+    // Neu bei jedem Gebiet: scene.restart zerstört die Bilder, die Map bliebe sonst voller Leichen.
+    this.spielerFallen = new Map();
     this.herzen = new Map();
 
     const kamera = this.cameras.main;
@@ -228,14 +230,14 @@ export class SpielSzene extends Phaser.Scene {
           gelernt: (this.charakter?.werte.gelernt ?? []).map((g) => g.id), attribute: this.charakter?.werte.attribute,
         },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key, effekt: f.effekt, tint: f.koerper.tintTopLeft, alpha: f.koerper.alpha })),
-        krits: this.krits, abgewehrt: this.abgewehrt,
+        krits: this.krits, abgewehrt: this.abgewehrt, spielerFallen: this.spielerFallen?.size ?? 0,
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert,
+          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -710,6 +712,15 @@ export class SpielSzene extends Phaser.Scene {
 
   standUebernehmen(m) {
     this.fallenUebernehmen(m);
+    // Fallen der Spieler (Taktiker): eine Platte mit violettem Schimmer.
+    const fda = new Set((m.sf ?? []).map((f) => f.id));
+    for (const f of m.sf ?? [])
+      if (!this.spielerFallen.has(f.id)) this.spielerFallen.set(f.id, this.add.image(f.x, f.y, 'fallen', 2).setTint(0xc8a0ff).setDepth(3));
+    for (const [id, b] of this.spielerFallen)
+      if (!fda.has(id)) {
+        b.destroy();
+        this.spielerFallen.delete(id);
+      }
     if (m.online) this.online = m.online;
     if (m.zeit != null) {
       this.zeit = m.zeit;
@@ -769,6 +780,10 @@ export class SpielSzene extends Phaser.Scene {
       e.duckt = g.z === 'laden';
       if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
       else if (!e.sprite.anims.isPlaying) e.sprite.play(g.art);
+      // Abgelenkt (Dieb): ein Fragezeichen über dem Kopf.
+      if (g.vw && !e.frage) e.frage = this.add.text(0, 0, '?', { fontFamily: SCHRIFT, fontSize: '8px', color: '#ffe680', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5);
+      if (e.frage) e.frage.setVisible(!!g.vw && !g.tot);
+      e.verwirrt = !!g.vw;
       // Markiert (Jägerschütze): ein rotes Dreieck über dem Kopf, für alle.
       if (g.mk && !e.marke) e.marke = this.add.triangle(0, 0, 0, 0, 10, 0, 5, 7, 0xff4a3a).setStrokeStyle(1, 0x5a1010);
       if (e.marke) e.marke.setVisible(!!g.mk && !g.tot);
@@ -844,6 +859,7 @@ export class SpielSzene extends Phaser.Scene {
       g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
       g.schatten.setPosition(g.x, g.y).setDepth(9);
       g.marke?.setPosition(g.x, g.y - 34).setDepth(6000);
+      g.frage?.setPosition(g.x + 10, g.y - 30).setDepth(6000);
     }
 
     // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.

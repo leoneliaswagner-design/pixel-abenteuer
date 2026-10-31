@@ -75,7 +75,13 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
   const plus = (b) => ausruestung.reduce((n, g) => n + (g?.boni?.[b] ?? 0), 0) + (p[b] ?? 0);
   // Aktive Fähigkeiten: länger mit „aktionDauer", schneller geladen mit
   // „aktionAbkling" (beides in Prozent).
-  const aktionen = gelernt.filter((g) => g.aktion).map((g) => ({
+  // Zwei auf derselben Taste: die später gelernte ersetzt die frühere
+  // (Taktiker: die Falle auf F statt der Doppelten Ablenkung).
+  const proTaste = new Map();
+  for (const g of gelernt.filter((x) => x.aktion)) proTaste.set(g.aktion.taste, g);
+  // Immer F, R, T — nicht nach Lernstufe: beim Dieb kommt R (Pfad, Stufe 7)
+  // vor F (Stufe 9), und die Leiste sprang in der Reihenfolge.
+  const aktionen = [...proTaste.values()].sort((a, b) => 'FRT'.indexOf(a.aktion.taste) - 'FRT'.indexOf(b.aktion.taste)).map((g) => ({
     id: g.id, name: g.name, ...g.aktion,
     dauer: g.aktion.dauer && Math.round(g.aktion.dauer * (1 + (p.aktionDauer ?? 0) / 100)),
     abklingzeit: Math.round(g.aktion.abklingzeit * (1 - Math.min(80, p.aktionAbkling ?? 0) / 100)),
@@ -113,6 +119,11 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       ruheSchuss: p.ruheSchuss ?? 0, ruheKrit: p.ruheKrit ?? 0, ruheSchutz: p.ruheSchutz ?? 0, laufSchutz: p.laufSchutz ?? 0,
       reichweite: p.reichweite ?? 0, durchschlag: p.durchschlag ?? 0, mehrPfeile: p.mehrPfeile ?? 0, schussKrit: !!p.schussKrit,
       herzPlus: p.herzPlus ?? 0, tarnung: !!p.tarnung, blendFlaeche: p.blendFlaeche ?? 0, markeSpringt: !!p.markeSpringt, markeSchaden: 1 + (p.markeSchaden ?? 0),
+      // Dieb: Hinterhalt (Gegner jagt jemand anderen oder ist umzingelt),
+      // Überraschung (jagt noch niemanden), Gift, Entschwinden, Gold, Feilschen.
+      hinterhalt: p.hinterhalt ?? 0, ueberraschung: !!p.ueberraschung, ueberraschKrit: !!p.ueberraschKrit, goldPlus: p.goldPlus ?? 0,
+      entschwinden: p.entschwinden ?? 0, entschwindenDauer: 1500 + (p.entschwindenDauer ?? 0), gift: p.gift ?? 0, lautlos: !!p.lautlos,
+      laufSchlag: p.laufSchlag ?? 0, tarnungLaufen: !!p.tarnungLaufen, dunkelSchutz: p.dunkelSchutz ?? 0, feilschen: p.feilschen ?? 0, ablenkWeit: !!p.ablenkWeit,
     },
   };
 }
@@ -139,9 +150,10 @@ export function passtHinein(inventar, art, gegenstaende, plaetze) {
 
 // Charisma macht Preise: je Punkt Modifikator ein paar Prozent billiger
 // beim Kaufen und mehr beim Verkaufen.
-export function kaufpreis(g, mod, handel) {
-  return Math.max(1, Math.round(g.preis * (1 - handel.charismaRabatt * mod.charisma)));
+// feilschen: Prozent besser in beide Richtungen (Trickbetrüger).
+export function kaufpreis(g, mod, handel, feilschen = 0) {
+  return Math.max(1, Math.round(g.preis * (1 - handel.charismaRabatt * mod.charisma) * (1 - feilschen / 100)));
 }
-export function verkaufspreis(g, mod, handel) {
-  return Math.max(1, Math.floor(g.preis * handel.ankauf * (1 + handel.charismaRabatt * mod.charisma)));
+export function verkaufspreis(g, mod, handel, feilschen = 0) {
+  return Math.max(1, Math.floor(g.preis * handel.ankauf * (1 + handel.charismaRabatt * mod.charisma) * (1 + feilschen / 100)));
 }

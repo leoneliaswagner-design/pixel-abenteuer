@@ -206,6 +206,38 @@ export class Spiel {
         art: f.geschoss, tempo: f.tempo, reichweite: Math.round(f.reichweite * (a.reichweiteFaktor ?? 1)), schaden: f.staerke + (a.schadenPlus ?? 0),
         pfeile: 1 + s.werte.kampf.mehrPfeile, durchschlag: a.durchschlag ?? 0, betaeuben: a.betaeuben ?? 0, krit: s.werte.kampf.schussKrit,
       }, jetzt);
+    } else if (a.art === 'ablenken') {
+      // Doppelte Ablenkung / Taschenspielertricks: die Nächsten verlieren
+      // jede Spur — sie wandern herum und greifen niemanden an.
+      const ziele = gebiet.gegner.filter((g) => !g.tot && (s.werte.kampf.ablenkWeit || Math.hypot(g.x - s.x, g.y - s.y) <= a.umkreis))
+        .sort((x, y) => Math.hypot(x.x - s.x, x.y - s.y) - Math.hypot(y.x - s.x, y.y - s.y)).slice(0, a.anzahl ?? 1);
+      for (const g of ziele) g.verwirrtBis = jetzt + a.dauer;
+    } else if (a.art === 'coup') {
+      const g = gebiet.gegner.filter((x) => !x.tot && Math.hypot(x.x - s.x, x.y - s.y) <= a.umkreis).sort((x, y) => Math.hypot(x.x - s.x, x.y - s.y) - Math.hypot(y.x - s.x, y.y - s.y))[0];
+      if (g) {
+        const [von, bis] = a.gold ?? [5, 15];
+        const n = von + Math.floor(this.zufall() * (bis - von + 1));
+        this.dazu(s, 'gold', n);
+        s.senden({ t: 'beute', art: 'gold', anzahl: n, x: g.x, y: g.y });
+        this.inventarSenden(s);
+        g.betaeubtBis = jetzt + 2000;
+      }
+    } else if (a.art === 'sprung') {
+      // Schattenwandeln: in Blickrichtung, so weit frei ist — nicht durch Wände.
+      if (RICHTUNGEN[m.r]) s.richtung = m.r;
+      const [dx, dy] = RICHTUNGEN[s.richtung];
+      let x = s.x, y = s.y;
+      for (let w = 8; w <= a.weite; w += 8) {
+        if (!gebiet.welt.frei(s.x + dx * w, s.y + dy * w)) break;
+        [x, y] = [s.x + dx * w, s.y + dy * w];
+      }
+      [s.x, s.y] = [x, y];
+      this.korrigiere(s);
+    } else if (a.art === 'falle') {
+      // Vorbereitete Positionen: eine Falle vor den Füßen, höchstens n je Spieler.
+      const eigene = gebiet.spielerFallen.filter((f) => f.von === s.id);
+      if (eigene.length >= (a.hoechstens ?? 2)) gebiet.spielerFallen.splice(gebiet.spielerFallen.indexOf(eigene[0]), 1);
+      gebiet.spielerFallen.push({ id: `f${this.naechsteId++}`, x: s.x, y: s.y - 4, von: s.id, betaeuben: a.betaeuben ?? 2000, schaden: a.schaden ?? 1 });
     } else if (a.art === 'markieren') {
       // Der nächste Gegner in Reichweite; die Markierung zählt für alle.
       const ziel = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= 240).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y))[0];
@@ -255,6 +287,8 @@ export class Spiel {
     let schaden = s.werte.schaden;
     if (jetzt < s.rauschBis) schaden += s.rauschBoni?.schaden ?? 0;
     if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
+    // Sprungangriff: wer gerade gelaufen ist.
+    if (k.laufSchlag && jetzt - s.stehtSeit < 300) schaden += k.laufSchlag;
     const kc = k.krit + (this.ruhig(s, jetzt) ? k.ruheKrit : 0);
     const krit = kc > 0 && this.zufall() < kc;
     if (krit) schaden *= k.kritFaktor;
@@ -274,6 +308,11 @@ export class Spiel {
     let p = k.schutz;
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
     p += this.ruhig(s, jetzt) ? k.ruheSchutz : jetzt - s.stehtSeit < 300 ? k.laufSchutz : 0;
+    // Lebender Schatten: nachts und an dunklen Orten.
+    if (k.dunkelSchutz) {
+      const z = this.tageszeit(jetzt);
+      if (this.gebiete.get(s.gebiet).welt.eigenschaftenKarte.licht === 'dunkel' || z < 0.25 || z > 0.8) p += k.dunkelSchutz;
+    }
     const aura = Math.max(0, ...this.gebiete.get(s.gebiet).spieler().filter((x) => x !== s && !x.tot && Math.hypot(x.x - s.x, x.y - s.y) <= 96).map((x) => x.werte?.kampf.aura ?? 0));
     p += aura;
     if (art === 'geschoss' || art === 'falle') p += k.ausweichen;
@@ -721,7 +760,7 @@ export class Spiel {
 
   ladenAngabe(s) {
     const l = this.laeden[s.laden.id];
-    const preise = (liste, f) => Object.fromEntries(liste.filter((a) => this.gegenstand(a)?.preis).map((a) => [a, f(this.gegenstaende[a], s.werte.mod, this.w.handel)]));
+    const preise = (liste, f) => Object.fromEntries(liste.filter((a) => this.gegenstand(a)?.preis).map((a) => [a, f(this.gegenstaende[a], s.werte.mod, this.w.handel, s.werte.kampf?.feilschen)]));
     return {
       t: 'laden', name: l.name, gruss: l.gruss ?? '',
       waren: preise(l.waren, kaufpreis),
@@ -733,7 +772,7 @@ export class Spiel {
     const l = this.imLaden(s);
     const g = this.gegenstand(art);
     if (!l || !g?.preis || !l.waren.includes(art)) return;
-    const preis = kaufpreis(g, s.werte.mod, this.w.handel);
+    const preis = kaufpreis(g, s.werte.mod, this.w.handel, s.werte.kampf?.feilschen);
     if ((s.inventar.gold ?? 0) < preis || !passtHinein(s.inventar, art, this.gegenstaende, this.w.inventar.plaetze)) return;
     this.dazu(s, 'gold', -preis);
     this.dazu(s, art, 1);
@@ -744,7 +783,7 @@ export class Spiel {
     const g = this.gegenstand(art);
     if (!this.imLaden(s) || !g?.preis || g.gemeinsam || !(s.inventar[art] > 0)) return;
     this.dazu(s, art, -1);
-    this.dazu(s, 'gold', verkaufspreis(g, s.werte.mod, this.w.handel));
+    this.dazu(s, 'gold', verkaufspreis(g, s.werte.mod, this.w.handel, s.werte.kampf?.feilschen));
     this.inventarSenden(s);
   }
 
@@ -755,7 +794,8 @@ export class Spiel {
     if (g.w.erfahrung && gebiet) this.erfahrungFuerGebiet(gebiet, g.w.erfahrung);
     const [von, bis] = g.w.gold ?? [0, 0];
     if (!s || !bis) return;
-    const n = von + Math.floor(Math.random() * (bis - von + 1));
+    // Langfinger: der Dieb findet mehr.
+    const n = Math.round((von + Math.floor(Math.random() * (bis - von + 1))) * (1 + (s.werte?.kampf.goldPlus ?? 0) / 100));
     if (!n) return;
     this.dazu(s, 'gold', n);
     s.senden({ t: 'beute', art: 'gold', anzahl: n, x: g.x, y: g.y });
@@ -811,6 +851,13 @@ export class Spiel {
       s.leben = 1;
       s.zaehBereit = jetzt + zaeh;
       this.gebiete.get(s.gebiet).anAlle({ t: 'nachricht', text: `${s.name} gibt nicht auf!` });
+    }
+    // Schattenentschwinden: nach dem Treffer kurz weg (unverwundbar, durchscheinend).
+    const ent = s.werte?.kampf.entschwinden;
+    if (ent && s.leben > 0 && jetzt >= (s.entschwindenBereit ?? 0)) {
+      s.leereBis = jetzt + s.werte.kampf.entschwindenDauer;
+      s.unverwundbarBis = Math.max(s.unverwundbarBis, s.leereBis);
+      s.entschwindenBereit = jetzt + ent;
     }
     const [rx, ry] = richtungZu(g.x, g.y - 6, s.x, s.y - 8, [0, 1]);
     // Den Rückstoß rechnet der Browser des Getroffenen selbst — er bewegt

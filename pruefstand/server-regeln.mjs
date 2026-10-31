@@ -1278,6 +1278,130 @@ const arena = (art, abstand) => {
   pruefe(uhr - 800 < (b1.betaeubtBis ?? 0), 'Blendpfeil: der getroffene Schleim ist betäubt');
 }
 
+// ---------- Dieb ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const lauf = (ms) => {
+    for (let i = 0; i < ms; i += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+    }
+  };
+  const mk = (name, stufe, pfad, klasse = 'schurke') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    x.unverwundbarBis = 0;
+    return x;
+  };
+  const g = wald.gegner[0];
+  const still = (x) => Object.assign(x, { tot: false, leben: 50, getroffenBis: 0, stossBis: 0, betaeubtBis: 0, verwirrtBis: 0, markiertBis: 0, giftBei: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6 });
+  const hieb = (wer, zielId) => {
+    still(g);
+    g.zielId = zielId;
+    Object.assign(wer, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+    sp.hieb(wer, { r: 'oben' });
+    return 50 - g.leben;
+  };
+  const dina = mk('Dina', 2);
+  const ole = mk('Ole', 1, null, 'magier');
+  Object.assign(ole, { x: g.x + 200, y: g.y });
+  const gegenMich = hieb(dina, dina.id);
+  const gegenOle = hieb(dina, ole.id);
+  pruefe(gegenOle === gegenMich + 1, `Hinterhältiger Schlag: jagt der Schleim Dina ${gegenMich}, jagt er Ole ${gegenOle}`);
+  // Langfinger: mehr Gold.
+  const vorher = dina.inventar.gold ?? 0;
+  sp.beute(dina.id, { w: { gold: [4, 4] }, x: 0, y: 0 }, null);
+  pruefe((dina.inventar.gold ?? 0) - vorher === 6, `Langfinger: 4 Gold Beute werden ${(dina.inventar.gold ?? 0) - vorher}`);
+  // Stufe 9: Verbesserter Hinterhalt (überrascht doppelt), Doppelte Ablenkung.
+  sp.verlassen(dina.id);
+  const tom = mk('Tom', 9);
+  const ueber = hieb(tom, null);
+  const gegenTom = hieb(tom, tom.id);
+  pruefe(ueber === gegenTom + 2, `Verbesserter Hinterhalt: überrascht ${ueber}, sonst ${gegenTom}`);
+  const [a, b, c] = wald.gegner.filter((x) => !x.tot);
+  for (const [x, dx] of [[a, 30], [b, 60], [c, 300]]) Object.assign(still(x), { x: tom.x + dx, y: tom.y });
+  sp.aktion(tom, { id: 'ablenkung' });
+  pruefe(uhr < a.verwirrtBis && uhr < b.verwirrtBis && !(uhr < (c.verwirrtBis ?? 0)), 'Doppelte Ablenkung: die zwei Nächsten sind abgelenkt, der Ferne nicht');
+  Object.assign(a, { x: tom.x, y: tom.y - 2, wechselBei: uhr + 1e6 });
+  tom.leben = 6;
+  lauf(300);
+  pruefe(tom.leben === 6, 'ein abgelenkter Schleim tut Tom nichts, auch wenn er ihn berührt');
+  sp.verlassen(tom.id);
+  // Stufe 13 und 15: Schattenentschwinden, Legendärer Coup.
+  const una = mk('Una', 15);
+  Object.assign(una, { leben: 6, unverwundbarBis: 0 });
+  sp.spielerTreffen(una, { x: una.x, y: una.y - 20, w: { schaden: 1 } }, uhr);
+  const weg = uhr < una.leereBis && uhr < una.unverwundbarBis && wald.stand(uhr).spieler.find((x) => x.id === una.id)?.e.includes('l');
+  uhr += 5000;
+  una.unverwundbarBis = 0;
+  sp.spielerTreffen(una, { x: una.x, y: una.y - 20, w: { schaden: 1 } }, uhr);
+  pruefe(weg && !(uhr < una.leereBis), 'Schattenentschwinden: nach dem Treffer kurz weg, gleich danach nicht noch einmal');
+  const n = wald.gegner.find((x) => !x.tot);
+  Object.assign(still(n), { x: una.x + 20, y: una.y });
+  const gold0 = una.inventar.gold ?? 0;
+  wurf = 0;
+  sp.aktion(una, { id: 'coup' });
+  wurf = 0.99;
+  pruefe((una.inventar.gold ?? 0) - gold0 === 5 && uhr < n.betaeubtBis, `Legendärer Coup: ${(una.inventar.gold ?? 0) - gold0} Gold, der Schleim ist benommen`);
+  sp.verlassen(una.id);
+  // Assassine: Überraschung immer kritisch, Gift.
+  const asa = mk('Asa', 10, 'assassine');
+  const krit = hieb(asa, null);
+  const normal = hieb(asa, asa.id);
+  pruefe(krit >= normal * 2, `Tödlicher Überraschungsschlag: überrascht ${krit}, sonst ${normal}`);
+  wurf = 0;
+  const mitGift = hieb(asa, asa.id);
+  wurf = 0.99;
+  g.vx = g.vy = 0;
+  lauf(1100);
+  pruefe(50 - g.leben === mitGift + 1, `Gift: eine Sekunde später noch 1 (${mitGift} → ${50 - g.leben})`);
+  sp.verlassen(asa.id);
+  // Taktiker: Falle statt Ablenkung auf F, höchstens zwei, ein Schleim läuft hinein.
+  const tak = mk('Tak', 10, 'taktiker');
+  const f = tak.werte.aktionen.find((x) => x.taste === 'F');
+  for (const dx of [0, 40, 80]) {
+    Object.assign(tak, { x: tak.x + (dx ? 40 : 0), aktionBereit: {} });
+    sp.aktion(tak, { id: f.id });
+  }
+  const fallen = wald.spielerFallen.filter((x) => x.von === tak.id);
+  const ziel = Object.assign(still(wald.gegner.find((x) => !x.tot)), { x: fallen[0].x, y: fallen[0].y });
+  lauf(100);
+  pruefe(f.id === 'fallenstellen' && fallen.length === 2 && uhr < ziel.betaeubtBis && ziel.leben < 50 && wald.spielerFallen.length === 1,
+    `Taktiker: F legt Fallen (${fallen.length} liegen), der Schleim darin ist betäubt (${50 - ziel.leben} Schaden)`);
+  sp.verlassen(tak.id);
+  // Schattenläufer: Sprung in Blickrichtung, nicht durch Wände; Tarnung im Laufen.
+  const sch = mk('Sch', 10, 'schattenlaeufer');
+  const x0 = sch.x, y0 = sch.y;
+  sch.richtung = 'links';
+  sp.aktion(sch, { id: 'schattenwandeln', r: 'links' });
+  // Der ganze Weg muss frei sein — sonst wäre er durch ein Hindernis gesprungen.
+  let wegFrei = true;
+  for (let x = x0; x >= sch.x; x -= 4) wegFrei &&= wald.welt.frei(x, y0);
+  pruefe(sch.x < x0 && x0 - sch.x <= 128 && sch.y === y0 && wegFrei, `Schattenwandeln: ${x0 - sch.x} Punkte nach links, der Weg dahin frei`);
+  const sg = wald.gegner.find((x) => !x.tot);
+  Object.assign(sch, { x: sg.x + sg.w.sichtweite * 0.7, y: sg.y, stehtSeit: uhr });
+  pruefe(!naechster(sg, [sch], uhr), 'Lautloser Schritt: auch im Laufen erst aus halber Entfernung bemerkt');
+  sp.verlassen(sch.id);
+  // Trickbetrüger: feilschen.
+  const tri = mk('Tri2', 3, 'trickbetrueger');
+  const nor = mitCharakter(sp, 'Nor', () => {}, 'schurke');
+  const laden = (wer) => {
+    wer.laden = { id: 'kraemerin', gebiet: wer.gebiet, x: wer.x, y: wer.y };
+    return sp.ladenAngabe(wer);
+  };
+  const lt = laden(tri), ln = laden(nor);
+  const art = Object.keys(ln.waren).find((x) => ln.waren[x] >= 10);
+  pruefe(art && lt.waren[art] < ln.waren[art] && lt.ankauf[art] > ln.ankauf[art], `Schnelllügner: ${art} kostet ${lt.waren[art]} statt ${ln.waren[art]}`);
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

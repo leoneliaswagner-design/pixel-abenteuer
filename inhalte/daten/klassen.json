@@ -454,8 +454,8 @@
     }
   },
   "schurke": {
-    "name": "Schurke",
-    "beschreibung": "Flink und gerissen. Wirft Dolche und knackt Schlösser ohne Schlüssel.",
+    "name": "Dieb",
+    "beschreibung": "Meister der Schatten: wirft Dolche, knackt Schlösser, trifft aus dem Hinterhalt — wenn der Gegner gerade jemand anderen jagt.",
     "attribute": {
       "staerke": 8,
       "geschick": 15,
@@ -476,7 +476,526 @@
     },
     "vorteile": [
       "schloesser"
-    ]
+    ],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "langfinger",
+          "name": "Langfinger",
+          "quelle": "Langfinger",
+          "text": "Knackt Schlösser ohne Schlüssel. Besiegte Gegner lassen 50 % mehr Gold.",
+          "boni": {
+            "goldPlus": 50
+          }
+        },
+        {
+          "id": "hinterhalt",
+          "name": "Hinterhältiger Schlag",
+          "quelle": "Hinterhältiger Schlag",
+          "text": "Wer einen Gegner trifft, der gerade jemand anderen jagt (oder neben dem ein Mitspieler steht), macht +1 Schaden. Wächst auf Stufe 11 und 20.",
+          "boni": {
+            "hinterhalt": 1
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "bewegung_d",
+          "name": "Meister der Bewegung",
+          "quelle": "Meister der Bewegung",
+          "text": "10 % schneller.",
+          "boni": {
+            "tempoProzent": 10
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "ueberraschung",
+          "name": "Verbesserter Hinterhalt",
+          "quelle": "Verbesserter Hinterhalt",
+          "text": "Gegen überraschte Gegner (die noch niemanden jagen) zählt der Hinterhältige Schlag doppelt.",
+          "boni": {
+            "ueberraschung": 1
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "reflexe",
+          "name": "Wendige Reflexe",
+          "quelle": "Wendige Reflexe",
+          "text": "Fallen und Geschosse verfehlen dich zu 25 %.",
+          "boni": {
+            "ausweichen": 0.25
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "zugriff",
+          "name": "Schneller Zugriff",
+          "quelle": "Schneller Zugriff",
+          "text": "Dolche laden 25 % schneller.",
+          "boni": {
+            "qAbkling": 25
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "ablenkung",
+          "name": "Doppelte Ablenkung",
+          "quelle": "Doppelte Ablenkung",
+          "text": "Taste F: die zwei nächsten Gegner verlieren dich 3 Sekunden aus den Augen und greifen niemanden an. Lädt 15 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "ablenken",
+            "dauer": 3000,
+            "anzahl": 2,
+            "umkreis": 128,
+            "abklingzeit": 15000
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "meisterdieb_u",
+          "name": "Unauffälliger Meisterdieb",
+          "quelle": "Unauffälliger Meisterdieb",
+          "text": "Besiegte Gegner lassen noch einmal 50 % mehr Gold.",
+          "boni": {
+            "goldPlus": 50
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "hinterhalt2",
+          "name": "Hinterhältiger Schlag (2)",
+          "quelle": "Hinterhältiger Schlag (2. Angriff)",
+          "text": "Der Hinterhältige Schlag macht +1 mehr.",
+          "boni": {
+            "hinterhalt": 1
+          }
+        }
+      ],
+      "13": [
+        {
+          "id": "entschwinden",
+          "name": "Schattenentschwinden",
+          "quelle": "Schattenentschwinden",
+          "text": "Wirst du getroffen, verschwindest du 1,5 Sekunden lang (unverwundbar). Höchstens alle 30 Sekunden.",
+          "boni": {
+            "entschwinden": 30000
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "wind",
+          "name": "Schnell wie der Wind",
+          "quelle": "Schnell wie der Wind",
+          "text": "10 % schneller.",
+          "boni": {
+            "tempoProzent": 10
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "coup",
+          "name": "Legendärer Coup",
+          "quelle": "Legendärer Coup",
+          "text": "Taste T: entreißt dem nächsten Gegner 5 bis 15 Gold, und er ist 2 Sekunden benommen. Lädt 60 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "coup",
+            "gold": [
+              5,
+              15
+            ],
+            "umkreis": 64,
+            "abklingzeit": 60000
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "perfekt",
+          "name": "Perfekte Reflexe",
+          "quelle": "Perfekte Reflexe",
+          "text": "10 % der Treffer prallen ab, Fallen und Geschosse verfehlen dich zu weiteren 15 %.",
+          "boni": {
+            "schutz": 0.1,
+            "ausweichen": 0.15
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "phantom",
+          "name": "Phantomdieb",
+          "quelle": "Phantomdieb",
+          "text": "Schattenentschwinden hält doppelt so lange.",
+          "boni": {
+            "entschwindenDauer": 1500
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "meisterdieb",
+          "name": "Meisterdieb",
+          "quelle": "Meisterdieb",
+          "text": "Der Hinterhältige Schlag macht +1 mehr, und 10 % der Treffer sind kritisch.",
+          "boni": {
+            "hinterhalt": 1,
+            "krit": 0.1
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "assassine": {
+        "name": "Assassine",
+        "text": "Überraschung, Gift und lautlose Siege.",
+        "stufen": {
+          "3": [
+            {
+              "id": "ueberraschungsschlag",
+              "name": "Tödlicher Überraschungsschlag",
+              "quelle": "Tödlicher Überraschungsschlag",
+              "text": "Treffer gegen überraschte Gegner sind immer kritisch.",
+              "boni": {
+                "ueberraschKrit": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "gegnerkenntnis",
+              "name": "Gegnerkenntnis",
+              "quelle": "Gegnerkenntnis",
+              "text": "Taste R: markiert den nächsten Gegner 10 Sekunden — jeder Treffer darauf macht +1 Schaden, von allen. Lädt 10 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "markieren",
+                "dauer": 10000,
+                "abklingzeit": 10000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "gift",
+              "name": "Gift und Klinge",
+              "quelle": "Gift & Klinge",
+              "text": "25 % deiner Treffer vergiften: eine Sekunde später +1 Schaden.",
+              "boni": {
+                "gift": 0.25
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "lautlos",
+              "name": "Lautloser Kill",
+              "quelle": "Lautloser Kill",
+              "text": "Besiegst du einen überraschten Gegner, verschwindest du 2 Sekunden.",
+              "boni": {
+                "lautlos": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "attentaeter",
+              "name": "Meisterattentäter",
+              "quelle": "Meisterattentäter",
+              "text": "Der Hinterhältige Schlag macht +1 mehr, und kritische Treffer dreifachen Schaden.",
+              "boni": {
+                "hinterhalt": 1,
+                "kritFaktor": 1
+              }
+            }
+          ]
+        }
+      },
+      "akrobat": {
+        "name": "Akrobat",
+        "text": "Schnell, schwer zu treffen, Sprungangriffe.",
+        "stufen": {
+          "3": [
+            {
+              "id": "klettern",
+              "name": "Klettermeister",
+              "quelle": "Klettermeister",
+              "text": "10 % schneller.",
+              "boni": {
+                "tempoProzent": 10
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "wandlauf",
+              "name": "Wandlauf",
+              "quelle": "Wandlauf",
+              "text": "Taste R: 3 Sekunden lang 60 % schneller. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "sprint",
+                "dauer": 3000,
+                "tempoFaktor": 1.6,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "rolle",
+              "name": "Ausweichrolle",
+              "quelle": "Ausweichrolle",
+              "text": "15 % der Treffer prallen ab.",
+              "boni": {
+                "schutz": 0.15
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "sprungangriff",
+              "name": "Sprungangriff",
+              "quelle": "Sprungangriff",
+              "text": "Wer gerade gelaufen ist, schlägt mit +1 Schaden zu.",
+              "boni": {
+                "laufSchlag": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "luftartist",
+              "name": "Luftartist",
+              "quelle": "Luftartist",
+              "text": "Fallen und Geschosse verfehlen dich zu weiteren 20 %, und Wandlauf hält doppelt so lange.",
+              "boni": {
+                "ausweichen": 0.2,
+                "aktionDauer": 100
+              }
+            }
+          ]
+        }
+      },
+      "taktiker": {
+        "name": "Taktiker",
+        "text": "Vorbereitung: Schwachstellen, eigene Fallen, schnellere Pläne.",
+        "stufen": {
+          "3": [
+            {
+              "id": "vorausgedacht",
+              "name": "Vorausgedacht",
+              "quelle": "Vorausgedacht",
+              "text": "10 % der Treffer sind kritisch.",
+              "boni": {
+                "krit": 0.1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "hintergrund",
+              "name": "Hintergrundinformationen",
+              "quelle": "Hintergrundinformationen",
+              "text": "Taste R: markiert den nächsten Gegner 12 Sekunden — jeder Treffer darauf macht +1 Schaden, von allen. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "markieren",
+                "dauer": 12000,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "fallenstellen",
+              "name": "Vorbereitete Positionen",
+              "quelle": "Vorbereitete Positionen",
+              "text": "Taste F: legt eine Falle vor deine Füße (höchstens zwei). Wer hineinläuft, ist 2 Sekunden betäubt und nimmt 1 Schaden. Lädt 6 Sekunden. (Ersetzt die Doppelte Ablenkung auf F.)",
+              "aktion": {
+                "taste": "F",
+                "art": "falle",
+                "betaeuben": 2000,
+                "schaden": 1,
+                "hoechstens": 2,
+                "abklingzeit": 6000
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "stratege",
+              "name": "Meisterstratege",
+              "quelle": "Meisterstratege",
+              "text": "Aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "schachmeister",
+              "name": "Schachmeister",
+              "quelle": "Schachmeister",
+              "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab.",
+              "boni": {
+                "aura": 0.1
+              }
+            }
+          ]
+        }
+      },
+      "schattenlaeufer": {
+        "name": "Schattenläufer",
+        "text": "Unbemerkt im Schatten, durch Schatten springen.",
+        "stufen": {
+          "3": [
+            {
+              "id": "verschmelzung",
+              "name": "Schattenverschmelzung",
+              "quelle": "Schattenverschmelzung",
+              "text": "Solange du stillstehst, bemerken Gegner dich erst aus halber Entfernung.",
+              "boni": {
+                "tarnung": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "lautloserschritt",
+              "name": "Lautloser Schritt",
+              "quelle": "Lautloser Schritt",
+              "text": "Auch im Laufen bemerken Gegner dich erst aus halber Entfernung.",
+              "boni": {
+                "tarnungLaufen": 1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "schattenwandeln",
+              "name": "Schattenwandeln",
+              "quelle": "Schattenwandeln",
+              "text": "Taste R: springt bis zu vier Kacheln in Blickrichtung. Lädt 10 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "sprung",
+                "weite": 128,
+                "abklingzeit": 10000
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "lebenderschatten",
+              "name": "Lebender Schatten",
+              "quelle": "Lebender Schatten",
+              "text": "Nachts und in dunklen Orten prallen 20 % der Treffer ab.",
+              "boni": {
+                "dunkelSchutz": 0.2
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "dunkelheit",
+              "name": "Meister der Dunkelheit",
+              "quelle": "Meister der Dunkelheit",
+              "text": "Schattenentschwinden hält weitere 1,5 Sekunden.",
+              "boni": {
+                "entschwindenDauer": 1500
+              }
+            }
+          ]
+        }
+      },
+      "trickbetrueger": {
+        "name": "Trickbetrüger",
+        "text": "Täuschen und ablenken: Gegner laufen ins Leere, Händler werden weich.",
+        "stufen": {
+          "3": [
+            {
+              "id": "schnellluegner",
+              "name": "Schnelllügner",
+              "quelle": "Schnelllügner",
+              "text": "Bei Händlern kaufst du 15 % billiger und verkaufst 15 % teurer.",
+              "boni": {
+                "feilschen": 15
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "taschenspieler",
+              "name": "Taschenspielertricks",
+              "quelle": "Taschenspielertricks",
+              "text": "Taste R: eine Illusion — alle Gegner bis vier Kacheln verlieren dich 3 Sekunden aus den Augen. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "ablenken",
+                "dauer": 3000,
+                "anzahl": 99,
+                "umkreis": 128,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "rolle_t",
+              "name": "Glaubwürdige Rolle",
+              "quelle": "Glaubwürdige Rolle",
+              "text": "Gegner bemerken dich erst aus halber Entfernung, auch im Laufen.",
+              "boni": {
+                "tarnungLaufen": 1
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "taeuschung",
+              "name": "Großmeister der Täuschung",
+              "quelle": "Grossmeister der Täuschung",
+              "text": "15 % der Treffer prallen ab.",
+              "boni": {
+                "schutz": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "identitaet",
+              "name": "Identitätswandler",
+              "quelle": "Identitätswandler",
+              "text": "Deine Ablenkungen wirken auf alle Gegner im ganzen Gebiet.",
+              "boni": {
+                "ablenkWeit": 1
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "magier": {
     "name": "Magier",

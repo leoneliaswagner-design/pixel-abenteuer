@@ -102,6 +102,15 @@
   Fokussierter Schuss (Ruhe), Reichweite, Tarnung, Gezielter Schuss
   (Durchschlag, F), Doppelschuss, Schnellfeuer (T), Beute markieren (R, für
   die ganze Gruppe), Blendpfeil, Beutezugriff u. a. Prüfstand `bogen.mjs`.
+- **Dieb** (31.10.2026): ersetzt den Schurken. Hinterhältiger Schlag (wenn
+  der Gegner jemand anderen jagt oder umzingelt ist), Überraschung, mehr
+  Gold, Ablenken (F), Schattenentschwinden, Legendärer Coup (T); Pfade
+  Assassine (Überraschung kritisch, Gift, Gegnerkenntnis), Akrobat
+  (Wandlauf, Ausweichrolle, Sprungangriff), Taktiker (eigene Fallen auf F,
+  Schachmeister-Aura), Schattenläufer (Tarnung, Schattenwandeln-Sprung,
+  Schutz im Dunkeln), Trickbetrüger (Feilschen, Illusion für alle).
+  Soziale Fähigkeiten (Verkleidung, Lügen) sind als Mechanik übersetzt.
+  Prüfstand `dieb.mjs`.
 - **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
   beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
 
@@ -129,9 +138,9 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger und Bogenschütze stehen. Offen: Drachenreiter, Dieb, Arzt, Koch,
+   Krieger, Bogenschütze, Dieb stehen. Offen: Drachenreiter, Arzt, Koch,
    Musiker, Gelehrter — nach demselben Muster in `klassen.json`. Danach
-   fallen Schurke, Magier, Kleriker weg. Die Spezies aus
+   fallen Magier und Kleriker weg. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
    schnellere Abklingzeiten).
@@ -284,3 +293,8 @@
 - stufen.mjs maß das neue Herz erst, nachdem die Steinkugel (vom Idol
   geweckt) Ana schon getroffen hatte: gemessen wird jetzt gleich nach dem
   Aufstieg.
+- dieb.mjs hat drei Mal in die falsche Richtung gemessen: Dinas lila Tunika
+  zählte als violette Falle, ein Schleim lief ihr nach, trat in die Falle und
+  starb, bevor Tom sie sah, und auf der Falle stehend verdeckte Dina sie.
+  Jetzt: grüne Tunika, Start außer Sichtweite, zur Seite treten, alle 50 ms
+  nachsehen. Ein Prüfstand, der Gegner in der Nähe hat, muss mit ihnen rechnen.

@@ -28,6 +28,8 @@ export class Gebiet {
     for (const d of this.welt.dinge)
       if (d.name === 'tuer' && spiel.spielstand.daten.welt.tueren?.[this.truhenSchluessel(d)]) this.welt.geoeffnet.add(d.schluessel);
     this.fallen = new Fallen(this);
+    // Fallen, die Spieler legen (Taktiker): { id, x, y, von, betaeuben, schaden }.
+    this.spielerFallen = [];
     this.zustaendeGeaendert(false);
   }
 
@@ -119,10 +121,31 @@ export class Gebiet {
   gegnerTreffen(g, s, jetzt, schaden = 1, wirkung = {}) {
     // Markierte Beute (Jägerschütze): jeder Treffer, von wem auch immer, macht mehr.
     if (jetzt < (g.markiertBis ?? 0)) schaden += g.markeSchaden ?? 1;
+    // Dieb: Hinterhalt, wenn der Gegner jemand anderen jagt, noch niemanden
+    // (überrascht) oder ein Mitspieler direkt neben ihm steht.
+    const wer = this.spiel.spieler.get(s.id), k = wer?.werte?.kampf;
+    const ueberrascht = !g.zielId;
+    if (k && !wirkung.gift) {
+      if (k.hinterhalt && (ueberrascht || g.zielId !== wer.id || this.spieler().some((p) => p !== wer && !p.tot && Math.hypot(p.x - g.x, p.y - g.y) < 40)))
+        schaden += k.hinterhalt * (ueberrascht && k.ueberraschung ? 2 : 1);
+      if (k.ueberraschKrit && ueberrascht && !wirkung.krit) {
+        schaden *= k.kritFaktor;
+        wirkung = { ...wirkung, krit: true };
+      }
+      // Gift und Klinge: eine Sekunde später noch einmal.
+      if (k.gift && this.spiel.zufall() < k.gift) [g.giftBei, g.giftVon] = [jetzt + 1000, wer.id];
+    }
     g.leben -= schaden;
     if (wirkung.betaeuben) g.betaeubtBis = jetzt + wirkung.betaeuben;
     if (wirkung.verlangsamen) g.langsamBis = jetzt + wirkung.verlangsamen;
     g.getroffenBis = jetzt + 250;
+    // Gift wirkt von innen: kein Rückstoß.
+    if (wirkung.ohneStoss) {
+      if (g.leben > 0) {
+        this.anAlle({ t: 'gegner_treffer', id: g.id, krit: false, schaden });
+        return;
+      }
+    }
     const [rx, ry] = richtungZu(s.x, s.y - 8, g.x, g.y - 6, RICHTUNGEN[s.richtung]);
     g.vx = rx * g.w.stossGeschwindigkeit;
     g.vy = ry * g.w.stossGeschwindigkeit;
@@ -135,6 +158,12 @@ export class Gebiet {
     }
     g.tot = true;
     g.wiederBei = jetzt + g.w.neuErscheinen;
+    g.giftBei = 0;
+    // Lautloser Kill: wer einen überraschten Gegner besiegt, verschwindet kurz.
+    if (k?.lautlos && ueberrascht) {
+      wer.leereBis = jetzt + 2000;
+      wer.unverwundbarBis = Math.max(wer.unverwundbarBis, wer.leereBis);
+    }
     // Beutezugriff: die Markierung springt zum nächsten Gegner.
     if (jetzt < (g.markiertBis ?? 0) && g.markeSpringt) {
       const neu = this.gegner.filter((o) => !o.tot && Math.hypot(o.x - g.x, o.y - g.y) <= 240).sort((a, b) => Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y))[0];
@@ -253,10 +282,26 @@ export class Gebiet {
       this.anAlle({ t: 'gegner_neu', id: g.id });
       return;
     }
+    // Gift: eine Sekunde nach dem Treffer noch einmal Schaden.
+    if (g.giftBei && jetzt >= g.giftBei) {
+      g.giftBei = 0;
+      this.gegnerTreffen(g, { id: g.giftVon, x: g.x, y: g.y }, jetzt, 1, { gift: true, ohneStoss: true });
+      if (g.tot) return;
+    }
+    // Fallen der Spieler: wer hineinläuft, ist betäubt.
+    const f = this.spielerFallen.find((f) => Math.hypot(f.x - g.x, f.y - g.y) < 16);
+    if (f) {
+      this.spielerFallen.splice(this.spielerFallen.indexOf(f), 1);
+      this.gegnerTreffen(g, { id: f.von, x: g.x, y: g.y }, jetzt, f.schaden, { betaeuben: f.betaeuben, ohneStoss: true });
+      if (g.tot) return;
+    }
     // Betäubt: steht still und tut niemandem etwas.
     if (jetzt < (g.betaeubtBis ?? 0) && jetzt >= g.stossBis) return;
     let vx, vy;
-    const ziel = jetzt < g.stossBis ? null : naechster(g, hier, jetzt);
+    // Abgelenkt: sieht niemanden, wandert nur herum.
+    const verwirrt = jetzt < (g.verwirrtBis ?? 0);
+    const ziel = jetzt < g.stossBis || verwirrt ? null : naechster(g, hier, jetzt);
+    g.zielId = ziel?.id ?? null;
     if (jetzt < g.stossBis) {
       vx = g.vx;
       vy = g.vy;
@@ -288,6 +333,7 @@ export class Gebiet {
     g.x = neu.x;
     g.y = neu.y;
 
+    if (verwirrt) return;
     for (const s of hier) {
       if (s.tot || jetzt < s.unverwundbarBis) continue;
       if (Math.hypot(s.x - g.x, s.y - 8 - (g.y - 6)) > 16) continue;
@@ -310,7 +356,8 @@ export class Gebiet {
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0) })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0), vw: jetzt < (g.verwirrtBis ?? 0) })),
+      sf: this.spielerFallen.map((f) => ({ id: f.id, x: f.x, y: f.y })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
       ...this.fallen.stand(jetzt),
     };
@@ -382,7 +429,7 @@ export function naechster(g, hier, jetzt = 0) {
   let bester = null, abstand = Infinity;
   for (const s of hier) {
     if (s.tot) continue;
-    const getarnt = s.werte?.kampf.tarnung && jetzt - s.stehtSeit >= 600;
+    const getarnt = s.werte?.kampf.tarnungLaufen || (s.werte?.kampf.tarnung && jetzt - s.stehtSeit >= 600);
     const d = Math.hypot(s.x - g.x, s.y - g.y);
     if (d < g.w.sichtweite * (getarnt ? 0.5 : 1) && d < abstand) { bester = s; abstand = d; }
   }

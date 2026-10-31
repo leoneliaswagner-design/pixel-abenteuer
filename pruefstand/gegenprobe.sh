@@ -361,6 +361,32 @@ probe client/szenen/Spiel.js "    n.bei('neustart', () => location.reload());" "
 probe client/fenster.js "!allein && \`Geht nur, wenn sonst niemand im Spiel ist (gerade \${d.online}).\`" "false" pruefstand/bogen.mjs \
   "Welt-Zurücksetzen ist trotz Mitspielern freigegeben"
 
+# Dieb
+probe server/gebiet.js "        schaden += k.hinterhalt * (ueberrascht && k.ueberraschung ? 2 : 1);" "        schaden += 0;" pruefstand/server-regeln.mjs \
+  "Hinterhältiger Schlag ohne Wirkung"
+probe server/gebiet.js "      if (k.hinterhalt && (ueberrascht || g.zielId !== wer.id ||" "      if (k.hinterhalt && (true ||" pruefstand/server-regeln.mjs \
+  "Hinterhalt auch gegen den, der einen selbst jagt"
+probe server/gebiet.js "    if (verwirrt) return;" "" pruefstand/server-regeln.mjs \
+  "abgelenkte Gegner greifen trotzdem an"
+probe server/spiel.js "    if (ent && s.leben > 0 && jetzt >= (s.entschwindenBereit ?? 0)) {" "    if (ent && s.leben > 0) {" pruefstand/server-regeln.mjs \
+  "Schattenentschwinden ohne Pause"
+probe server/gebiet.js "      if (k.gift && this.spiel.zufall() < k.gift) [g.giftBei, g.giftVon] = [jetzt + 1000, wer.id];" "" pruefstand/server-regeln.mjs \
+  "Gift wirkt nicht"
+probe server/spiel.js "        if (!gebiet.welt.frei(s.x + dx * w, s.y + dy * w)) break;" "" pruefstand/server-regeln.mjs \
+  "Schattenwandeln springt durch Wände"
+probe server/spiel.js "      if (eigene.length >= (a.hoechstens ?? 2))" "      if (false)" pruefstand/server-regeln.mjs \
+  "beliebig viele Fallen"
+probe server/spiel.js "    const n = Math.round((von + Math.floor(Math.random() * (bis - von + 1))) * (1 + (s.werte?.kampf.goldPlus ?? 0) / 100));" "    const n = von + Math.floor(Math.random() * (bis - von + 1));" pruefstand/server-regeln.mjs \
+  "Langfinger findet nicht mehr Gold"
+probe gemeinsam/regeln.js "  return Math.max(1, Math.round(g.preis * (1 - handel.charismaRabatt * mod.charisma) * (1 - feilschen / 100)));" "  return Math.max(1, Math.round(g.preis * (1 - handel.charismaRabatt * mod.charisma)));" pruefstand/server-regeln.mjs \
+  "Schnelllügner zahlt den vollen Preis"
+probe gemeinsam/regeln.js "  for (const g of gelernt.filter((x) => x.aktion)) proTaste.set(g.aktion.taste, g);" "  for (const g of gelernt.filter((x) => x.aktion)) proTaste.set(g.id, g);" pruefstand/dieb.mjs \
+  "zwei Fähigkeiten auf F"
+probe client/szenen/Spiel.js "      if (g.vw && !e.frage)" "      if (false && !e.frage)" pruefstand/dieb.mjs \
+  "Ablenkung beim anderen nicht zu sehen"
+probe client/szenen/Spiel.js "      if (!this.spielerFallen.has(f.id)) this.spielerFallen.set" "      if (false) this.spielerFallen.set" pruefstand/dieb.mjs \
+  "Fallen der Mitspieler unsichtbar"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

@@ -75,7 +75,7 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
-- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`): in
+- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`): in
   `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
   (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
   macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
@@ -84,7 +84,10 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Glück läuft über `spiel.zufall` — Prüfstände setzen `ZUFALL=0.99` (nie)
   bzw. geben in server-regeln einen eigenen Wurf vor. Schüsse der Spieler
   gehen über `spiel.schiessen()` (Durchschlag, Krit, Betäuben je Treffer);
-  „Ruhe" heißt: seit 0,6 s nicht bewegt (`s.stehtSeit`).
+  „Ruhe" heißt: seit 0,6 s nicht bewegt (`s.stehtSeit`). Zwei Aktionen auf
+  derselben Taste: die später gelernte gewinnt; die Leiste steht immer in
+  der Folge F, R, T. Hinterhalt/Überraschung (Dieb) hängen an `g.zielId`
+  (wen der Gegner gerade jagt; null = überrascht).
 - **Menü** (Esc oder Knopf ≡): Verlassen lädt die Seite neu (der Server
   speichert wie bei jedem Gehen). `neu_anfangen` löscht den eigenen Eintrag
   im Spielstand (`s.geloescht`: `merken` schreibt ihn nicht zurück),
@@ -131,6 +134,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - `node pruefstand/bogen.mjs` — Bogenschützin markiert einen Schleim (rotes
   Dreieck beim anderen am Bildpunkt); Menü: Welt-Zurücksetzen gesperrt mit
   Grund, Charakter neu beginnen (Wahl kommt wieder), Spiel verlassen.
+- `node pruefstand/dieb.mjs` — Taktikerin legt eine Falle (violett beim
+  anderen), Dieb lenkt ab (gelbes Fragezeichen beim anderen), Leiste Q/F/R.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

@@ -287,6 +287,7 @@ node pruefstand/risse.mjs           # Gruppenschlüssel, Tür, Riss in den Tempe
 node pruefstand/stufen.mjs          # Erfahrung, Aufstieg, Balken und Herzen am Bildpunkt
 node pruefstand/krieger.mjs         # Pfadwahl, Attributspunkte, Kampfrausch beim anderen
 node pruefstand/bogen.mjs           # Bogenschütze markiert, Menü: neu beginnen, verlassen
+node pruefstand/dieb.mjs            # Falle des Taktikers, Ablenkung beim anderen sichtbar
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
