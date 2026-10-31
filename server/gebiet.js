@@ -128,6 +128,8 @@ export class Gebiet {
     if (k && !wirkung.gift) {
       if (k.hinterhalt && (ueberrascht || g.zielId !== wer.id || this.spieler().some((p) => p !== wer && !p.tot && Math.hypot(p.x - g.x, p.y - g.y) < 40)))
         schaden += k.hinterhalt * (ueberrascht && k.ueberraschung ? 2 : 1);
+      // Chirurgisches Geschick: gegen schon Verletzte.
+      if (k.chirurg && g.leben < g.w.leben) schaden += k.chirurg;
       if (k.ueberraschKrit && ueberrascht && !wirkung.krit) {
         schaden *= k.kritFaktor;
         wirkung = { ...wirkung, krit: true };
@@ -285,7 +287,13 @@ export class Gebiet {
     // Gift: eine Sekunde nach dem Treffer noch einmal Schaden.
     if (g.giftBei && jetzt >= g.giftBei) {
       g.giftBei = 0;
-      this.gegnerTreffen(g, { id: g.giftVon, x: g.x, y: g.y }, jetzt, 1, { gift: true, ohneStoss: true });
+      const k = this.spiel.spieler.get(g.giftVon)?.werte?.kampf;
+      // Ansteckende Wirkung: das Gift springt auf den nächsten Gegner über.
+      if (k?.giftSpringt) {
+        const n = this.gegner.filter((o) => !o.tot && o !== g && !o.giftBei && Math.hypot(o.x - g.x, o.y - g.y) <= 64).sort((a, b) => Math.hypot(a.x - g.x, a.y - g.y) - Math.hypot(b.x - g.x, b.y - g.y))[0];
+        if (n) [n.giftBei, n.giftVon] = [jetzt + 1000, g.giftVon];
+      }
+      this.gegnerTreffen(g, { id: g.giftVon, x: g.x, y: g.y }, jetzt, k?.giftSchaden ?? 1, { gift: true, ohneStoss: true });
       if (g.tot) return;
     }
     // Fallen der Spieler: wer hineinläuft, ist betäubt.
@@ -356,7 +364,7 @@ export class Gebiet {
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0), vw: jetzt < (g.verwirrtBis ?? 0) })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0), vw: jetzt < (g.verwirrtBis ?? 0), l: Math.max(0, g.leben), lm: g.w.leben })),
       sf: this.spielerFallen.map((f) => ({ id: f.id, x: f.x, y: f.y })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
       ...this.fallen.stand(jetzt),

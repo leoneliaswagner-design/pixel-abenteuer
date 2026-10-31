@@ -102,6 +102,7 @@ export class SpielSzene extends Phaser.Scene {
     this.sprintBis ??= 0;
     this.aufstiege ??= 0;
     this.krits ??= 0;
+    this.mixturen ??= 0;
     this.abgewehrt ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
@@ -230,14 +231,14 @@ export class SpielSzene extends Phaser.Scene {
           gelernt: (this.charakter?.werte.gelernt ?? []).map((g) => g.id), attribute: this.charakter?.werte.attribute,
         },
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key, effekt: f.effekt, tint: f.koerper.tintTopLeft, alpha: f.koerper.alpha })),
-        krits: this.krits, abgewehrt: this.abgewehrt, spielerFallen: this.spielerFallen?.size ?? 0,
+        krits: this.krits, abgewehrt: this.abgewehrt, mixturen: this.mixturen, spielerFallen: this.spielerFallen?.size ?? 0,
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
         funken: this.funken,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt,
+          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt, balken: g.balken?.visible ? g.balken.width : null,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -671,6 +672,12 @@ export class SpielSzene extends Phaser.Scene {
         this.aufschrift(g.x, g.y + 16, 'Krit!', '#ffd84a');
       }
     });
+    // Eine geworfene Mixtur (Alchemist): ein grüner Kreis, wo sie platzt.
+    n.bei('mixtur', (m) => {
+      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0.35).setDepth(6000).setStrokeStyle(2, 0xc8ffb0);
+      this.mixturen++;
+      this.tweens.add({ targets: k, alpha: 0, scale: 1.2, duration: 600, onComplete: () => k.destroy() });
+    });
     // Ein Treffer prallt an jemandem ab (Kampfstil, Rausch, Schutzaura).
     n.bei('abgeprallt', (m) => {
       const f = m.id === this.meineId ? this.ich : this.andere.get(m.id);
@@ -784,6 +791,7 @@ export class SpielSzene extends Phaser.Scene {
       if (g.vw && !e.frage) e.frage = this.add.text(0, 0, '?', { fontFamily: SCHRIFT, fontSize: '8px', color: '#ffe680', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5);
       if (e.frage) e.frage.setVisible(!!g.vw && !g.tot);
       e.verwirrt = !!g.vw;
+      [e.leben, e.lebenMax] = [g.l, g.lm];
       // Markiert (Jägerschütze): ein rotes Dreieck über dem Kopf, für alle.
       if (g.mk && !e.marke) e.marke = this.add.triangle(0, 0, 0, 0, 10, 0, 5, 7, 0xff4a3a).setStrokeStyle(1, 0x5a1010);
       if (e.marke) e.marke.setVisible(!!g.mk && !g.tot);
@@ -860,6 +868,17 @@ export class SpielSzene extends Phaser.Scene {
       g.schatten.setPosition(g.x, g.y).setDepth(9);
       g.marke?.setPosition(g.x, g.y - 34).setDepth(6000);
       g.frage?.setPosition(g.x + 10, g.y - 30).setDepth(6000);
+      // Erweiterte Diagnose (Arzt): ein Lebensbalken über jedem Gegner.
+      const diagnose = this.charakter?.werte.kampf?.diagnose && g.sprite.visible && g.lebenMax;
+      if (diagnose && !g.balken) {
+        g.balkenGrund = this.add.rectangle(0, 0, 20, 4, 0x1b1424).setOrigin(0.5);
+        g.balken = this.add.rectangle(0, 0, 18, 2, 0xe04848).setOrigin(0, 0.5);
+      }
+      g.balkenGrund?.setVisible(!!diagnose).setPosition(g.x, g.y - 28).setDepth(6000);
+      if (g.balken) {
+        g.balken.setVisible(!!diagnose).setPosition(g.x - 9, g.y - 28).setDepth(6001);
+        g.balken.width = Math.round(18 * Math.max(0, g.leben) / (g.lebenMax || 1));
+      }
     }
 
     // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.

@@ -206,6 +206,32 @@ export class Spiel {
         art: f.geschoss, tempo: f.tempo, reichweite: Math.round(f.reichweite * (a.reichweiteFaktor ?? 1)), schaden: f.staerke + (a.schadenPlus ?? 0),
         pfeile: 1 + s.werte.kampf.mehrPfeile, durchschlag: a.durchschlag ?? 0, betaeuben: a.betaeuben ?? 0, krit: s.werte.kampf.schussKrit,
       }, jetzt);
+    } else if (a.art === 'behandeln') {
+      // Feldbehandlung: wer in der Nähe am meisten fehlt (man selbst zählt mit).
+      const k = s.werte.kampf;
+      const ziel = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= a.umkreis)
+        .sort((x, y) => (this.maxLeben(y) - y.leben) - (this.maxLeben(x) - x.leben))[0];
+      if (ziel) this.heilen(s, [ziel], k.heilVoll ? this.maxLeben(ziel) : a.menge + k.heilPlus, jetzt);
+    } else if (a.art === 'reanimieren') {
+      const ziel = gebiet.spieler().filter((p) => p.tot && p !== s && Math.hypot(p.x - s.x, p.y - s.y) <= a.umkreis)[0];
+      // Nichts zu tun: die Abklingzeit zählt nicht.
+      if (!ziel) {
+        s.aktionBereit[a.id] = 0;
+        return;
+      }
+      this.vorOrtBeleben(ziel, s.werte.kampf.heilVoll ? this.maxLeben(ziel) : a.menge, jetzt);
+    } else if (a.art === 'mixtur') {
+      // Heilsalbe: fliegt ein Stück in Blickrichtung und wirkt dort im Umkreis.
+      if (RICHTUNGEN[m.r]) s.richtung = m.r;
+      const k = s.werte.kampf, [dx, dy] = RICHTUNGEN[s.richtung];
+      const mx = s.x + dx * a.weite, my = s.y + dy * a.weite, r = a.radius * (1 + k.mixturRadius / 100);
+      const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - mx, p.y - my) <= r);
+      this.heilen(s, ziele, a.menge + k.heilPlus, jetzt, k.mixturSchutz || k.heilSchutz);
+      if (k.mixturSchaden) for (const g of gebiet.gegner) if (!g.tot && Math.hypot(g.x - mx, g.y - my) <= r) gebiet.gegnerTreffen(g, { id: s.id, x: mx, y: my }, jetzt, k.mixturSchaden, { ohneStoss: true });
+      gebiet.anAlle({ t: 'mixtur', x: mx, y: my, r });
+    } else if (a.art === 'seuche') {
+      for (const g of gebiet.gegner)
+        if (!g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= a.umkreis) Object.assign(g, { giftBei: jetzt + 1000, giftVon: s.id, langsamBis: jetzt + a.dauer });
     } else if (a.art === 'ablenken') {
       // Doppelte Ablenkung / Taschenspielertricks: die Nächsten verlieren
       // jede Spur — sie wandern herum und greifen niemanden an.
@@ -252,6 +278,23 @@ export class Spiel {
     const schreck = s.werte.kampf.schreck;
     if (schreck) for (const g of gebiet.gegner) if (!g.tot && Math.hypot(g.x - s.x, g.y - s.y) < 96) g.betaeubtBis = jetzt + schreck;
     gebiet.anAlle({ t: 'aktion', id: s.id, art: a.art, dauer: a.dauer ?? 0 });
+  }
+
+  // Heilung durch einen Spieler: Frontlinienhilfe schützt danach kurz.
+  heilen(von, ziele, menge, jetzt, schutz = von.werte?.kampf.heilSchutz ?? 0) {
+    for (const p of ziele) {
+      p.leben = Math.min(this.maxLeben(p), p.leben + menge);
+      if (schutz) [p.heilSchutzBis, p.heilSchutz] = [jetzt + 3000, schutz];
+    }
+    if (ziele.length) this.gebiete.get(von.gebiet).anAlle({ t: 'heilung', von: von.id, ziele: ziele.map((p) => p.id) });
+  }
+
+  // Zurück ins Leben, wo man liegt (Schnellreanimation, Stabilisierung).
+  vorOrtBeleben(s, leben, jetzt) {
+    Object.assign(s, { tot: false, leben: Math.max(1, Math.min(this.maxLeben(s), leben)), unverwundbarBis: jetzt + 2000, budget: 0, vorOrt: null });
+    s.korrektur++;
+    s.senden({ t: 'wiederbelebt', x: s.x, y: s.y, k: s.korrektur });
+    this.gebiete.get(s.gebiet).anAlle({ t: 'heilung', von: s.id, ziele: [s.id] });
   }
 
   ruhig(s, jetzt) {
@@ -309,6 +352,7 @@ export class Spiel {
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
     p += this.ruhig(s, jetzt) ? k.ruheSchutz : jetzt - s.stehtSeit < 300 ? k.laufSchutz : 0;
     // Lebender Schatten: nachts und an dunklen Orten.
+    if (jetzt < (s.heilSchutzBis ?? 0)) p += s.heilSchutz;
     if (k.dunkelSchutz) {
       const z = this.tageszeit(jetzt);
       if (this.gebiete.get(s.gebiet).welt.eigenschaftenKarte.licht === 'dunkel' || z < 0.25 || z > 0.8) p += k.dunkelSchutz;
@@ -818,8 +862,7 @@ export class Spiel {
       this.schiessen(s, gebiet, { art: f.geschoss, tempo: f.tempo, reichweite: f.reichweite, schaden: f.staerke }, jetzt);
     } else if (f.art === 'heilung') {
       const ziele = gebiet.spieler().filter((p) => !p.tot && Math.hypot(p.x - s.x, p.y - s.y) <= f.umkreis);
-      for (const p of ziele) p.leben = Math.min(this.maxLeben(p), p.leben + f.staerke);
-      gebiet.anAlle({ t: 'heilung', von: s.id, ziele: ziele.map((p) => p.id) });
+      this.heilen(s, ziele, f.staerke, jetzt);
     } else if (f.art === 'ansturm') {
       // Der Browser bewegt die eigene Figur — er bekommt den Schub wie einen
       // Rückstoß, nur nach vorn. Getroffen wird, wer auf dem Weg steht.
@@ -868,15 +911,30 @@ export class Spiel {
     // Etwas länger als der Stoß selbst: die letzten Positionen davon sind
     // noch unterwegs, wenn er beim Browser schon vorbei ist.
     if (stoss) s.stossBis = jetzt + ws.stossDauer + 250;
+    // Lebensretter: ein Arzt in der Nähe (oder man selbst) hält einen auf den Beinen.
+    if (s.leben <= 0) {
+      const gebiet = this.gebiete.get(s.gebiet);
+      const arzt = gebiet.spieler().find((p) => !p.tot && p.werte?.kampf.retter && jetzt >= (p.retterBereit ?? 0) && Math.hypot(p.x - s.x, p.y - s.y) <= 96);
+      if (arzt) {
+        s.leben = 1;
+        arzt.retterBereit = jetzt + arzt.werte.kampf.retter;
+        if (arzt.werte.kampf.retterSchild) s.unverwundbarBis = Math.max(s.unverwundbarBis, jetzt + arzt.werte.kampf.retterSchild);
+        gebiet.anAlle({ t: 'nachricht', text: arzt === s ? `${s.name} hält sich auf den Beinen!` : `${arzt.name} rettet ${s.name}!` });
+        gebiet.anAlle({ t: 'heilung', von: arzt.id, ziele: [s.id] });
+      }
+    }
     if (s.leben > 0) return;
     s.tot = true;
     s.wiederBei = jetzt + ws.wiederbelebung;
+    // Meister der Stabilisierung: wer neben einem Arzt fällt, steht dort wieder auf.
+    s.vorOrt = this.gebiete.get(s.gebiet).spieler().some((p) => p !== s && !p.tot && p.werte?.kampf.stabilisieren && Math.hypot(p.x - s.x, p.y - s.y) <= 96);
     this.anAlle({ t: 'nachricht', text: `${s.name} wurde besiegt.` });
   }
 
   // Wiederbelebt wird an der letzten Ankunft — dem Eingang des Gebiets, in
   // dem man zuletzt angekommen ist, wie die Raumeingänge in Zelda.
   wiederbeleben(s, jetzt) {
+    if (s.vorOrt) return this.vorOrtBeleben(s, Math.ceil(this.maxLeben(s) / 2), jetzt);
     const a = s.ankunft;
     const zurueck = this.gebiete.get(a.gebiet)?.welt.frei(a.x, a.y) ? a : this.startpunkt();
     const anderesGebiet = zurueck.gebiet !== s.gebiet;

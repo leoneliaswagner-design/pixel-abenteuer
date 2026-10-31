@@ -98,9 +98,11 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
     tempo: Math.round(grund.geschwindigkeit * (1 + 0.04 * mod.geschick + (p.tempoProzent ?? 0) / 100)) + plus('tempo'),
     schaden: 1 + bonus(mod.staerke) + plus('schaden') + erreicht(stufen?.schadenAb, stufe),
     faehigkeit: f && {
-      ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe),
+      ...f, staerke: (f.schaden ?? f.heilung ?? 0) + bonus(mod[f.attribut] ?? 0) + plus('faehigkeit') + erreicht(stufen?.faehigkeitAb, stufe) + (f.art === 'heilung' ? p.heilPlus ?? 0 : 0),
       abklingzeit: Math.round(f.abklingzeit * (1 - Math.min(80, p.qAbkling ?? 0) / 100)),
       ...(f.reichweite && { reichweite: Math.round(f.reichweite * (1 + (p.reichweite ?? 0) / 100)) }),
+      // Arzt: Erste Hilfe heilt mehr und reicht weiter.
+      ...(f.art === 'heilung' && { umkreis: Math.round(f.umkreis * (1 + (p.heilUmkreis ?? 0) / 100)) }),
     },
     vorteile: klasse.vorteile ?? [],
     stufe,
@@ -124,6 +126,11 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       hinterhalt: p.hinterhalt ?? 0, ueberraschung: !!p.ueberraschung, ueberraschKrit: !!p.ueberraschKrit, goldPlus: p.goldPlus ?? 0,
       entschwinden: p.entschwinden ?? 0, entschwindenDauer: 1500 + (p.entschwindenDauer ?? 0), gift: p.gift ?? 0, lautlos: !!p.lautlos,
       laufSchlag: p.laufSchlag ?? 0, tarnungLaufen: !!p.tarnungLaufen, dunkelSchutz: p.dunkelSchutz ?? 0, feilschen: p.feilschen ?? 0, ablenkWeit: !!p.ablenkWeit,
+      // Arzt: Heilen, Lebensretter (Abklingzeit in ms), Diagnose, Chirurgie
+      // (Schaden gegen Verletzte), Mixturen, ansteckendes Gift.
+      heilPlus: p.heilPlus ?? 0, heilSchutz: p.heilSchutz ?? 0, heilVoll: !!p.heilVoll, diagnose: !!p.diagnose, chirurg: p.chirurg ?? 0,
+      retter: Math.round((p.retter ?? 0) * (1 - Math.min(80, p.retterAbkling ?? 0) / 100)), retterSchild: p.retterSchild ?? 0, stabilisieren: !!p.stabilisieren,
+      mixturSchaden: p.mixturSchaden ?? 0, mixturSchutz: p.mixturSchutz ?? 0, mixturRadius: p.mixturRadius ?? 0, giftSpringt: !!p.giftSpringt, giftSchaden: 1 + (p.giftSchaden ?? 0),
     },
   };
 }

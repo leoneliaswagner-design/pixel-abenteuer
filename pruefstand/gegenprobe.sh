@@ -387,6 +387,29 @@ probe client/szenen/Spiel.js "      if (g.vw && !e.frage)" "      if (false && !
 probe client/szenen/Spiel.js "      if (!this.spielerFallen.has(f.id)) this.spielerFallen.set" "      if (false) this.spielerFallen.set" pruefstand/dieb.mjs \
   "Fallen der Mitspieler unsichtbar"
 
+# Arzt
+probe gemeinsam/regeln.js " + (f.art === 'heilung' ? p.heilPlus ?? 0 : 0)," "," pruefstand/server-regeln.mjs \
+  "Medizinisches Wissen heilt nicht mehr"
+probe server/spiel.js "        .sort((x, y) => (this.maxLeben(y) - y.leben) - (this.maxLeben(x) - x.leben))[0];" "        [0];" pruefstand/server-regeln.mjs \
+  "Feldbehandlung heilt nicht den am meisten Verletzten"
+probe server/spiel.js "      const arzt = gebiet.spieler().find((p) => !p.tot && p.werte?.kampf.retter && jetzt >= (p.retterBereit ?? 0) &&" "      const arzt = gebiet.spieler().find((p) => !p.tot && p.werte?.kampf.retter &&" pruefstand/server-regeln.mjs \
+  "Lebensretter ohne Pause"
+probe server/spiel.js "    if (s.vorOrt) return this.vorOrtBeleben(s, Math.ceil(this.maxLeben(s) / 2), jetzt);" "" pruefstand/server-regeln.mjs \
+  "Stabilisierung schickt zum Eingang zurück"
+probe server/spiel.js "      if (!ziel) {
+        s.aktionBereit[a.id] = 0;" "      if (!ziel) {" pruefstand/server-regeln.mjs \
+  "Schnellreanimation verbraucht die Abklingzeit auch ohne Besiegten"
+probe server/gebiet.js "      if (k.chirurg && g.leben < g.w.leben) schaden += k.chirurg;" "" pruefstand/server-regeln.mjs \
+  "Chirurgisches Geschick ohne Wirkung"
+probe server/spiel.js "    if (jetzt < (s.heilSchutzBis ?? 0)) p += s.heilSchutz;" "" pruefstand/server-regeln.mjs \
+  "Frontlinienhilfe schützt nicht"
+probe server/gebiet.js "        if (n) [n.giftBei, n.giftVon] = [jetzt + 1000, g.giftVon];" "" pruefstand/server-regeln.mjs \
+  "Gift springt nicht über"
+probe client/szenen/Spiel.js "      const diagnose = this.charakter?.werte.kampf?.diagnose && g.sprite.visible && g.lebenMax;" "      const diagnose = g.sprite.visible && g.lebenMax;" pruefstand/arzt.mjs \
+  "jeder sieht die Lebensbalken, nicht nur der Arzt"
+probe client/szenen/Spiel.js "      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0.35)" "      const k = this.add.circle(m.x, m.y - 8, m.r, 0x7ee070, 0)" pruefstand/arzt.mjs \
+  "die Mixtur ist nicht zu sehen"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

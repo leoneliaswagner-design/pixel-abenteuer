@@ -1023,8 +1023,8 @@
     ]
   },
   "kleriker": {
-    "name": "Kleriker",
-    "beschreibung": "Diener der Götter. Heilt sich und alle Gefährten in der Nähe.",
+    "name": "Arzt",
+    "beschreibung": "Heilt durch Medizin statt Magie: verarztet die Gruppe, holt Gefallene zurück und schneidet präzise, wo es schon blutet.",
     "attribute": {
       "staerke": 13,
       "geschick": 8,
@@ -1035,13 +1035,470 @@
     },
     "faehigkeit": {
       "art": "heilung",
-      "name": "Heilendes Wort",
+      "name": "Erste Hilfe",
       "abklingzeit": 8000,
       "umkreis": 80,
       "heilung": 2,
       "attribut": "weisheit"
     },
-    "vorteile": []
+    "vorteile": [],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "heiler",
+          "name": "Naturheiler",
+          "quelle": "Natural Healer",
+          "text": "Herzen, die du aufhebst, heilen ein halbes Herz mehr.",
+          "boni": {
+            "herzPlus": 1
+          }
+        },
+        {
+          "id": "medizin",
+          "name": "Medizinisches Wissen",
+          "quelle": "Medizinisches Wissen",
+          "text": "Erste Hilfe (Q) heilt ein halbes Herz mehr.",
+          "boni": {
+            "heilPlus": 1
+          }
+        },
+        {
+          "id": "chirurgisch",
+          "name": "Chirurgisches Geschick",
+          "quelle": "Chirurgisches Geschick",
+          "text": "Gegen schon verletzte Gegner +1 Schaden.",
+          "boni": {
+            "chirurg": 1
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "feldbehandlung",
+          "name": "Feldbehandlung",
+          "quelle": "Feldbehandlung",
+          "text": "Taste F: heilt den am stärksten verletzten Mitspieler in deiner Nähe (oder dich) um eineinhalb Herzen. Lädt 10 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "behandeln",
+            "menge": 3,
+            "umkreis": 64,
+            "abklingzeit": 10000
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "intervention",
+          "name": "Schnelle Intervention",
+          "quelle": "Schnelle Intervention",
+          "text": "Erste Hilfe lädt 25 % schneller.",
+          "boni": {
+            "qAbkling": 25
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "diagnose",
+          "name": "Erweiterte Diagnose",
+          "quelle": "Erweiterte Diagnose",
+          "text": "Du siehst über jedem Gegner, wie viel Leben er noch hat.",
+          "boni": {
+            "diagnose": 1
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "lebensretter",
+          "name": "Lebensretter",
+          "quelle": "Lebensretter",
+          "text": "Fällt ein Mitspieler (oder du) bis drei Kacheln um dich, bleibt er mit einem halben Herz stehen. Einmal pro Minute.",
+          "boni": {
+            "retter": 60000
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "praezisionsschnitt",
+          "name": "Präzisionsschnitt",
+          "quelle": "Präzisionsschnitt",
+          "text": "Gegen verletzte Gegner weitere +1 Schaden.",
+          "boni": {
+            "chirurg": 1
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "stabilisierung",
+          "name": "Meister der Stabilisierung",
+          "quelle": "Meister der Stabilisierung",
+          "text": "Wer bis drei Kacheln um dich besiegt wird, steht an Ort und Stelle wieder auf, mit halben Herzen — nicht am Eingang.",
+          "boni": {
+            "stabilisieren": 1
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "praezision2",
+          "name": "Chirurgische Präzision",
+          "quelle": "Chirurgische Präzision (Verbessert)",
+          "text": "Gegen verletzte Gegner weitere +1 Schaden.",
+          "boni": {
+            "chirurg": 1
+          }
+        }
+      ],
+      "13": [
+        {
+          "id": "reanimation",
+          "name": "Schnellreanimation",
+          "quelle": "Schnellreanimation",
+          "text": "Taste T: holt einen besiegten Mitspieler neben dir sofort zurück, mit einem Herz. Lädt 60 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "reanimieren",
+            "umkreis": 64,
+            "menge": 2,
+            "abklingzeit": 60000
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "anatomie",
+          "name": "Anatomisches Wissen",
+          "quelle": "Anatomisches Wissen",
+          "text": "10 % deiner Treffer sind kritisch.",
+          "boni": {
+            "krit": 0.1
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "lebensanker",
+          "name": "Lebensanker",
+          "quelle": "Lebensanker",
+          "text": "Lebensretter lädt doppelt so schnell.",
+          "boni": {
+            "retterAbkling": 50
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "operationsmeister",
+          "name": "Operationsmeister",
+          "quelle": "Operationsmeister",
+          "text": "Alle Heilungen ein halbes Herz mehr, aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "heilPlus": 1,
+            "aktionAbkling": 20
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "lebenswille",
+          "name": "Lebenswille",
+          "quelle": "Lebenswille",
+          "text": "Wen der Lebensretter hält, der ist danach 3 Sekunden unverwundbar.",
+          "boni": {
+            "retterSchild": 3000
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "legende",
+          "name": "Ärztliche Legende",
+          "quelle": "Ärztliche Legende",
+          "text": "Feldbehandlung und Schnellreanimation heilen voll.",
+          "boni": {
+            "heilVoll": 1
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "alchemist": {
+        "name": "Alchemist",
+        "text": "Mixturen werfen: heilen die Gruppe, später brennen sie auch.",
+        "stufen": {
+          "3": [
+            {
+              "id": "heilsalbe",
+              "name": "Heilsalbe",
+              "quelle": "Reagenzienlabor",
+              "text": "Taste R: wirft eine Mixtur drei Kacheln weit; alle Mitspieler dort heilen ein Herz. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "mixtur",
+                "weite": 96,
+                "radius": 48,
+                "menge": 2,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "mixturen",
+              "name": "Verbesserte Mixturen",
+              "quelle": "Verbesserte Mixturen",
+              "text": "Die Mixtur brennt Gegner an der Stelle um 1 Schaden, und alle Heilungen ein halbes Herz mehr.",
+              "boni": {
+                "mixturSchaden": 1,
+                "heilPlus": 1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "chemie",
+              "name": "Chemische Expertise",
+              "quelle": "Chemische Expertise",
+              "text": "Aktive Fähigkeiten laden 20 % schneller.",
+              "boni": {
+                "aktionAbkling": 20
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "transmutation",
+              "name": "Transmutationsmischung",
+              "quelle": "Transmutationsmischung",
+              "text": "Wen die Mixtur heilt, an dem prallen 3 Sekunden lang 40 % der Treffer ab (Steinhaut).",
+              "boni": {
+                "mixturSchutz": 0.4
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "grossmeister_a",
+              "name": "Großmeister der Alchemie",
+              "quelle": "Grossmeister der Alchemie",
+              "text": "Die Mixtur trifft eine doppelt so große Fläche.",
+              "boni": {
+                "mixturRadius": 100
+              }
+            }
+          ]
+        }
+      },
+      "feldarzt": {
+        "name": "Feldarzt",
+        "text": "Mitten im Kampf: größere Reichweite, schützt, wen er heilt.",
+        "stufen": {
+          "3": [
+            {
+              "id": "stabilisierung_f",
+              "name": "Schnelle Stabilisierung",
+              "quelle": "Schnelle Stabilisierung",
+              "text": "Erste Hilfe erreicht Mitspieler in eineinhalbfacher Entfernung.",
+              "boni": {
+                "heilUmkreis": 50
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "evakuierung",
+              "name": "Evakuierungsprotokoll",
+              "quelle": "Evakuierungsprotokoll",
+              "text": "Taste R: 3 Sekunden lang 60 % schneller, um zu Verletzten zu kommen. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "sprint",
+                "dauer": 3000,
+                "tempoFaktor": 1.6,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "frontlinie",
+              "name": "Frontlinienhilfe",
+              "quelle": "Frontlinienhilfe",
+              "text": "Wen du heilst, an dem prallen 3 Sekunden lang 30 % der Treffer ab.",
+              "boni": {
+                "heilSchutz": 0.3
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "notfall",
+              "name": "Notfallversorgung",
+              "quelle": "Notfallversorgung",
+              "text": "Erste Hilfe heilt ein Herz mehr.",
+              "boni": {
+                "heilPlus": 2
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "retter_f",
+              "name": "Unerschütterlicher Retter",
+              "quelle": "Unerschütterlicher Retter",
+              "text": "Lebensretter lädt doppelt so schnell, und du bist 10 % schneller.",
+              "boni": {
+                "retterAbkling": 50,
+                "tempoProzent": 10
+              }
+            }
+          ]
+        }
+      },
+      "chirurg": {
+        "name": "Chirurg",
+        "text": "Das Skalpell als Waffe: Schwachstellen, schnelle präzise Schnitte.",
+        "stufen": {
+          "3": [
+            {
+              "id": "schnitt_c",
+              "name": "Präzisionsschnitt",
+              "quelle": "Präzisionsschnitt",
+              "text": "Gegen verletzte Gegner weitere +1 Schaden.",
+              "boni": {
+                "chirurg": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "schwachstelle",
+              "name": "Schwachstellenanalyse",
+              "quelle": "Schwachstellenanalyse",
+              "text": "Taste R: markiert den nächsten Gegner 12 Sekunden — jeder Treffer darauf macht +1 Schaden, von allen. Lädt 12 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "markieren",
+                "dauer": 12000,
+                "abklingzeit": 12000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "schnellzugriff",
+              "name": "Schnellzugriff",
+              "quelle": "Schnellzugriff",
+              "text": "Hiebe kommen 25 % schneller.",
+              "boni": {
+                "hiebTempo": 25
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "effizienz",
+              "name": "Tödliche Effizienz",
+              "quelle": "Tödliche Effizienz",
+              "text": "15 % deiner Treffer sind kritisch.",
+              "boni": {
+                "krit": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "meisterchirurg",
+              "name": "Meisterchirurg",
+              "quelle": "Meisterchirurg",
+              "text": "Gegen verletzte Gegner weitere +2 Schaden, und +1 Schaden überhaupt.",
+              "boni": {
+                "chirurg": 2,
+                "schaden": 1
+              }
+            }
+          ]
+        }
+      },
+      "toxikologe": {
+        "name": "Toxikologe",
+        "text": "Gift statt Heilung: was er trifft, leidet nach — und steckt andere an.",
+        "stufen": {
+          "3": [
+            {
+              "id": "toxik",
+              "name": "Grundlagen der Toxikologie",
+              "quelle": "Grundlagen der Toxikologie",
+              "text": "30 % deiner Treffer vergiften: eine Sekunde später +1 Schaden.",
+              "boni": {
+                "gift": 0.3
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "immun",
+              "name": "Immunitätsausbildung",
+              "quelle": "Immunitätsausbildung",
+              "text": "Fallen und Geschosse verfehlen dich zu 20 %.",
+              "boni": {
+                "ausweichen": 0.2
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "ansteckend",
+              "name": "Ansteckende Wirkung",
+              "quelle": "Ansteckende Wirkung",
+              "text": "Wirkt dein Gift, springt es auf den nächsten Gegner daneben über.",
+              "boni": {
+                "giftSpringt": 1
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "mischung",
+              "name": "Perfekte Mischung",
+              "quelle": "Perfekte Mischung",
+              "text": "Weitere 20 % der Treffer vergiften, und Gift macht +1 mehr.",
+              "boni": {
+                "gift": 0.2,
+                "giftSchaden": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "seuche",
+              "name": "Seuchenmeister",
+              "quelle": "Seuchenmeister",
+              "text": "Taste R: alle Gegner bis drei Kacheln um dich sind vergiftet und 3 Sekunden halb so schnell. Lädt 30 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "seuche",
+                "umkreis": 96,
+                "dauer": 3000,
+                "abklingzeit": 30000
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "waldlaeufer": {
     "name": "Bogenschütze",

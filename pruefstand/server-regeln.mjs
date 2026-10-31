@@ -1402,6 +1402,113 @@ const arena = (art, abstand) => {
   pruefe(art && lt.waren[art] < ln.waren[art] && lt.ankauf[art] > ln.ankauf[art], `Schnelllügner: ${art} kostet ${lt.waren[art]} statt ${ln.waren[art]}`);
 }
 
+// ---------- Arzt ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => wurf });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const lauf = (ms) => {
+    for (let i = 0; i < ms; i += 50) {
+      uhr += 50;
+      sp.schritt(0.05);
+    }
+  };
+  const mk = (name, stufe, pfad, klasse = 'kleriker') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    x.unverwundbarBis = 0;
+    return x;
+  };
+  const schlag = { x: 0, y: 0, w: { schaden: 99 } };
+  const toeten = (wer) => {
+    Object.assign(schlag, { x: wer.x, y: wer.y - 20 });
+    wer.unverwundbarBis = 0;
+    sp.spielerTreffen(wer, schlag, uhr);
+  };
+  const ana = mk('Ana', 13);
+  const ben = mk('Ben', 1, null, 'kaempfer');
+  const kleriker1 = werteBerechnen(werte.klassen.kleriker, werte.spezies.mensch, werte.spieler, [], 1, werte.stufen);
+  pruefe(ana.werte.faehigkeit.name === 'Erste Hilfe' && kleriker1.faehigkeit.staerke === werte.klassen.kleriker.faehigkeit.heilung + 1 + 1,
+    `Arzt Stufe 1: Erste Hilfe heilt ${kleriker1.faehigkeit.staerke} (2, +1 Weisheit, +1 Medizinisches Wissen)`);
+  // Feldbehandlung: wer am meisten fehlt.
+  Object.assign(ben, { x: ana.x + 30, y: ana.y, leben: 2 });
+  ana.leben = ana.werte.maxLeben - 1;
+  sp.aktion(ana, { id: 'feldbehandlung' });
+  pruefe(ben.leben === 2 + 3 + 1 && ana.leben === ana.werte.maxLeben - 1, `Feldbehandlung: Ben (am meisten verletzt) 2 → ${ben.leben}, Ana bleibt`);
+  // Lebensretter: Ben bleibt stehen, gleich danach nicht noch einmal.
+  toeten(ben);
+  const gehalten = !ben.tot && ben.leben === 1;
+  uhr += 2000;
+  toeten(ben);
+  pruefe(gehalten && ben.tot, `Lebensretter: Ben hält sich (${gehalten}), beim zweiten Mal gleich danach nicht`);
+  // Meister der Stabilisierung: Ben steht an Ort und Stelle wieder auf.
+  const [bx, by] = [ben.x, ben.y];
+  lauf(werte.spieler.wiederbelebung + 200);
+  pruefe(!ben.tot && ben.gebiet === 'wald' && Math.hypot(ben.x - bx, ben.y - by) < 1 && ben.leben === Math.ceil(ben.werte.maxLeben / 2),
+    `Stabilisierung: Ben steht dort auf, wo er fiel, mit ${ben.leben} halben Herzen`);
+  // Schnellreanimation: ohne Besiegten keine Abklingzeit, mit sofort zurück.
+  sp.aktion(ana, { id: 'reanimation' });
+  const frei = !(uhr < (ana.aktionBereit.reanimation ?? 0));
+  uhr += 61000;
+  // Zweimal: beim ersten Mal hält ihn der Lebensretter (wieder geladen).
+  toeten(ben);
+  uhr += 2000;
+  toeten(ben);
+  const tot = ben.tot;
+  sp.aktion(ana, { id: 'reanimation' });
+  pruefe(frei && tot && !ben.tot && ben.leben === 2, `Schnellreanimation: nichts zu tun → keine Wartezeit; Ben sofort zurück mit ${ben.leben}`);
+  // Chirurgisches Geschick: gegen Verletzte mehr.
+  const g = wald.gegner[0];
+  const hau = (leben) => {
+    Object.assign(g, { tot: false, leben, getroffenBis: 0, stossBis: 0, zielId: ana.id });
+    Object.assign(ana, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+    const vor = g.leben;
+    sp.hieb(ana, { r: 'oben' });
+    return vor - g.leben;
+  };
+  const unverletzt = hau(g.w.leben), angeschlagen = hau(g.w.leben - 1 + 0.5);
+  pruefe(angeschlagen === unverletzt + 3, `Chirurgisches Geschick (Stufe 13: +3): unverletzt ${unverletzt}, verletzt ${angeschlagen}`);
+  pruefe(wald.stand(uhr).gegner[0].lm === g.w.leben && 'l' in wald.stand(uhr).gegner[0], 'der Stand nennt Leben und Höchstleben der Gegner (für die Diagnose)');
+  sp.verlassen(ana.id);
+  // Alchemist: Mixtur heilt dort, wo sie landet, und brennt Gegner.
+  const al = mk('Al', 7, 'alchemist');
+  Object.assign(ben, { x: al.x, y: al.y - 96, leben: 2 });
+  const sg = wald.gegner[1];
+  Object.assign(sg, { tot: false, x: al.x + 20, y: al.y - 96, leben: 5, stossBis: 0, getroffenBis: 0 });
+  al.richtung = 'oben';
+  const frei2 = wald.welt.frei(ben.x, ben.y);
+  sp.aktion(al, { id: 'heilsalbe', r: 'oben' });
+  pruefe(!frei2 || (ben.leben === 2 + 2 + 2 && sg.leben < 5), `Heilsalbe: Ben drei Kacheln vor Al 2 → ${ben.leben}, der Schleim daneben brennt (${5 - sg.leben})`);
+  sp.verlassen(al.id);
+  // Feldarzt: wen er heilt, an dem prallt es ab.
+  const fe = mk('Fe', 10, 'feldarzt');
+  Object.assign(ben, { x: fe.x + 20, y: fe.y, leben: 2 });
+  sp.faehigkeit(fe, { r: 'unten' });
+  wurf = 0.2;
+  Object.assign(schlag, { w: { schaden: 1 } });
+  const vor = ben.leben;
+  ben.unverwundbarBis = 0;
+  sp.spielerTreffen(ben, { x: ben.x, y: ben.y - 20, w: { schaden: 1 } }, uhr);
+  wurf = 0.99;
+  pruefe(ben.leben === vor, 'Frontlinienhilfe: gleich nach der Heilung prallt der Treffer an Ben ab (Wurf 0,2)');
+  sp.verlassen(fe.id);
+  // Toxikologe: Gift springt über.
+  const tox = mk('Tox', 10, 'toxikologe');
+  const [g1, g2] = wald.gegner;
+  for (const [x, dx] of [[g1, 0], [g2, 30]]) Object.assign(x, { tot: false, leben: 50, x: tox.x + dx, y: tox.y - 40, giftBei: 0, stossBis: 0, getroffenBis: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6, zielId: tox.id });
+  Object.assign(g1, { giftBei: uhr + 50, giftVon: tox.id });
+  lauf(100);
+  const sprang = g2.giftBei > uhr;
+  lauf(1200);
+  pruefe(sprang && g2.leben < 50, `Ansteckende Wirkung: das Gift springt auf den Nachbarn (${50 - g2.leben} Schaden)`);
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

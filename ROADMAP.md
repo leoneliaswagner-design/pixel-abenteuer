@@ -111,6 +111,13 @@
   Schutz im Dunkeln), Trickbetrüger (Feilschen, Illusion für alle).
   Soziale Fähigkeiten (Verkleidung, Lügen) sind als Mechanik übersetzt.
   Prüfstand `dieb.mjs`.
+- **Arzt** (31.10.2026): ersetzt den Kleriker. Erste Hilfe (Q), Feldbehandlung
+  (F, wer am meisten fehlt), Diagnose (Lebensbalken über Gegnern),
+  Chirurgisches Geschick (mehr gegen Verletzte), Lebensretter (hält Mitspieler
+  bei einem halben Herz), Stabilisierung (aufstehen am Ort statt am Eingang),
+  Schnellreanimation (T). Pfade Alchemist (Heilsalbe werfen, brennt, Steinhaut),
+  Feldarzt (Reichweite, Schutz nach Heilung, Sprint), Chirurg (Markieren,
+  schneller, Krit), Toxikologe (Gift, springt über, Seuche). Prüfstand `arzt.mjs`.
 - **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
   beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
 
@@ -138,9 +145,9 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger, Bogenschütze, Dieb stehen. Offen: Drachenreiter, Arzt, Koch,
+   Krieger, Bogenschütze, Dieb, Arzt stehen. Offen: Drachenreiter, Koch,
    Musiker, Gelehrter — nach demselben Muster in `klassen.json`. Danach
-   fallen Magier und Kleriker weg. Die Spezies aus
+   fällt der Magier weg. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
    schnellere Abklingzeiten).
