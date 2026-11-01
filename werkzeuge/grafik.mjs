@@ -808,7 +808,7 @@ for (const [name, t] of Object.entries(TUNIKEN)) figurenBlatt({ tunika: t, haar:
 const KLASSEN = {
   kaempfer: (t) => ({ tunika: t, haar: '#5a3a22', kopf: { art: 'helm', farbe: '#b8b8c8', dunkel: '#6a6a7a', busch: t[0] }, schultern: '#b8b8c8' }),
   schurke: (t) => ({ tunika: t, haar: '#3a2a1a', kopf: { art: 'kapuze', farben: ['#3a3446', '#55506a', '#24202e'] }, schal: '#24202e' }),
-  magier: (t) => ({ tunika: t, haar: '#d8d8e0', bart: 'voll', kopf: { art: 'hut', farben: t }, robe: true }),
+  gelehrter: (t) => ({ tunika: t, haar: '#6a4a2a', kopf: { art: 'doktorhut', farbe: '#2a2a3a', quaste: '#e8b84a' }, brille: '#c8a040', robe: true }),
   kleriker: (t) => ({ tunika: t, haar: P.haare, kopf: { art: 'kapuze', farben: ['#ece6d6', '#ffffff', '#b8ae98'] }, symbol: P.gold }),
   waldlaeufer: (t) => ({ tunika: t, haar: '#a0602a', kopf: { art: 'kapuze', farben: ['#4a6a2a', '#6a8a3a', '#2e4618'] }, koecher: true }),
   koch: (t) => ({ tunika: t, haar: '#7a4a24', bart: 'schnurr', bartFarbe: '#5a3418', kopf: { art: 'kochmuetze' }, schuerze: '#f4f0e6' }),
@@ -872,7 +872,7 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
 // ---------- Gegenstände (16×16, für Inventar und Laden) ----------
 // Reihenfolge = „bild" in gegenstaende.json: 0 Gold, 1 Schlüssel,
 // 2 Rissstein, 3 Heiltrank, 4 Langschwert, 5 Lederrüstung, 6 Kettenhemd,
-// 7 Zauberstab, 8 Ring, 9 Karte (nur für den Knopf), 10 Goldenes Idol,
+// 7 Gelehrtenstab, 8 Ring, 9 Karte (nur für den Knopf), 10 Goldenes Idol,
 // 11 Eulenstatuette.
 {
   const symbol = [];
@@ -923,7 +923,7 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
   b.loeschen(6, 3, 4, 2);
   for (let y = 4; y < 14; y += 2) for (let x = 3 + (y % 4 ? 1 : 0); x < 13; x += 2) b.setze(x, y, '#d0d0e0');
   symbol.push(b);
-  b = neu(); // Zauberstab
+  b = neu(); // Gelehrtenstab (früher Zauberstab)
   for (let i = 0; i < 10; i++) b.rechteck(3 + i, 13 - i, 1, 1, P.holz);
   b.ellipse(12.5, 3.5, 2.5, 2.5, '#6fd0ff');
   b.setze(12, 3, '#ffffff');

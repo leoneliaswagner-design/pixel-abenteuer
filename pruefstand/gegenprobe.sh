@@ -110,8 +110,8 @@ probe server/spiel.js "Math.hypot(p.x - s.x, p.y - s.y) <= f.umkreis" "true" pru
   "Heilung reicht über die ganze Karte"
 probe server/spiel.js "const knackt = s.werte?.vorteile.includes('schloesser') && !e.zauber;" "const knackt = !e.zauber;" pruefstand/server-regeln.mjs \
   "jeder knackt Schlösser"
-probe server/spiel.js "if (e.magisch && !s.werte?.vorteile.includes('magie')) {" "if (false) {" pruefstand/server-regeln.mjs \
-  "jeder liest magische Schrift"
+probe server/spiel.js "if (e.magisch && !s.werte?.vorteile.includes('runen')) {" "if (false) {" pruefstand/server-regeln.mjs \
+  "jeder liest alte Runen"
 probe client/main.js "if (!willkommen.charakter) {" "if (false) {" pruefstand/klassen.mjs \
   "Browser lässt die Charakterwahl aus"
 probe client/figur.js "this.textur = klasse && szene" "this.textur = false && szene" pruefstand/klassen.mjs \
@@ -451,6 +451,25 @@ probe client/figur.js "    this.note.setVisible(lied);" "    this.note.setVisibl
   "die Note ist nicht zu sehen"
 probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/musiker.mjs \
   "Figuren ohne Klassenbild (kein Barett)"
+
+# Gelehrter
+probe server/spiel.js "      for (const ziel of ziele.slice(0, 1 + s.werte.kampf.markeMehr)) gebiet.markieren(ziel, s, jetzt + a.dauer);" "      for (const ziel of ziele.slice(0, 1)) gebiet.markieren(ziel, s, jetzt + a.dauer);" pruefstand/server-regeln.mjs \
+  "Kenne deinen Feind II analysiert nur einen"
+probe server/spiel.js "      this.drohneSchiessen(s, jetzt);" "" pruefstand/server-regeln.mjs \
+  "die Drohne schießt nicht"
+probe server/spiel.js "    if (!ziel) return;
+    s.drohneBei" "    s.drohneBei" pruefstand/server-regeln.mjs \
+  "die Drohne schießt ohne Gegner ins Leere"
+probe server/spiel.js "    const [ax, ay] = [s.x + 14, s.y - 14];" "    const [ax, ay] = [s.x + 14, s.y - 30];" pruefstand/server-regeln.mjs \
+  "Drohnenbolzen startet auf Kopfhöhe (in der Wand)"
+probe gemeinsam/regeln.js "      markeMehr: p.markeMehr ?? 0," "      markeMehr: 0," pruefstand/server-regeln.mjs \
+  "markeMehr wird nicht gerechnet"
+probe server/gebiet.js " + (s.werte?.kampf.drohne ? 'd' : '')," "," pruefstand/gelehrter.mjs \
+  "der Stand meldet die Drohne nicht"
+probe client/figur.js "    this.drohne.setVisible(drohne);" "    this.drohne.setVisible(false);" pruefstand/gelehrter.mjs \
+  "die Drohne ist nicht zu sehen"
+probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/gelehrter.mjs \
+  "Figuren ohne Klassenbild (kein Doktorhut)"
 
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi

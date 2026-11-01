@@ -356,14 +356,14 @@ spiel6.takt(0.05);
 pruefe(!wald6.stand(uhr).spieler.some((x) => x.id === neuer.id), 'wer noch wählt, ist für die anderen nicht da');
 spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'drache', spezies: 'mensch' });
 pruefe(neuer.waehlt, 'eine Klasse, die es nicht gibt, wird nicht angenommen');
-spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'magier', spezies: 'zwerg' });
+spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'gelehrter', spezies: 'zwerg' });
 const wahl = post6.find((m) => m.t === 'charakter');
-pruefe(!neuer.waehlt && wahl?.werte.maxLeben === 9 && neuer.leben === 9 && wahl.werte.attribute.konstitution === 16,
-  `Zwergen-Magier: KON 14+2 = ${wahl?.werte.attribute.konstitution}, ${wahl?.werte.maxLeben} halbe Herzen`);
+pruefe(!neuer.waehlt && wahl?.werte.maxLeben === 8 && neuer.leben === 8 && wahl.werte.attribute.konstitution === 14,
+  `Zwergen-Gelehrter: KON 12+2 = ${wahl?.werte.attribute.konstitution}, ${wahl?.werte.maxLeben} halbe Herzen`);
 spiel6.nachricht(neuer.id, { t: 'charakter', klasse: 'kaempfer', spezies: 'elf' });
-pruefe(neuer.klasse === 'magier', 'wer gewählt hat, kann nicht nachträglich umwählen');
+pruefe(neuer.klasse === 'gelehrter', 'wer gewählt hat, kann nicht nachträglich umwählen');
 
-// Schwertschaden aus der Stärke: Kämpfer (STÄ 16) trifft mit 2, Magier mit 1.
+// Schwertschaden aus der Stärke: Kämpfer (STÄ 16) trifft mit 2, Gelehrter mit 1.
 const schleim6 = wald6.gegner[0];
 const hauen = (wer) => {
   Object.assign(schleim6, { tot: false, leben: 2, vx: 0, vy: 0, getroffenBis: 0, x: wer.x, y: wer.y + 20, stossBis: uhr + 1e6 });
@@ -373,18 +373,18 @@ const hauen = (wer) => {
   return schleim6.leben;
 };
 pruefe(hauen(anderer) <= 0, `Kämpfer besiegt einen Schleim mit einem Hieb (Schaden ${anderer.werte.schaden})`);
-pruefe(hauen(neuer) === 1, `Magier braucht zwei Hiebe (Schaden ${neuer.werte.schaden})`);
+pruefe(hauen(neuer) === 1, `Gelehrter braucht zwei Hiebe (Schaden ${neuer.werte.schaden})`);
 
-// Feuerball: fliegt, trifft den Schleim drei Kacheln weiter, mit Schaden 3.
-Object.assign(schleim6, { tot: false, leben: 3, vx: 0, vy: 0, getroffenBis: 0, x: neuer.x + 96, y: neuer.y, stossBis: uhr + 1e6 });
+// Armbrustbolzen: fliegt, trifft den Schleim drei Kacheln weiter, mit seinem ganzen Schaden.
+Object.assign(schleim6, { tot: false, leben: neuer.werte.faehigkeit.staerke, vx: 0, vy: 0, getroffenBis: 0, x: neuer.x + 96, y: neuer.y, stossBis: uhr + 1e6 });
 spiel6.nachricht(neuer.id, { t: 'bereit' });
-// Nach rechts: unter dem Magier steht drei Kacheln weiter ein Baum.
+// Nach rechts: unter dem Gelehrten steht drei Kacheln weiter ein Baum.
 spiel6.nachricht(neuer.id, { t: 'faehigkeit', r: 'rechts' });
 const flug = wald6.geschosse.size;
 spiel6.nachricht(neuer.id, { t: 'faehigkeit', r: 'rechts' });
-pruefe(flug === 1 && wald6.geschosse.size === 1, 'Feuerball fliegt; ein zweiter sofort danach nicht (Abklingzeit)');
+pruefe(flug === 1 && wald6.geschosse.size === 1, 'Armbrustbolzen fliegt; ein zweiter sofort danach nicht (Abklingzeit)');
 for (let i = 0; i < 20 && wald6.geschosse.size; i++) { uhr += 50; spiel6.schritt(0.05); }
-pruefe(schleim6.tot, `der Feuerball trifft den Schleim drei Kacheln weiter (Leben ${schleim6.leben})`);
+pruefe(schleim6.tot, `der Bolzen trifft den Schleim drei Kacheln weiter (Leben ${schleim6.leben})`);
 
 // Kleriker heilt, wer in der Nähe steht — nicht den, der weit weg ist.
 const kleriker = mitCharakter(spiel6, 'Heiler', () => {}, 'kleriker', 'mensch');
@@ -405,7 +405,7 @@ Object.assign(schleim6, { tot: false, leben: 2, vx: 0, vy: 0, getroffenBis: 0, x
 spiel6.nachricht(kaempfer.id, { t: 'faehigkeit', r: 'unten' });
 pruefe(post7.some((m) => m.t === 'stoss' && m.vy > 0) && schleim6.leben <= 0, 'Schildstoß: Schub nach vorn, der Schleim davor ist besiegt');
 
-// Schurke knackt die Tür in der Höhle ohne Schlüssel; Magier liest Runen.
+// Schurke knackt die Tür in der Höhle ohne Schlüssel; Gelehrter liest Runen.
 const spiel8 = new Spiel(karten, werteWald, { jetzt: () => uhr });
 const post8 = [];
 const schurke = mitCharakter(spiel8, 'Dieb', (m) => post8.push(m), 'schurke', 'halbling');
@@ -424,8 +424,8 @@ const lesen = (klasse) => {
   spiel8.verlassen(x.id);
   return p.find((m) => m.t === 'dialog')?.seiten[0] ?? '';
 };
-const magierLiest = lesen('magier'), kaempferLiest = lesen('kaempfer');
-pruefe(magierLiest.startsWith('Eine Inschrift') && kaempferLiest.startsWith('Fremde'), `Runen: Magier liest „${magierLiest.slice(0, 20)}…", Kämpfer „${kaempferLiest.slice(0, 20)}…"`);
+const gelehrterLiest = lesen('gelehrter'), kaempferLiest = lesen('kaempfer');
+pruefe(gelehrterLiest.startsWith('Eine Inschrift') && kaempferLiest.startsWith('Fremde'), `Runen: Gelehrter liest „${gelehrterLiest.slice(0, 20)}…", Kämpfer „${kaempferLiest.slice(0, 20)}…"`);
 
 // Klasse und Spezies stehen im Spielstand.
 const datei9 = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');
@@ -578,7 +578,7 @@ const K = 32, zeile9 = 9 * K + 24;
 const arena = (art, abstand) => {
   const sp = new Spiel(karten, werteWald, { jetzt: () => uhr });
   const p = [];
-  const s = mitCharakter(sp, 'Held', (m) => p.push(m), 'magier', 'mensch');
+  const s = mitCharakter(sp, 'Held', (m) => p.push(m), 'gelehrter', 'mensch');
   sp.wechseln(s, 'tiefwald', 'vom_inselwald');
   Object.assign(s, { x: 2 * K + 16, y: zeile9, unverwundbarBis: 0 });
   const gebiet = sp.gebiete.get('tiefwald');
@@ -652,7 +652,7 @@ const arena = (art, abstand) => {
     sp.nachricht(s.id, { t: 'hieb', r: 'rechts' });
     hiebe++;
   }
-  pruefe(m.tot && hiebe === 4, `Magier braucht ${hiebe} Hiebe für das Skelett`);
+  pruefe(m.tot && hiebe === 4, `Gelehrter braucht ${hiebe} Hiebe für das Skelett`);
 }
 // Fledermaus: fliegt nicht gerade, sondern im Zickzack.
 {
@@ -1009,7 +1009,7 @@ const arena = (art, abstand) => {
   };
   const pk = [], pm = [];
   const kurt = mitCharakter(sp, 'Kurt', (m) => pk.push(m));
-  const mia = mitCharakter(sp, 'Mia', (m) => pm.push(m), 'magier');
+  const mia = mitCharakter(sp, 'Mia', (m) => pm.push(m), 'gelehrter');
   const aufStufe = (wer, n) => {
     wer.erfahrung = t[n - 1] - 1;
     sp.erfahrungGeben(wer, 1);
@@ -1311,7 +1311,7 @@ const arena = (art, abstand) => {
     return 50 - g.leben;
   };
   const dina = mk('Dina', 2);
-  const ole = mk('Ole', 1, null, 'magier');
+  const ole = mk('Ole', 1, null, 'gelehrter');
   Object.assign(ole, { x: g.x + 200, y: g.y });
   const gegenMich = hieb(dina, dina.id);
   const gegenOle = hieb(dina, ole.id);
@@ -1688,6 +1688,126 @@ const arena = (art, abstand) => {
   Object.assign(still(nah), { x: wb.x + 60, y: wb.y });
   sp.aktion(wb, { id: 'publikum_w' });
   pruefe(uhr < nah.betaeubtBis && uhr < nah.langsamBis, 'Publikum adressieren: der Schleim steht still');
+}
+
+// ---------- Gelehrter ----------
+{
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => 0.99 });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const mk = (name, stufe, pfad, klasse = 'gelehrter') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_hoehle');
+    x.unverwundbarBis = uhr + 1e9;
+    return x;
+  };
+  const still = (g) => Object.assign(g, { tot: false, leben: 50, getroffenBis: 0, stossBis: 0, betaeubtBis: 0, verwirrtBis: 0, langsamBis: 0, markiertBis: 0, giftBei: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6, zielId: 'x', wiederBei: 0 });
+  const alleWeg = () => { for (const g of wald.gegner) Object.assign(g, { tot: true, wiederBei: uhr + 1e9 }); };
+  const gel = mk('Gil', 2);
+  const ben = mk('Ben', 1, null, 'kaempfer');
+  pruefe(gel.werte.faehigkeit.name === 'Armbrustbolzen' && gel.werte.aktionen.map((a) => a.taste).join('') === 'FT' && gel.werte.kampf.diagnose,
+    `Gelehrter Stufe 2: Q ${gel.werte.faehigkeit.name}, ${gel.werte.aktionen.map((a) => a.taste + ' ' + a.name).join(', ')}, sieht Lebensbalken`);
+  const g = wald.gegner[0];
+  const hau = (wer) => {
+    still(g);
+    Object.assign(wer, { x: g.x, y: g.y + 20, naechsterHieb: 0 });
+    sp.hieb(wer, { r: 'oben' });
+    return 50 - g.leben;
+  };
+  // Analyseblick: der nächste Gegner — Bens Hieb macht +1.
+  const vorher = hau(ben);
+  alleWeg();
+  Object.assign(still(g), { x: gel.x + 60, y: gel.y });
+  sp.aktion(gel, { id: 'analyseblick' });
+  const markiert = uhr < g.markiertBis;
+  const g0 = g.markiertBis;
+  const mitAnalyse = (() => { Object.assign(ben, { x: g.x, y: g.y + 20, naechsterHieb: 0 }); g.leben = 50; g.getroffenBis = 0; sp.hieb(ben, { r: 'oben' }); return 50 - g.leben; })();
+  pruefe(markiert && g0 && mitAnalyse === vorher + 1, `Analyseblick: Bens Hieb ${vorher} → ${mitAnalyse}`);
+  // Alchemiekrug: zwei Kacheln vor ihm Säure, verlangsamt.
+  alleWeg();
+  Object.assign(still(g), { x: gel.x, y: gel.y - 64 });
+  sp.aktion(gel, { id: 'alchemiekrug', r: 'oben' });
+  pruefe(g.leben === 49 && uhr < g.langsamBis, `Alchemiekrug: ${50 - g.leben} Schaden, der Schleim ist langsam`);
+  sp.verlassen(gel.id);
+  // Stufe 6: Gelehrtenhilfe (R) stärkt Ben; Stufe 5: Analyse +2.
+  const g6 = mk('Gerd', 6);
+  Object.assign(ben, { x: g6.x + 30, y: g6.y });
+  sp.aktion(g6, { id: 'gelehrtenhilfe' });
+  const beraten = hau(ben);
+  alleWeg();
+  Object.assign(still(g), { x: g6.x + 60, y: g6.y });
+  sp.aktion(g6, { id: 'analyseblick' });
+  const doppelt = (() => { Object.assign(ben, { x: g.x, y: g.y + 20, naechsterHieb: 0 }); g.leben = 50; g.getroffenBis = 0; sp.hieb(ben, { r: 'oben' }); return 50 - g.leben; })();
+  pruefe(beraten === vorher + 1 && doppelt === vorher + 1 + 2, `Gelehrtenhilfe: Hieb ${vorher} → ${beraten}; mit Schwachstellen (Stufe 5) analysiert ${doppelt}`);
+  sp.verlassen(g6.id);
+  uhr += 11000;
+  // Stufe 15: der Analyseblick erfasst drei Gegner.
+  const g15 = mk('Greta', 15);
+  alleWeg();
+  const vier = wald.gegner.slice(0, 4);
+  vier.forEach((x, i) => Object.assign(still(x), { x: g15.x + 40 + i * 30, y: g15.y }));
+  sp.aktion(g15, { id: 'analyseblick' });
+  const n = vier.filter((x) => uhr < x.markiertBis).length;
+  pruefe(n === 3, `Kenne deinen Feind II: ${n} von 4 Gegnern analysiert`);
+  sp.verlassen(g15.id);
+  // Technologe 3: T ist jetzt der Schallblaster (Falle); 10: die Drohne schießt selbst.
+  const tec = mk('Tec', 10, 'technologe');
+  const tAktion = tec.werte.aktionen.find((a) => a.taste === 'T');
+  alleWeg();
+  // Betäubt, damit er stehen bleibt — sonst läuft er auf Tec zu, und der Bolzen geht vorbei.
+  // Ein freier Fleck vor Riftside: am Höhlenausgang stehen Büsche im Schussweg.
+  Object.assign(tec, { x: 272, y: 856 });
+  Object.assign(still(g), { x: tec.x + 90, y: tec.y - 30, betaeubtBis: uhr + 1e6 });
+  wald.geschosse.clear();
+  let schuesse = 0;
+  for (let i = 0; i < 20 && g.leben === 50; i++) {
+    uhr += 50;
+    sp.schritt(0.05);
+    schuesse = Math.max(schuesse, [...wald.geschosse.values()].filter((p) => p.von === tec.id).length);
+  }
+  const stand = wald.stand(uhr).spieler.find((x) => x.id === tec.id);
+  pruefe(tAktion?.art === 'falle' && schuesse === 1 && g.leben === 49 && stand.e.includes('d'),
+    `Technologe: T ${tAktion?.name}; ${schuesse} Schuss, Schleim bei ${Math.round(g.x - tec.x)},${Math.round(g.y - tec.y)}, die Drohne trifft den Schleim schräg vorn (${50 - g.leben} Schaden), Stand „${stand.e}"`);
+  // Dicht unter einer Hecke: auf Kopfhöhe (y - 30) flöge der Bolzen durch
+  // die Hecke und bliebe hängen — auf Hüfthöhe trifft er. Die Stelle sucht
+  // der Test in der Karte, wie sie der Server sieht.
+  const ww = wald.welt, fest = (x, y) => ww.istFest(Math.floor(x / 32), Math.floor(y / 32));
+  let hecke = null;
+  for (let ty = 3; ty < ww.hoehe - 3 && !hecke; ty++) for (let tx = 2; tx < ww.breite - 5 && !hecke; tx++) for (const fy of [8, 14, 20, 26]) {
+    const x = tx * 32 + 16, y = ty * 32 + fy;
+    if (!ww.frei(x, y) || !ww.frei(x + 104, y)) continue;
+    let unten = true, oben = false;
+    for (let d = 8; d <= 88; d += 2) {
+      if (fest(x + 14 + d, y - 14 + (d / 90) * 8)) unten = false;
+      if (fest(x + 14 + d, y - 30 + (d / 90) * 24)) oben = true;
+    }
+    if (unten && oben) {
+      hecke = { x, y };
+      break;
+    }
+  }
+  Object.assign(tec, hecke ?? {});
+  Object.assign(still(g), { x: tec.x + 104, y: tec.y, betaeubtBis: uhr + 1e6 });
+  uhr += 3000;
+  for (let i = 0; i < 20 && g.leben === 50; i++) { uhr += 50; sp.schritt(0.05); }
+  pruefe(hecke && g.leben === 49, `Drohne dicht unter einer Hecke (${hecke?.x}, ${hecke?.y}): trifft trotzdem (${50 - g.leben} Schaden)`);
+  // Ohne Gegner in Reichweite schießt sie nicht.
+  alleWeg();
+  wald.geschosse.clear();
+  for (let i = 0; i < 60; i++) { uhr += 50; sp.schritt(0.05); }
+  pruefe(wald.geschosse.size === 0, 'Drohne: ohne Gegner in fünf Kacheln kein Schuss');
+  sp.verlassen(tec.id);
+  // Wissenschaftler 10: das Säurefeld ist doppelt so groß.
+  const wis = mk('Wis', 10, 'wissenschaftler');
+  alleWeg();
+  Object.assign(still(g), { x: wis.x + 60, y: wis.y - 64 });
+  sp.aktion(wis, { id: 'alchemiekrug', r: 'oben' });
+  pruefe(g.leben === 48, `Reagenzienfeld: der Krug trifft auch eine Kachel daneben (${50 - g.leben} Schaden mit Formeln)`);
 }
 
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------

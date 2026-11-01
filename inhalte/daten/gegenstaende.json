@@ -52,18 +52,18 @@
     ]
   },
   "zauberstab": {
-    "name": "Zauberstab",
-    "einzeln": "einen Zauberstab",
-    "mehrzahl": "Zauberstäbe",
+    "name": "Gelehrtenstab",
+    "einzeln": "einen Gelehrtenstab",
+    "mehrzahl": "Gelehrtenstäbe",
     "bild": 7,
-    "beschreibung": "Bündelt die Magie: die Fähigkeit wird stärker.",
+    "beschreibung": "Eschenholz mit Messingbeschlag und Visier: der Bolzen trifft härter.",
     "platz": "waffe",
     "boni": {
       "faehigkeit": 1
     },
     "preis": 45,
     "klassen": [
-      "magier"
+      "gelehrter"
     ]
   },
   "lederruestung": {

@@ -138,6 +138,10 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       // Musiker: das Lied (stärkt alle im Umkreis), Lethargie, Klangstoß.
       liedSchutz: p.liedSchutz ?? 0, liedHeil: p.liedHeil ?? 0, liedWeit: p.liedWeit ?? 0, liedSchaden: p.liedSchaden ?? 0, liedLangsam: !!p.liedLangsam,
       lethargieBetaeubt: p.lethargieBetaeubt ?? 0, klangWeit: p.klangWeit ?? 0,
+      // Gelehrter: Analyse trifft mehr Gegner; die Drohne des Technologen
+      // (Abstand der Schüsse in ms, 0 = keine).
+      markeMehr: p.markeMehr ?? 0,
+      drohne: p.drohne ? Math.round(p.drohne * (1 - Math.min(80, p.drohneTempo ?? 0) / 100)) : 0, drohneSchaden: 1 + (p.drohneSchaden ?? 0),
     },
   };
 }

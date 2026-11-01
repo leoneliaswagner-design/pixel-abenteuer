@@ -87,8 +87,8 @@ try {
   pruefe(await bis(p, (s) => s.inventar.langschwert === 1 && s.inventar.gold === 80), 'Langschwert gekauft: im Rucksack, 80 Gold übrig');
   const goldImFenster = await p.textContent('#fenster .gold');
   pruefe(goldImFenster.trim() === '80', `das Fenster zeigt den neuen Stand (${goldImFenster.trim()} Gold)`);
-  const stab = await p.locator('#fenster .ware', { hasText: 'Zauberstab' }).textContent();
-  pruefe(stab.includes('Nur für: Magier'), 'beim Zauberstab steht, wer ihn tragen darf');
+  const stab = await p.locator('#fenster .ware', { hasText: 'Gelehrtenstab' }).textContent();
+  pruefe(stab.includes('Nur für: Gelehrter'), 'beim Gelehrtenstab steht, wer ihn tragen darf');
   await p.click('#fenster [data-tun=kaufen][data-art=heiltrank]');
   await bis(p, (s) => s.inventar.heiltrank === 1);
   await p.click('#fenster [data-tun=kaufen][data-art=kettenhemd]');

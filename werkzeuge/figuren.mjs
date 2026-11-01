@@ -19,6 +19,8 @@ const STIEFEL = ['#6b4426', '#8c5d37'];
 //   haar, frisur ('kurz' | 'lang' | 'glatze'), bart (null | 'schnurr' | 'voll'), bartFarbe
 //   kopf     null | { art: 'helm', farbe, dunkel, busch } | { art: 'kapuze', farben: [g, h, d] }
 //            | { art: 'hut', farben: [g, h, d] } | { art: 'kochmuetze' } | { art: 'barett', farben: [g, h, d], feder }
+//            | { art: 'doktorhut', farbe, quaste }
+//   brille   Farbe der Fassung (oder nichts)
 //   robe, schal, symbol, schultern, schuerze, koecher (Farben oder true)
 export function figur(o, richtung, bild) {
   const b = new Bild(BREITE, HOEHE);
@@ -119,7 +121,7 @@ function kopfVorneHinten(b, o, hinten) {
     b.ellipse(16, 9, 7, 3.5, k.farben[0], (x, y) => y <= 9);
   }
   if (hinten) {
-    if (!k || k.art === 'hut' || k.art === 'kochmuetze' || k.art === 'barett') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
+    if (!k || k.art === 'hut' || k.art === 'kochmuetze' || k.art === 'barett' || k.art === 'doktorhut') b.ellipse(16, 12.5, 7.5, 8, o.frisur === 'glatze' ? HAUT[1] : o.haar);
     if (o.frisur === 'glatze') b.rechteck(9, 13, 14, 4, o.haar);
   } else {
     // Gesicht: zwei Augen, ein Lichtpunkt, rote Wangen.
@@ -130,7 +132,8 @@ function kopfVorneHinten(b, o, hinten) {
     b.setze(11, 17, '#f0a08a');
     b.setze(20, 17, '#f0a08a');
     b.rechteck(15, 18, 2, 1, '#c87868');
-    if (!k) haarVorne(b, o);
+    if (!k || k.art === 'doktorhut') haarVorne(b, o);
+    if (o.brille) brille(b, o.brille, [12, 18]);
     if (o.bart === 'voll') {
       b.ellipse(16, 19, 5.5, 4, o.bartFarbe ?? o.haar, (x, y) => y >= 17);
       b.rechteck(13, 22, 6, 2, o.bartFarbe ?? o.haar);
@@ -147,6 +150,7 @@ function kopfVorneHinten(b, o, hinten) {
   if (k?.art === 'hut') hut(b, k.farben, 16);
   if (k?.art === 'kochmuetze') kochmuetze(b, 16);
   if (k?.art === 'barett') barett(b, k, 16);
+  if (k?.art === 'doktorhut') doktorhut(b, k, 16);
 }
 
 function haarVorne(b, o) {
@@ -195,6 +199,30 @@ function barett(b, { farben: [g, hl, d], feder }, mitte) {
   for (let i = 0; i < 9; i++) b.rechteck(mitte - 4 - i, 5 - Math.round(i * 0.55), 2, 2, i % 3 ? feder : '#ffffff');
 }
 
+// Doktorhut des Gelehrten: flaches Brett über einer Kappe, die Quaste hängt
+// seitlich herab — eckig, damit man ihn nicht mit dem Barett verwechselt.
+function doktorhut(b, { farbe, quaste }, mitte) {
+  b.rechteck(mitte - 6, 6, 12, 4, farbe);
+  b.rechteck(mitte - 10, 4, 20, 2, farbe);
+  b.rechteck(mitte - 10, 3, 20, 1, '#4a4a5e');
+  b.rechteck(mitte - 1, 3, 2, 1, quaste);
+  b.rechteck(mitte + 1, 4, 6, 1, quaste);
+  b.rechteck(mitte + 7, 4, 1, 7, quaste);
+  b.rechteck(mitte + 6, 11, 3, 2, quaste);
+}
+
+// Runde Brille: ein Rahmen um jedes Auge (x der Augen), vorn mit Steg.
+function brille(b, farbe, augen) {
+  for (const x of augen) {
+    b.rechteck(x - 1, 12, 4, 1, farbe);
+    b.rechteck(x - 1, 16, 4, 1, farbe);
+    b.rechteck(x - 1, 13, 1, 3, farbe);
+    b.rechteck(x + 2, 13, 1, 3, farbe);
+  }
+  if (augen.length === 2) b.rechteck(augen[0] + 3, 13, augen[1] - augen[0] - 4, 1, farbe);
+  else b.rechteck(augen[0] + 3, 13, 5, 1, farbe);
+}
+
 function koecherHinten(b) {
   b.rechteck(19, 16, 4, 14, '#7a4a2a');
   b.rechteck(19, 16, 4, 1, '#9a6a3a');
@@ -241,7 +269,8 @@ function seite(b, o, s, holt) {
   b.rechteck(10, 13, 2, 3, AUGE);
   b.setze(10, 13, '#ffffff');
   b.setze(11, 17, '#f0a08a');
-  if (!k) {
+  if (o.brille) brille(b, o.brille, [10]);
+  if (!k || k.art === 'doktorhut') {
     if (o.frisur === 'glatze') b.rechteck(17, 10, 4, 7, o.haar);
     else {
       b.ellipse(16, 10, 7, 5, o.haar, (x, y) => y <= 11 || x >= 17);
@@ -261,6 +290,7 @@ function seite(b, o, s, holt) {
   if (k?.art === 'hut') hut(b, k.farben, 15);
   if (k?.art === 'kochmuetze') kochmuetze(b, 15);
   if (k?.art === 'barett') barett(b, k, 15);
+  if (k?.art === 'doktorhut') doktorhut(b, k, 15);
   if (o.schultern) b.rechteck(12, 21, 6, 3, o.schultern);
 
   // Der sichtbare Arm: pendelt vor und zurück; beim Ausholen nach vorn.

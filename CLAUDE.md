@@ -75,7 +75,7 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
-- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`, Koch = `koch`, Musiker = `musiker`): in
+- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`, Koch = `koch`, Musiker = `musiker`, Gelehrter = `gelehrter`): in
   `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
   (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
   macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
@@ -93,7 +93,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   ist ein Zeit-Bonus am Spieler (`s.mahlBis`, `s.mahlBoni`), das Lied des
   Musikers ebenso (`s.liedBis`, `s.liedBoni`; Stand-Flag `n` → Note). Eine neue Klasse
   braucht ein Aussehen in `KLASSEN` (grafik.mjs) und `npm run grafik`, sonst
-  trägt sie die Kapuze in Spielerfarbe.
+  trägt sie die Kapuze in Spielerfarbe. Die Drohne des Technologen schießt
+  der Server selbst (`drohneSchiessen`, Stand-Flag `d`). Den Magier gibt es
+  nicht mehr; ein Spielstand mit `magier` wählt beim nächsten Beitreten neu.
 - **Menü** (Esc oder Knopf ≡): Verlassen lädt die Seite neu (der Server
   speichert wie bei jedem Gehen). `neu_anfangen` löscht den eigenen Eintrag
   im Spielstand (`s.geloescht`: `merken` schreibt ihn nicht zurück),
@@ -148,13 +150,15 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   sieht die Kochmütze (Bildpunkte), Mahl heilt ihn.
 - `node pruefstand/musiker.mjs` — Neue wählt den Musiker, der andere sieht
   das Barett und nach dem Lied (F) die goldene Note über beiden (Bildpunkte).
+- `node pruefstand/gelehrter.mjs` — Technologe (Stufe 10) aus dem Spielstand:
+  der andere sieht Doktorhut und Drohne (Bildpunkte), Leiste Q/F/R/T.
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas
   prüft, tut es in der Schonfrist nach dem Beitreten (1,5 s).
 - `node pruefstand/riftside.mjs` — Start in der Stadt, Ansprechen, Stadttor.
 - `node pruefstand/klassen.mjs` — Charakterwahl bei 360 Punkten, Klassenbild
-  beim anderen Spieler (Bildpunkte), Feuerball, Heilung, gemessenes Tempo.
+  beim anderen Spieler (Bildpunkte), Bolzen, Heilung, gemessenes Tempo.
 - `node pruefstand/inventar.mjs` — Krämerin, kaufen, gesperrte Knöpfe mit
   Grund, anlegen, Trank auf 1, leere Herzen am Bildpunkt, Spielstand-Datei,
   Ladenfenster bei 360 Punkten.

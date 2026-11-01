@@ -144,11 +144,15 @@ die Stärke ihrer Fähigkeit.
 
 | Klasse | Fähigkeit (Q) | Vorteil |
 |---|---|---|
-| Kämpfer | Schildstoß: Sprung nach vorn, trifft, wer im Weg steht | viel Stärke und Leben |
-| Schurke | Dolchwurf | öffnet verschlossene Türen ohne Schlüssel |
-| Magier | Feuerball (langsam, Schaden 3) | liest magische Schrift |
-| Kleriker | Heilendes Wort: heilt sich und alle in der Nähe | — |
-| Waldläufer | Pfeil (schnell, weit) | — |
+| Krieger | Schildstoß: Sprung nach vorn, trifft, wer im Weg steht | viel Stärke und Leben |
+| Dieb | Dolchwurf | öffnet verschlossene Türen ohne Schlüssel |
+| Gelehrter | Armbrustbolzen | liest alte Runen |
+| Arzt | Erste Hilfe: heilt sich und alle in der Nähe | — |
+| Bogenschütze | Pfeil (schnell, weit) | — |
+| Koch | Messerwurf | — |
+| Musiker | Klangstoß: stößt die Gegner vor ihm zurück | — |
+
+Dazu je Klasse Fähigkeiten auf F, R, T und ab Stufe 3 ein Pfad (Taste C).
 
 Spezies: Mensch (+1 auf alles), Elf, Zwerg, Halbling. Alles steht in
 `inhalte/daten/klassen.json` und `spezies.json` — eine Homebrew-Klasse ist
@@ -291,9 +295,10 @@ node pruefstand/dieb.mjs            # Falle des Taktikers, Ablenkung beim andere
 node pruefstand/arzt.mjs            # Diagnose-Balken, Heilsalbe beim anderen
 node pruefstand/koch.mjs            # Koch wählen, Kochmütze beim anderen, Mahl
 node pruefstand/musiker.mjs         # Musiker wählen, Barett beim anderen, Lied mit Note
+node pruefstand/gelehrter.mjs       # Technologe: Doktorhut und Drohne beim anderen
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
-node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Feuerball, Heilung, Tempo
+node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Bolzen, Heilung, Tempo
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
 node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48

@@ -1,5 +1,5 @@
 // Klassen im Browser: Wahl beim ersten Beitreten (auch am Handy), eigenes
-// Aussehen beim anderen Spieler, Feuerball und Heilung — gemessen im
+// Aussehen beim anderen Spieler, Doktorhut, Armbrustbolzen und Heilung — gemessen im
 // jeweils ANDEREN Browser, und am Bildpunkt.
 //
 //   node pruefstand/klassen.mjs          (baut vorher mit vite)
@@ -16,7 +16,7 @@ const wurzel = fileURLToPath(new URL('..', import.meta.url));
 const PORT = 3461;
 const lies = (d) => JSON.parse(readFileSync(join(wurzel, d), 'utf8'));
 const werte = lies('inhalte/daten/werte.json'), klassen = lies('inhalte/daten/klassen.json'), spezies = lies('inhalte/daten/spezies.json');
-const soll = werteBerechnen(klassen.magier, spezies.elf, werte.spieler);
+const soll = werteBerechnen(klassen.gelehrter, spezies.elf, werte.spieler);
 
 if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wurzel, stdio: 'inherit' });
 
@@ -101,12 +101,12 @@ try {
   pruefe(wahl.ueberstand <= 0 && wahl.knopfErreichbar, `am Handy nichts rechts abgeschnitten (Überstand ${wahl.ueberstand} px), Seite scrollt`);
   await mia.evaluate(() => {
     const f = document.getElementById('wahl');
-    f.querySelector('input[value=magier]').checked = true;
+    f.querySelector('input[value=gelehrter]').checked = true;
     f.querySelector('input[value=elf]').checked = true;
     f.dispatchEvent(new Event('change'));
   });
   const vorschau = await mia.textContent('#vorschau');
-  pruefe(vorschau.includes('Feuerball') && vorschau.includes(`Tempo ${soll.tempo}`) && vorschau.includes(`${soll.maxLeben / 2} Herzen`),
+  pruefe(vorschau.includes('Armbrustbolzen') && vorschau.includes(`Tempo ${soll.tempo}`) && vorschau.includes(`${soll.maxLeben / 2} Herzen`),
     `Vorschau rechnet wie der Server: ${vorschau.replace(/\s+/g, ' ').trim().slice(0, 90)}`);
   await mia.click('#wahl button[type=submit]');
   await mia.waitForFunction(() => window.__spiel?.zustand, null, { timeout: 10000 });
@@ -129,9 +129,9 @@ try {
 
   const zustand = (p) => p.evaluate(() => window.__spiel.zustand());
   let zm = await zustand(mia), zt = await zustand(tom);
-  pruefe(zm.ich.klasse === 'magier' && zm.ich.tempo === soll.tempo && zm.ich.max === soll.maxLeben,
-    `Mia ist Elfen-Magierin: Tempo ${zm.ich.tempo}, ${zm.ich.max} halbe Herzen`);
-  pruefe(zt.andere[0]?.textur?.startsWith('held-magier-'), `Tom sieht Mia als Magierin (${zt.andere[0]?.textur})`);
+  pruefe(zm.ich.klasse === 'gelehrter' && zm.ich.tempo === soll.tempo && zm.ich.max === soll.maxLeben,
+    `Mia ist Elfen-Gelehrte: Tempo ${zm.ich.tempo}, ${zm.ich.max} halbe Herzen`);
+  pruefe(zt.andere[0]?.textur?.startsWith('held-gelehrter-'), `Tom sieht Mia als Gelehrte (${zt.andere[0]?.textur})`);
   pruefe(zm.andere[0]?.textur?.startsWith('held-kleriker-'), `Mia sieht Tom als Kleriker (${zm.andere[0]?.textur})`);
   // Die weiße Kapuze des Klerikers, auf Mias Schirm (Figuren sind 48 hoch,
   // die Kapuze sitzt 25…45 Punkte über dem Fuß).
@@ -145,7 +145,16 @@ try {
   }
   pruefe(weiss > 20, `weiße Kapuze bei Mia auf dem Schirm (${weiss} Bildpunkte)`);
 
-  // --- Feuerball: Mia wirft, Tom sieht ihn fliegen ---
+  // Der dunkle Doktorhut, auf Toms Schirm (über Mias Kopf).
+  const miaBeiTom = zt.andere[0];
+  let hut = 0;
+  for (let i = 0; i < 6 && hut <= 20; i++) {
+    hut = Math.max(hut, await farbeZaehlen(tom, miaBeiTom.x - 12, miaBeiTom.y - 48, 24, 10, [42, 42, 58], 10));
+    await warte(37);
+  }
+  pruefe(hut > 20, `Doktorhut bei Tom auf dem Schirm (${hut} Bildpunkte)`);
+
+  // --- Armbrustbolzen: Mia schießt, Tom sieht ihn fliegen ---
   // Die Richtung mit dem längsten freien Weg — die Karte entscheidet, nicht der Zufall.
   const richtung = await mia.evaluate(() => {
     const s = window.__spiel.szene, w = s.welt, k = w.kachel;
@@ -159,29 +168,23 @@ try {
     return beste;
   });
   await mia.evaluate((r) => (window.__spiel.szene.ich.richtung = r), richtung);
-  // Orange auf dem ganzen Schirm, vorher und im Flug: der Ball ist schneller
-  // als ein Bildschirmfoto, ein kleiner Ausschnitt um ihn verfehlte ihn.
-  const ganz = (p) => p.evaluate(() => window.__spiel.szene.cameras.main.worldView).then((v) => farbeZaehlen(p, v.x, v.y, v.width, v.height, [240, 120, 40], 30));
-  const orangeVorher = await ganz(tom);
   await mia.keyboard.press('q');
   await mia.keyboard.press('q');
-  let gesehen = 0, hoechstens = 0, orange = 0;
+  // Der Bolzen ist schneller als ein Bildschirmfoto — gezählt wird im Stand
+  // bei Tom; dass Figuren beim anderen am Bildpunkt ankommen, prüft der Hut.
+  let gesehen = 0, hoechstens = 0;
   for (let i = 0; i < 40; i++) {
     zt = await zustand(tom);
-    const f = zt.geschosse.filter((g) => g.art === 'feuerball');
+    const f = zt.geschosse.filter((g) => g.art === 'pfeil');
     z.geschossBlicke++;
     hoechstens = Math.max(hoechstens, f.length);
-    if (f.length) {
-      gesehen++;
-      if (!orange) orange = (await ganz(tom)) - orangeVorher;
-    }
+    if (f.length) gesehen++;
     if (gesehen && !f.length) break;
-    await warte(40);
+    await warte(20);
   }
   zm = await zustand(mia);
-  pruefe(gesehen > 0 && hoechstens === 1, `Tom sieht Mias Feuerball (${gesehen}× gesehen, höchstens ${hoechstens} zugleich — Abklingzeit)`);
-  pruefe(orange > 5, `der Feuerball ist auf Toms Schirm orange (${orange} Bildpunkte mehr als vor dem Wurf)`);
-  pruefe(zm.ich.faehigkeitBereit > 0 && zm.ich.faehigkeitBereit <= klassen.magier.faehigkeit.abklingzeit,
+  pruefe(gesehen > 0 && hoechstens === 1, `Tom sieht Mias Bolzen (${gesehen}× gesehen, höchstens ${hoechstens} zugleich — Abklingzeit)`);
+  pruefe(zm.ich.faehigkeitBereit > 0 && zm.ich.faehigkeitBereit <= klassen.gelehrter.faehigkeit.abklingzeit,
     `Mias Abklingzeit läuft (${zm.ich.faehigkeitBereit.toFixed(0)} ms übrig)`);
 
   // --- Tom heilt: Mia sieht die Funken um ihn ---

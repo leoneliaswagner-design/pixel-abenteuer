@@ -134,6 +134,15 @@
   Schutz), Straßenmusiker (Klangflut heilt), Virtuose (Ablenkung, Lied
   verlangsamt). Mahl-Boni können jetzt auch Schutz (`boni.schutz`).
   Prüfstand `musiker.mjs`.
+- **Gelehrter** (01.11.2026), der Magier fällt weg: Doktorhut, Brille, Robe.
+  Armbrustbolzen (Q), Analyse (Lebensbalken über Gegnern), Analyseblick
+  (F: Gegner nimmt mehr Schaden, ab 15 bis zu drei), Alchemiekrug (T: Säure,
+  verlangsamt), Gelehrtenhilfe (R ab 6: +1 Schaden für alle nahen), liest
+  die alten Runen im Tempel (Vorteil `runen`, früher `magie`). Pfade
+  Historiker (Aura, stärkere Gelehrtenhilfe), Wissenschaftler (größerer und
+  stärkerer Krug, mehr Gold), Technologe (Schallblaster-Falle auf T, ab 10
+  eine Drohne, die selbst schießt). Der Zauberstab heißt Gelehrtenstab.
+  Spielstände mit Magier wählen neu. Prüfstand `gelehrter.mjs`.
 - **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
   beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
 
@@ -161,9 +170,11 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger, Bogenschütze, Dieb, Arzt, Koch, Musiker stehen. Offen:
-   Drachenreiter, Gelehrter — nach demselben Muster in `klassen.json`. Danach
-   fällt der Magier weg. Die Spezies aus
+   Krieger, Bogenschütze, Dieb, Arzt, Koch, Musiker, Gelehrter stehen,
+   der Magier ist weg. Offen: Drachenreiter — nach demselben Muster in
+   `klassen.json`. Der Mechanische Gefährte ist eine Drohne ohne eigenes
+   Leben (schießt nur); ein echter Begleiter, der getroffen werden kann,
+   wäre ein eigener Schritt. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
    schnellere Abklingzeiten).
@@ -195,6 +206,11 @@
 
 ## Gelernt
 
+- Geschosse, die nicht aus der Hand kommen (Drohne), starten trotzdem auf
+  Hüfthöhe: auf Kopfhöhe flog der Bolzen am Höhlenausgang durch die Hecke
+  hinter dem Spieler und verschwand. Prüfstellen dafür sucht der Test in der
+  Welt des Servers — eine frisch aus der Kartendatei gebaute Welt meldete
+  Hecken, wo der Server keine hatte, und die Gegenprobe biss nicht.
 - Phaser verliert einen Tastendruck, wenn die Taste im selben Bild losgelassen
   wird (`Key.onUp` setzt `_justDown` zurück). Hieb hört deshalb auf das
   `keydown`-Ereignis.

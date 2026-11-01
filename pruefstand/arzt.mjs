@@ -45,7 +45,9 @@ writeFileSync(spielstand, JSON.stringify({
   version: 1,
   welt: {},
   spieler: {
-    ben: stelle('Ben', 'rot', 'kaempfer', ben.x, ben.y, 0, null, 2, 'unten'),
+    // Grün, nicht rot: die rote Tunika (208,72,72) liegt in der Toleranz des
+    // Lebensbalkens — stand Ben nah am Schleim, zählte sie als Balken (volle Runde, 1.11.).
+    ben: stelle('Ben', 'gruen', 'kaempfer', ben.x, ben.y, 0, null, 2, 'unten'),
     alma: stelle('Alma', 'blau', 'kleriker', fleck.x, fleck.y, werte.stufen.erfahrung[6], 'alchemist', 8, oben ? 'oben' : 'unten'),
   },
 }));

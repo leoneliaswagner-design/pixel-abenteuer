@@ -360,7 +360,7 @@ export class Gebiet {
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
         // Was man an der Figur sieht: Rausch (rot), Leerer Körper (durchscheinend), Sprint.
-        e: (jetzt < s.rauschBis ? 'r' : '') + (jetzt < s.leereBis ? 'l' : '') + (jetzt < s.sprintBis ? 's' : '') + (jetzt < (s.liedBis ?? 0) ? 'n' : ''),
+        e: (jetzt < s.rauschBis ? 'r' : '') + (jetzt < s.leereBis ? 'l' : '') + (jetzt < s.sprintBis ? 's' : '') + (jetzt < (s.liedBis ?? 0) ? 'n' : '') + (s.werte?.kampf.drohne ? 'd' : ''),
       })),
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.

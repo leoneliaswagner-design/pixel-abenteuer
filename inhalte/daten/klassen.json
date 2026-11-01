@@ -997,30 +997,448 @@
       }
     }
   },
-  "magier": {
-    "name": "Magier",
-    "beschreibung": "Gelehrt und mächtig. Schleudert Feuerbälle und liest magische Schriften.",
+  "gelehrter": {
+    "name": "Gelehrter",
+    "beschreibung": "Wissen als Waffe: liest Gegner und alte Runen, schießt mit der Armbrust, wirft Säure und stärkt die Gruppe mit klugem Rat.",
     "attribute": {
       "staerke": 8,
       "geschick": 13,
-      "konstitution": 14,
-      "intelligenz": 15,
-      "weisheit": 12,
+      "konstitution": 12,
+      "intelligenz": 16,
+      "weisheit": 13,
       "charisma": 10
     },
     "faehigkeit": {
       "art": "geschoss",
-      "name": "Feuerball",
-      "abklingzeit": 2200,
-      "geschoss": "feuerball",
-      "tempo": 170,
-      "reichweite": 200,
-      "schaden": 2,
+      "name": "Armbrustbolzen",
+      "abklingzeit": 1100,
+      "geschoss": "pfeil",
+      "tempo": 300,
+      "reichweite": 240,
+      "schaden": 1,
       "attribut": "intelligenz"
     },
     "vorteile": [
-      "magie"
-    ]
+      "runen"
+    ],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "analyse",
+          "name": "Analyse",
+          "quelle": "Wissensdrang",
+          "text": "Du liest das Schlachtfeld: über jedem Gegner siehst du, wie viel Leben ihm bleibt.",
+          "boni": {
+            "diagnose": 1
+          }
+        },
+        {
+          "id": "alchemiekrug",
+          "name": "Alchemiekrug",
+          "quelle": "Alchemy Jug",
+          "text": "Taste T: ein Schwall Säure ein Stück vor dir — trifft und verlangsamt die Gegner dort 2 Sekunden. Lädt 10 Sekunden.",
+          "aktion": {
+            "taste": "T",
+            "art": "curry",
+            "farbe": "saeure",
+            "weite": 64,
+            "radius": 36,
+            "schaden": 1,
+            "verlangsamen": 2000,
+            "abklingzeit": 10000
+          }
+        },
+        {
+          "id": "einen_schritt",
+          "name": "Einen Schritt voraus",
+          "quelle": "One Step Ahead",
+          "text": "Selten überrascht: 5 % der Geschosse und Fallen weichst du aus.",
+          "boni": {
+            "ausweichen": 0.05
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "analyseblick",
+          "name": "Analyseblick",
+          "quelle": "Know your Enemy",
+          "text": "Taste F: der nächste Gegner wird analysiert — 8 Sekunden lang macht jeder Treffer gegen ihn +1 Schaden, egal von wem. Lädt 12 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "markieren",
+            "dauer": 8000,
+            "abklingzeit": 12000
+          }
+        }
+      ],
+      "4": [
+        {
+          "id": "expertise_g",
+          "name": "Expertise",
+          "quelle": "Expertise",
+          "text": "Der Bolzen ist schneller nachgeladen (15 %).",
+          "boni": {
+            "qAbkling": 15
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "schwachstellen",
+          "name": "Schwachstellen",
+          "quelle": "Analyse",
+          "text": "Analysierte Gegner nehmen +1 Schaden mehr.",
+          "boni": {
+            "markeSchaden": 1
+          }
+        }
+      ],
+      "6": [
+        {
+          "id": "gelehrtenhilfe",
+          "name": "Gelehrtenhilfe",
+          "quelle": "Bardic Inspiration",
+          "text": "Taste R: kluger Rat — alle Mitspieler bis drei Kacheln (und du) schlagen 10 Sekunden lang mit +1 Schaden zu. Lädt 20 Sekunden.",
+          "aktion": {
+            "taste": "R",
+            "art": "mahl",
+            "umkreis": 96,
+            "menge": 0,
+            "dauer": 10000,
+            "boni": {
+              "schaden": 1
+            },
+            "abklingzeit": 20000
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "improvisiert",
+          "name": "Improvisiert",
+          "quelle": "Improvisiert",
+          "text": "Ein improvisierter Schutzschild: 10 % der Treffer prallen ab.",
+          "boni": {
+            "schutz": 0.1
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "kenne_feind",
+          "name": "Kenne deinen Feind",
+          "quelle": "Know your Enemy",
+          "text": "Aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "aktionAbkling": 20
+          }
+        }
+      ],
+      "10": [
+        {
+          "id": "scharfsinn",
+          "name": "Scharfsinn",
+          "quelle": "Keen Mind",
+          "text": "Der Bolzen lädt noch einmal 15 % schneller.",
+          "boni": {
+            "qAbkling": 15
+          }
+        },
+        {
+          "id": "erzfeind",
+          "name": "Erzfeind",
+          "quelle": "Favored Enemy",
+          "text": "5 % deiner Treffer sind kritisch.",
+          "boni": {
+            "krit": 0.05
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "wissensmeister",
+          "name": "Wissensmeisterschaft",
+          "quelle": "Wissensmeisterschaft",
+          "text": "Analysierte Gegner nehmen noch +1 Schaden mehr; 5 % mehr kritische Treffer.",
+          "boni": {
+            "markeSchaden": 1,
+            "krit": 0.05
+          }
+        }
+      ],
+      "13": [
+        {
+          "id": "quelle_inspiration",
+          "name": "Quelle der Inspiration",
+          "quelle": "Font of Inspiration",
+          "text": "Gelehrtenhilfe und Analyse halten anderthalbmal so lange.",
+          "boni": {
+            "aktionDauer": 50
+          }
+        }
+      ],
+      "14": [
+        {
+          "id": "schutzschleier",
+          "name": "Schutzschleier",
+          "quelle": "Protective Shroud / Aura of Protection",
+          "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab. Gelehrtenhilfe schützt zusätzlich (10 %).",
+          "boni": {
+            "aura": 0.1,
+            "mahlSchutz": 0.1
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "kenne_feind2",
+          "name": "Kenne deinen Feind II",
+          "quelle": "Know Your Enemy 2",
+          "text": "Der Analyseblick erfasst bis zu drei Gegner.",
+          "boni": {
+            "markeMehr": 2
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "erleuchtung",
+          "name": "Erleuchtung",
+          "quelle": "Aura of Courage",
+          "text": "Gelehrtenhilfe gibt +2 statt +1 und reicht anderthalbmal so weit.",
+          "boni": {
+            "mahlSchaden": 1,
+            "mahlUmkreis": 50
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "allwissend",
+          "name": "Allwissender Moment",
+          "quelle": "Allwissender Moment",
+          "text": "Fällt ein analysierter Gegner, springt die Analyse auf den nächsten.",
+          "boni": {
+            "markeSpringt": 1
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "gelehrtenlegende",
+          "name": "Gelehrtenlegende",
+          "quelle": "Gelehrtenlegende",
+          "text": "Analysierte Gegner nehmen noch +1 Schaden mehr; aktive Fähigkeiten laden 20 % schneller.",
+          "boni": {
+            "markeSchaden": 1,
+            "aktionAbkling": 20
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "historiker": {
+        "name": "Historiker",
+        "text": "Meister der Vergangenheit: Legenden, die Mitspieler schützen und stärken.",
+        "stufen": {
+          "3": [
+            {
+              "id": "lebende_chronik",
+              "name": "Lebende Chronik",
+              "quelle": "Lebende Chronik",
+              "text": "Du zitierst die passende Schlacht: Mitspieler bis drei Kacheln um dich wehren 10 % der Treffer ab.",
+              "boni": {
+                "aura": 0.1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "lehren",
+              "name": "Lehren der Vergangenheit",
+              "quelle": "Lehren der Vergangenheit",
+              "text": "Gelehrtenhilfe gibt +1 Schaden mehr.",
+              "boni": {
+                "mahlSchaden": 1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "rekonstruktion",
+              "name": "Taktische Rekonstruktion",
+              "quelle": "Taktische Rekonstruktion",
+              "text": "Gelehrtenhilfe schützt zusätzlich: 15 % der Treffer prallen ab.",
+              "boni": {
+                "mahlSchutz": 0.15
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "legendenschreiber",
+              "name": "Legendenschreiber",
+              "quelle": "Legendenschreiber",
+              "text": "Analysierte Gegner nehmen noch +1 Schaden mehr.",
+              "boni": {
+                "markeSchaden": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "chronomemorium",
+              "name": "Chronomemorium",
+              "quelle": "Chronomemorium",
+              "text": "15 % der Treffer prallen ab; aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "schutz": 0.15,
+                "aktionAbkling": 25
+              }
+            }
+          ]
+        }
+      },
+      "wissenschaftler": {
+        "name": "Wissenschaftler",
+        "text": "Logik und Alchemie: stärkere Formeln, größere Felder.",
+        "stufen": {
+          "3": [
+            {
+              "id": "formeln",
+              "name": "Experimentelle Formeln",
+              "quelle": "Experimentelle Formeln / Analytischer Geist",
+              "text": "Der Alchemiekrug macht +1 Schaden und wirkt ein Viertel weiter.",
+              "boni": {
+                "curryPlus": 1,
+                "curryWeit": 25
+              }
+            }
+          ],
+          "6": [
+            {
+              "id": "reaktiv",
+              "name": "Reaktive Anwendung",
+              "quelle": "Reaktive Anwendung",
+              "text": "Ein Schutzschirm aus der Tasche: 10 % der Geschosse und Fallen weichst du aus.",
+              "boni": {
+                "ausweichen": 0.1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "reagenzienfeld",
+              "name": "Reagenzienfeld",
+              "quelle": "Reagenzienfeld",
+              "text": "Der Alchemiekrug bedeckt ein doppelt so großes Feld.",
+              "boni": {
+                "curryWeit": 75
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "theorie_praxis",
+              "name": "Theorie in Praxis",
+              "quelle": "Theorie in Praxis",
+              "text": "Blei zu Gold: besiegte Gegner lassen die Hälfte mehr Gold fallen.",
+              "boni": {
+                "goldPlus": 50
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "perfektion",
+              "name": "Logische Perfektion",
+              "quelle": "Logische Perfektion",
+              "text": "Der Analyseblick erfasst zwei Gegner mehr; aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "markeMehr": 2,
+                "aktionAbkling": 25
+              }
+            }
+          ]
+        }
+      },
+      "technologe": {
+        "name": "Technologe",
+        "text": "Gadgets und Apparate: Schallfallen und eine Drohne, die mitkämpft.",
+        "stufen": {
+          "3": [
+            {
+              "id": "werkstatt",
+              "name": "Erfinderwerkstatt",
+              "quelle": "Erfinderwerkstatt",
+              "text": "Taste T: statt des Krugs ein Schallblaster vor deinen Füßen — wer darauf tritt, ist 2 Sekunden betäubt. Höchstens zwei. Lädt 6 Sekunden.",
+              "aktion": {
+                "taste": "T",
+                "art": "falle",
+                "betaeuben": 2000,
+                "schaden": 1,
+                "hoechstens": 2,
+                "abklingzeit": 6000
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "taktische_gadgets",
+              "name": "Taktische Gadgets",
+              "quelle": "Taktische Gadgets",
+              "text": "Aktive Fähigkeiten laden 25 % schneller.",
+              "boni": {
+                "aktionAbkling": 25
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "gefaehrte",
+              "name": "Mechanischer Gefährte",
+              "quelle": "Mechanischer Gefährte",
+              "text": "Eine Drohne schwebt neben dir und schießt alle 2,5 Sekunden auf den nächsten Gegner bis fünf Kacheln.",
+              "boni": {
+                "drohne": 2500
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "ueberladung",
+              "name": "Systemüberladung",
+              "quelle": "Systemüberladung",
+              "text": "Die Drohne macht +1 Schaden.",
+              "boni": {
+                "drohneSchaden": 1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "singularitaet",
+              "name": "Technologische Singularität",
+              "quelle": "Technologische Singularität",
+              "text": "Die Drohne schießt doppelt so oft; 10 % der Treffer prallen ab.",
+              "boni": {
+                "drohneTempo": 50,
+                "schutz": 0.1
+              }
+            }
+          ]
+        }
+      }
+    }
   },
   "kleriker": {
     "name": "Arzt",

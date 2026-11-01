@@ -674,9 +674,9 @@ export class SpielSzene extends Phaser.Scene {
     });
     // Eine geworfene Mixtur (Alchemist, Wildniskoch): ein grüner Kreis, wo sie
     // platzt; Curry orange, Chili rot (Koch); Lied gold, Lethargie blau,
-    // Klangstoß weiß (Musiker).
+    // Klangstoß weiß (Musiker); Säure gelbgrün (Gelehrter).
     n.bei('mixtur', (m) => {
-      const [fuell, rand] = { curry: [0xf0a030, 0xffe080], gewuerz: [0xe04030, 0xffa080], lied: [0xffd84a, 0xfff0a0], lethargie: [0x5070d0, 0xa0b8ff], klang: [0xe8e8ff, 0xffffff] }[m.farbe] ?? [0x7ee070, 0xc8ffb0];
+      const [fuell, rand] = { curry: [0xf0a030, 0xffe080], gewuerz: [0xe04030, 0xffa080], lied: [0xffd84a, 0xfff0a0], lethargie: [0x5070d0, 0xa0b8ff], klang: [0xe8e8ff, 0xffffff], saeure: [0xb8e030, 0xe8ff90] }[m.farbe] ?? [0x7ee070, 0xc8ffb0];
       const k = this.add.circle(m.x, m.y - 8, m.r, fuell, 0.35).setDepth(6000).setStrokeStyle(2, rand);
       this.mixturen++;
       this.tweens.add({ targets: k, alpha: 0, scale: 1.2, duration: 600, onComplete: () => k.destroy() });

@@ -62,6 +62,12 @@ export class Figur {
     // statt als Zeichen — die Pixelschrift hat kein ♪.
     this.note = szene.add.graphics().setVisible(false).setDepth(5000);
     this.note.fillStyle(0xffd84a).fillCircle(-2, 0, 2.5).fillRect(0, -9, 1.5, 9).fillRect(0, -9, 5, 2).fillRect(3.5, -9, 1.5, 5);
+    // Drohne des Technologen: Messinggehäuse, zwei Rotoren, türkises Auge —
+    // schwebt rechts an der Schulter; der Server lässt ihre Bolzen etwas darunter
+    // (Hüfthöhe) starten.
+    this.drohne = szene.add.graphics().setVisible(false);
+    this.drohne.fillStyle(0x6a5a3a).fillRect(-8, -5, 16, 2).fillStyle(0xb89850).fillRoundedRect(-5, -3, 10, 7, 2)
+      .fillStyle(0x8a7a5a).fillRect(-1, -5, 2, 2).fillStyle(0x50e0f0).fillRect(-1.5, -0.5, 3, 3);
   }
 
   // Auf See sitzt die Figur im Ruderboot: man sieht sie nur bis zum Gürtel
@@ -139,10 +145,13 @@ export class Figur {
     const lied = !this.tot && !!this.effekt?.includes('n');
     this.note.setVisible(lied);
     if (lied) this.note.setPosition(Math.round(x + 10), Math.round(y - 52 + Math.sin(jetzt / 200) * 2));
+    const drohne = !this.tot && !!this.effekt?.includes('d') && !this.boot;
+    this.drohne.setVisible(drohne);
+    if (drohne) this.drohne.setPosition(Math.round(x + 14), Math.round(y - 26 + Math.sin(jetzt / 260) * 2)).setDepth(10 + y + 1);
   }
 
   zerstoeren() {
     this.szene.tweens.killTweensOf(this.schwert);
-    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot, this.note]) t?.destroy();
+    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot, this.note, this.drohne]) t?.destroy();
   }
 }

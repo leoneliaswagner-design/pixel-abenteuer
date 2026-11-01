@@ -313,7 +313,7 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
         inhalt: 'idol', id: 'tempel_idol', setzt: 'idol_genommen,tempel_geschlossen', erfahrung: 60,
         meldung: 'Ein Grollen geht durch den Tempel … und in Riftside schließt sich der Riss in der Fischergasse!',
       }],
-      // Magische Schrift: nur ein Magier kann sie lesen (Vorteil „magie").
+      // Alte Runen: nur der Gelehrte kann sie lesen (Vorteil „runen").
       '!': [{ magisch: true, text: 'Eine Inschrift in leuchtenden Runen:\n\n„Wer das Gold vom Sockel hebt, weckt den Stein. Lauf."' }],
     },
     punkte: {

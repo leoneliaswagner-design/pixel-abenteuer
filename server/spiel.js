@@ -223,7 +223,7 @@ export class Spiel {
       const mx = s.x + dx * a.weite, my = s.y + dy * a.weite, r = a.radius * (1 + k.curryWeit / 100);
       for (const g of gebiet.gegner)
         if (!g.tot && Math.hypot(g.x - mx, g.y - my) <= r) gebiet.gegnerTreffen(g, { id: s.id, x: mx, y: my }, jetzt, a.schaden + k.curryPlus, { verlangsamen: a.verlangsamen, ohneStoss: true });
-      gebiet.anAlle({ t: 'mixtur', x: mx, y: my, r, farbe: 'curry' });
+      gebiet.anAlle({ t: 'mixtur', x: mx, y: my, r, farbe: a.farbe ?? 'curry' });
     } else if (a.art === 'gewuerz') {
       // Würzattacke: Chili ins Gesicht der Gegner vor einem (rundum, wenn weit).
       const k = s.werte.kampf, [dx, dy] = RICHTUNGEN[s.richtung];
@@ -320,9 +320,10 @@ export class Spiel {
       if (eigene.length >= (a.hoechstens ?? 2)) gebiet.spielerFallen.splice(gebiet.spielerFallen.indexOf(eigene[0]), 1);
       gebiet.spielerFallen.push({ id: `f${this.naechsteId++}`, x: s.x, y: s.y - 4, von: s.id, betaeuben: a.betaeuben ?? 2000, schaden: a.schaden ?? 1 });
     } else if (a.art === 'markieren') {
-      // Der nächste Gegner in Reichweite; die Markierung zählt für alle.
-      const ziel = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= 240).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y))[0];
-      if (ziel) gebiet.markieren(ziel, s, jetzt + a.dauer);
+      // Die nächsten Gegner in Reichweite (meist einer, der Gelehrte später
+      // mehr); die Markierung zählt für alle.
+      const ziele = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - s.x, g.y - s.y) <= 240).sort((a, b) => Math.hypot(a.x - s.x, a.y - s.y) - Math.hypot(b.x - s.x, b.y - s.y));
+      for (const ziel of ziele.slice(0, 1 + s.werte.kampf.markeMehr)) gebiet.markieren(ziel, s, jetzt + a.dauer);
     }
     else if (a.art === 'leere') {
       s.leereBis = jetzt + a.dauer;
@@ -733,9 +734,10 @@ export class Spiel {
     const e = ding.eig;
 
     if (ding.name === 'schild') {
-      // Magische Schrift: nur wer Magie lesen kann, versteht sie.
-      if (e.magisch && !s.werte?.vorteile.includes('magie')) {
-        s.senden({ t: 'dialog', seiten: ['Fremde, leuchtende Zeichen. Du kannst sie nicht lesen.', 'Vielleicht kann ein Magier etwas damit anfangen.'] });
+      // Alte Runen: nur der Gelehrte kann sie lesen (früher der Magier,
+      // den es nicht mehr gibt — die Kampagne hat keine Zauberer-Klasse).
+      if (e.magisch && !s.werte?.vorteile.includes('runen')) {
+        s.senden({ t: 'dialog', seiten: ['Fremde, leuchtende Zeichen. Du kannst sie nicht lesen.', 'Vielleicht kann ein Gelehrter etwas damit anfangen.'] });
         return;
       }
       s.senden({ t: 'dialog', seiten: seiten(this.textFuer(e)) });
@@ -1032,11 +1034,34 @@ export class Spiel {
           s.erholtBei = jetzt + e;
         }
       } else s.erholtBei = 0;
+      this.drohneSchiessen(s, jetzt);
     }
     if (jetzt - this.zuletztGespeichert >= SPEICHER_ABSTAND) {
       for (const s of this.spieler.values()) this.merken(s);
       this.speichern();
     }
+  }
+
+  // Mechanischer Gefährte (Technologe): die Drohne zielt selbst auf den
+  // nächsten Gegner bis fünf Kacheln — schräg, nicht nur in vier Richtungen.
+  drohneSchiessen(s, jetzt) {
+    const k = s.werte?.kampf;
+    if (!k?.drohne || s.tot || s.waehlt || jetzt < (s.drohneBei ?? 0)) return;
+    const gebiet = this.gebiete.get(s.gebiet);
+    if (gebiet.meer) return;
+    // Abgefeuert auf Hüfthöhe wie jeder Spielerschuss (s.y - 10): auf Höhe
+    // der Drohne (y - 30) lag der Startpunkt schon in der Felswand hinter
+    // dem Spieler, und der Bolzen verschwand im ersten Takt.
+    const [ax, ay] = [s.x + 14, s.y - 14];
+    const ziel = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - ax, g.y - 6 - ay) <= 160).sort((a, b) => Math.hypot(a.x - ax, a.y - ay) - Math.hypot(b.x - ax, b.y - ay))[0];
+    if (!ziel) return;
+    s.drohneBei = jetzt + k.drohne;
+    const [dx, dy] = [ziel.x - ax, ziel.y - 6 - ay], l = Math.hypot(dx, dy) || 1, tempo = 300;
+    gebiet.geschossAbfeuern({
+      von: s.id, art: 'pfeil', richtung: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'rechts' : 'links') : dy > 0 ? 'unten' : 'oben',
+      x: ax, y: ay, vx: (dx / l) * tempo, vy: (dy / l) * tempo, rest: 200, schaden: k.drohneSchaden,
+      kritChance: 0, kritFaktor: 1, betaeubenChance: 0, durch: 0, getroffen: new Set(),
+    });
   }
 
   // Ein Takt: rechnen, dann jedem Spieler den Stand seines Gebiets schicken.
