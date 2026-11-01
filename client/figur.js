@@ -65,6 +65,10 @@ export class Figur {
     // Drohne des Technologen: Messinggehäuse, zwei Rotoren, türkises Auge —
     // schwebt rechts an der Schulter; der Server lässt ihre Bolzen etwas darunter
     // (Hüfthöhe) starten.
+    // Der Drache des Drachenreiters: fliegt links neben ihm, schlägt mit den
+    // Flügeln, blickt mit dem Reiter nach links oder rechts.
+    this.drache = szene.textures.exists('drache') ? szene.add.sprite(0, 0, 'drache', 0).setOrigin(0.5, 1).setVisible(false) : null;
+    this.drache?.setData('blick', 'links');
     this.drohne = szene.add.graphics().setVisible(false);
     this.drohne.fillStyle(0x6a5a3a).fillRect(-8, -5, 16, 2).fillStyle(0xb89850).fillRoundedRect(-5, -3, 10, 7, 2)
       .fillStyle(0x8a7a5a).fillRect(-1, -5, 2, 2).fillStyle(0x50e0f0).fillRect(-1.5, -0.5, 3, 3);
@@ -145,6 +149,16 @@ export class Figur {
     const lied = !this.tot && !!this.effekt?.includes('n');
     this.note.setVisible(lied);
     if (lied) this.note.setPosition(Math.round(x + 10), Math.round(y - 52 + Math.sin(jetzt / 200) * 2));
+    const drache = !this.tot && !!this.effekt?.includes('D') && !this.boot;
+    if (this.drache) {
+      this.drache.setVisible(drache);
+      if (drache) {
+        if (this.richtung === 'links' || this.richtung === 'rechts') this.drache.setData('blick', this.richtung);
+        // Das Blatt blickt nach links; nach rechts gespiegelt.
+        this.drache.setFrame(Math.floor(jetzt / 160) % 2).setFlipX(this.drache.getData('blick') === 'rechts')
+          .setPosition(Math.round(x - 18), Math.round(y - 14 + Math.sin(jetzt / 300) * 2)).setDepth(10 + y - 1);
+      }
+    }
     const drohne = !this.tot && !!this.effekt?.includes('d') && !this.boot;
     this.drohne.setVisible(drohne);
     if (drohne) this.drohne.setPosition(Math.round(x + 14), Math.round(y - 26 + Math.sin(jetzt / 260) * 2)).setDepth(10 + y + 1);
@@ -152,6 +166,6 @@ export class Figur {
 
   zerstoeren() {
     this.szene.tweens.killTweensOf(this.schwert);
-    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot, this.note, this.drohne]) t?.destroy();
+    for (const t of [this.schatten, this.koerper, this.schwert, this.schild, this.boot, this.note, this.drohne, this.drache]) t?.destroy();
   }
 }

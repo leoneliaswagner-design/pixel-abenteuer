@@ -142,6 +142,11 @@ export function werteBerechnen(klasse, spezies, grund, ausruestung = [], stufe =
       // (Abstand der Schüsse in ms, 0 = keine).
       markeMehr: p.markeMehr ?? 0,
       drohne: p.drohne ? Math.round(p.drohne * (1 - Math.min(80, p.drohneTempo ?? 0) / 100)) : 0, drohneSchaden: 1 + (p.drohneSchaden ?? 0),
+      // Drachenreiter: der Drache an der Seite (sichtbar ab Stufe 1), sein
+      // Feuerball von selbst (Abstand in ms, 0 = noch nicht) und der Feueratem.
+      drachenbegleiter: !!p.drachenbegleiter,
+      drache: p.drache ? Math.round(p.drache * (1 - Math.min(80, p.drachenTempo ?? 0) / 100)) : 0, drachenSchaden: 1 + (p.drachenSchaden ?? 0),
+      drachenWeit: p.drachenWeit ?? 0, atemPlus: p.atemPlus ?? 0, atemWeit: p.atemWeit ?? 0,
     },
   };
 }

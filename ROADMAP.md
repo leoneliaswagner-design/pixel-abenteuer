@@ -143,8 +143,21 @@
   stärkerer Krug, mehr Gold), Technologe (Schallblaster-Falle auf T, ab 10
   eine Drohne, die selbst schießt). Der Zauberstab heißt Gelehrtenstab.
   Spielstände mit Magier wählen neu. Prüfstand `gelehrter.mjs`.
+- **Drachenreiter** (01.11.2026): Drachenhelm mit Hörnern, ein kleiner roter
+  Drache fliegt neben ihm (eigenes Bild `drache.png`). Drachenfeuer (Q:
+  Feuerball), Feueratem (F: vorn, brennt nach), Drachenbindung (ab 7 speit
+  der Drache von selbst), Flugmeister (R: schneller), Sturzflug (T ab 15).
+  Pfade Drachenflüsterer, Akrobat der Lüfte (aus der Beschreibung, Foundry
+  hat dazu keine Einträge), Zwei Körper, eine Seele (R: Verschmolzene
+  Gestalt). Prüfstand `drachenreiter.mjs`.
 - **Menü** (Esc, Knopf ≡): Weiterspielen, Spiel verlassen, Charakter neu
   beginnen, ganze Welt zurücksetzen (nur allein) — mit Rückfrage.
+
+- **tempel.mjs schwankt** (1.11.2026, einmal in drei Läufen): „Ben läuft
+  nicht durch die Kugel" — Ben stand bei y 850, über der liegenden Kugel
+  (880), also schon jenseits. Vermutlich hat ihn `freiSchieben` beim Liegen
+  der Kugel nach oben statt nach unten geschoben. Offen: Bens Lage vor dem
+  Laufen mitschreiben und `freiSchieben` die Richtung vorgeben.
 
 ## Grundgerüst — als Nächstes
 
@@ -170,11 +183,13 @@
 8. Dinge mit `bedingung` (eine Figur erscheint erst nach einem Ereignis) —
    dafür muss `welt.belegt` vom Zustand abhängen.
 9. **Homebrew-Klassen** (`konzept/klassen.md`, `konzept/foundry/homebrew.json`):
-   Krieger, Bogenschütze, Dieb, Arzt, Koch, Musiker, Gelehrter stehen,
-   der Magier ist weg. Offen: Drachenreiter — nach demselben Muster in
-   `klassen.json`. Der Mechanische Gefährte ist eine Drohne ohne eigenes
-   Leben (schießt nur); ein echter Begleiter, der getroffen werden kann,
-   wäre ein eigener Schritt. Die Spezies aus
+   Alle acht stehen (Krieger, Bogenschütze, Dieb, Arzt, Koch, Musiker,
+   Gelehrter, Drachenreiter), der Magier ist weg. Drohne und Drache sind
+   Begleiter ohne eigenes Leben (schießen nur, folgen dem Spieler); ein
+   echter Begleiter, der getroffen werden kann, reitbar ist (Drachenreiter
+   „fliegt" nur als Tempo und Sprung), wäre ein eigener Schritt. Der
+   Akrobat der Lüfte ist aus der Beschreibung gebaut — mit dem Spielleiter
+   abgleichen. Die Spezies aus
    Foundry (18) ersetzen die vier. Beim Krieger mit dem Spielleiter
    abstimmen, ob die Übersetzungen passen (z. B. „Verlässliches Talent" →
    schnellere Abklingzeiten).

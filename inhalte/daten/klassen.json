@@ -3401,5 +3401,420 @@
         }
       }
     }
+  },
+  "drachenreiter": {
+    "name": "Drachenreiter",
+    "beschreibung": "Frontkämpfer mit einem jungen Drachen an der Seite: der Drache speit Feuer, kämpft später von selbst und trägt seinen Reiter durch die Luft.",
+    "attribute": {
+      "staerke": 15,
+      "geschick": 12,
+      "konstitution": 14,
+      "intelligenz": 9,
+      "weisheit": 12,
+      "charisma": 11
+    },
+    "faehigkeit": {
+      "art": "geschoss",
+      "name": "Drachenfeuer",
+      "abklingzeit": 2200,
+      "geschoss": "feuerball",
+      "tempo": 170,
+      "reichweite": 200,
+      "schaden": 2,
+      "attribut": "staerke"
+    },
+    "vorteile": [],
+    "attributAb": [
+      4,
+      8,
+      12,
+      16,
+      19
+    ],
+    "pfadAb": 3,
+    "stufen": {
+      "1": [
+        {
+          "id": "drachenbindung",
+          "name": "Drachengefährte",
+          "quelle": "Animal Companion",
+          "text": "Ein junger Drache fliegt an deiner Seite. Auf Q speit er einen Feuerball.",
+          "boni": {
+            "drachenbegleiter": 1
+          }
+        },
+        {
+          "id": "reitertraining",
+          "name": "Reitertraining",
+          "quelle": "Mount Master",
+          "text": "Du weißt, wann du dich ducken musst: 5 % der Geschosse und Fallen weichst du aus.",
+          "boni": {
+            "ausweichen": 0.05
+          }
+        }
+      ],
+      "2": [
+        {
+          "id": "feueratem",
+          "name": "Feueratem",
+          "quelle": "Fighting Style / Drache greift mit an",
+          "text": "Taste F: der Drache faucht einen Feuerstrahl vor dir — alle Gegner dort nehmen 2 Schaden und brennen nach. Lädt 12 Sekunden.",
+          "aktion": {
+            "taste": "F",
+            "art": "feueratem",
+            "umkreis": 72,
+            "schaden": 2,
+            "abklingzeit": 12000
+          }
+        },
+        {
+          "id": "kampfstil_d",
+          "name": "Kampfstil",
+          "quelle": "Fighting Style",
+          "text": "Verteidigung: 10 % der Treffer prallen ab.",
+          "boni": {
+            "schutz": 0.1
+          }
+        }
+      ],
+      "4": [
+        {
+          "id": "wachstum",
+          "name": "Natürliche Entwicklung",
+          "quelle": "Natural Evolution",
+          "text": "Dein Drache wächst: seine Feuerbälle (von selbst) machen +1 Schaden.",
+          "boni": {
+            "drachenSchaden": 1
+          }
+        }
+      ],
+      "5": [
+        {
+          "id": "angriff2_d",
+          "name": "Zusätzlicher Angriff",
+          "quelle": "Extra Attack",
+          "text": "+1 Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        }
+      ],
+      "6": [
+        {
+          "id": "urinstinkt",
+          "name": "Urinstinkt",
+          "quelle": "Primeval Awareness",
+          "text": "Der Drache wittert Gegner früher: er greift ein Viertel weiter an.",
+          "boni": {
+            "drachenWeit": 25
+          }
+        }
+      ],
+      "7": [
+        {
+          "id": "drachenband",
+          "name": "Drachenbindung",
+          "quelle": "Drachenbindung",
+          "text": "Der Drache kämpft von selbst: alle 4 Sekunden ein Feuerball auf den nächsten Gegner bis vier Kacheln.",
+          "boni": {
+            "drache": 4000
+          }
+        }
+      ],
+      "9": [
+        {
+          "id": "flugmeister",
+          "name": "Flugmeister",
+          "quelle": "Land's Stride / Flugmeister",
+          "text": "Taste R: auf dem Drachen — 4 Sekunden lang deutlich schneller. Lädt 15 Sekunden.",
+          "aktion": {
+            "taste": "R",
+            "art": "sprint",
+            "dauer": 4000,
+            "abklingzeit": 15000
+          }
+        }
+      ],
+      "11": [
+        {
+          "id": "drachenschuppen",
+          "name": "Drachenschuppen",
+          "quelle": "Draconic Defense / Elemental Fury",
+          "text": "Schuppen sprießen: 10 % mehr Treffer prallen ab. Der Feueratem macht +1 Schaden.",
+          "boni": {
+            "schutz": 0.1,
+            "atemPlus": 1
+          }
+        }
+      ],
+      "13": [
+        {
+          "id": "verschmelzung",
+          "name": "Drachenverschmelzung",
+          "quelle": "Elemental Adaptation / Drachenverschmelzung",
+          "text": "Ihr teilt die Sinne: der Drache greift ein Viertel öfter an; dein Hieb verlangsamt (Elementarklinge).",
+          "boni": {
+            "drachenTempo": 25,
+            "verlangsamen": 1500
+          }
+        }
+      ],
+      "15": [
+        {
+          "id": "sturzflug",
+          "name": "Sturzflug",
+          "quelle": "Dragon Wings",
+          "text": "Taste T: auf dem Drachen über vier Kacheln nach vorn — nicht durch Wände. Lädt 8 Sekunden. Der Feueratem reicht anderthalbmal so weit.",
+          "boni": {
+            "atemWeit": 50
+          },
+          "aktion": {
+            "taste": "T",
+            "art": "sprung",
+            "weite": 128,
+            "abklingzeit": 8000
+          }
+        }
+      ],
+      "17": [
+        {
+          "id": "angriff3_d",
+          "name": "Zusätzlicher Angriff",
+          "quelle": "Extra Attack",
+          "text": "+1 Schaden (kommt mit der Stufe).",
+          "hinweis": true
+        },
+        {
+          "id": "drachenkenner",
+          "name": "Drachenkenner",
+          "quelle": "Dragon Expert",
+          "text": "Die Feuerbälle des Drachen machen +1 Schaden.",
+          "boni": {
+            "drachenSchaden": 1
+          }
+        }
+      ],
+      "18": [
+        {
+          "id": "mut_d",
+          "name": "Aura des Mutes",
+          "quelle": "Aura of Courage",
+          "text": "Mitspieler bis drei Kacheln um dich: 10 % ihrer Treffer prallen ab.",
+          "boni": {
+            "aura": 0.1
+          }
+        }
+      ],
+      "20": [
+        {
+          "id": "eins",
+          "name": "Drache und Reiter als Eins",
+          "quelle": "Primal Champion",
+          "text": "+1 Schaden und ein Herz mehr; der Drache greift ein Viertel öfter an.",
+          "boni": {
+            "schaden": 1,
+            "leben": 2,
+            "drachenTempo": 25
+          }
+        }
+      ]
+    },
+    "pfade": {
+      "drachenfluesterer": {
+        "name": "Drachenflüsterer",
+        "text": "Ein spirituelles Band: Befehle ohne Worte, ein stärkerer Drache.",
+        "stufen": {
+          "3": [
+            {
+              "id": "seelenband",
+              "name": "Seelenband",
+              "quelle": "Seelenband",
+              "text": "Der Drache versteht dich ohne Worte: er greift ein Viertel öfter an, und Mitspieler bis drei Kacheln wehren 5 % der Treffer ab.",
+              "boni": {
+                "drachenTempo": 25,
+                "aura": 0.05
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "harmonie",
+              "name": "Harmonie der Herzen",
+              "quelle": "Harmonie der Herzen",
+              "text": "Der Drache fängt Schläge ab: 10 % der Treffer prallen ab.",
+              "boni": {
+                "schutz": 0.1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "geteilte_macht",
+              "name": "Geteilte Macht",
+              "quelle": "Geteilte Macht",
+              "text": "Der Feueratem macht +1 Schaden und reicht ein Viertel weiter.",
+              "boni": {
+                "atemPlus": 1,
+                "atemWeit": 25
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "seelenhueter",
+              "name": "Hüter der Seelenverbindung",
+              "quelle": "Hüter der Seelenverbindung",
+              "text": "Ein tödlicher Treffer lässt dir ein halbes Herz — höchstens einmal pro Minute.",
+              "boni": {
+                "zaeh": 60000
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "zwei_seelen",
+              "name": "Zwei Seelen, ein Wille",
+              "quelle": "Zwei Seelen, ein Wille",
+              "text": "15 % deiner Treffer sind kritisch; die Feuerbälle des Drachen machen +1 Schaden.",
+              "boni": {
+                "krit": 0.15,
+                "drachenSchaden": 1
+              }
+            }
+          ]
+        }
+      },
+      "akrobat": {
+        "name": "Akrobat der Lüfte",
+        "text": "Wind und Schatten: schnelle Wendungen, Ausweichen, Sturzangriffe.",
+        "stufen": {
+          "3": [
+            {
+              "id": "wendig",
+              "name": "Luftakrobatik",
+              "quelle": "Akrobat der Lüfte",
+              "text": "Wer sich bewegt, ist schwer zu treffen: 10 % Ausweichen gegen Geschosse und Fallen, beim Laufen 10 % Schutz.",
+              "boni": {
+                "ausweichen": 0.1,
+                "laufSchutz": 0.1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "sturzangriff",
+              "name": "Sturzangriff",
+              "quelle": "Luftkampfmanöver",
+              "text": "Wer gerade gelaufen ist, schlägt mit +1 Schaden zu.",
+              "boni": {
+                "laufSchlag": 1
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "manoever",
+              "name": "Flugmanöver",
+              "quelle": "Flugmanöver",
+              "text": "Drachenflug und Sturzflug laden ein Viertel schneller; der Drachenflug hält anderthalbmal so lange.",
+              "boni": {
+                "aktionAbkling": 25,
+                "aktionDauer": 50
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "windgleich",
+              "name": "Windgleich",
+              "quelle": "Akrobat der Lüfte",
+              "text": "Noch einmal 10 % Ausweichen gegen Geschosse und Fallen.",
+              "boni": {
+                "ausweichen": 0.1
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "wind_schatten",
+              "name": "Wind und Schatten",
+              "quelle": "Akrobat der Lüfte",
+              "text": "Nach einem Treffer bist du kurz weg — unverwundbar, durchscheinend (alle 30 Sekunden).",
+              "boni": {
+                "entschwinden": 30000
+              }
+            }
+          ]
+        }
+      },
+      "zwei_koerper": {
+        "name": "Zwei Körper, eine Seele",
+        "text": "Reiter und Drache wie eine Kreatur: geteilte Kraft, geteilter Schmerz.",
+        "stufen": {
+          "3": [
+            {
+              "id": "seelenverschmelzung",
+              "name": "Seelenverschmelzung",
+              "quelle": "Seelenverschmelzung",
+              "text": "Ein Befehl genügt: die Feuerbälle des Drachen machen +1 Schaden.",
+              "boni": {
+                "drachenSchaden": 1
+              }
+            }
+          ],
+          "7": [
+            {
+              "id": "lebensverknuepfung",
+              "name": "Lebensverknüpfung",
+              "quelle": "Lebensverknüpfung",
+              "text": "Mit höchstens halben Herzen heilst du langsam (alle 4 Sekunden ein halbes Herz).",
+              "boni": {
+                "erholung": 4000
+              }
+            }
+          ],
+          "10": [
+            {
+              "id": "positionswechsel",
+              "name": "Positionswechsel",
+              "quelle": "Positionswechsel",
+              "text": "Der Sturzflug lädt schneller, Drachenflug hält länger (aktive Fähigkeiten 20 % schneller, 50 % länger).",
+              "boni": {
+                "aktionAbkling": 20,
+                "aktionDauer": 50
+              }
+            }
+          ],
+          "15": [
+            {
+              "id": "spiegel",
+              "name": "Spiegel des Schmerzes",
+              "quelle": "Spiegel des Schmerzes",
+              "text": "Der Drache trägt die Hälfte: 15 % der Treffer prallen ab.",
+              "boni": {
+                "schutz": 0.15
+              }
+            }
+          ],
+          "18": [
+            {
+              "id": "verschmolzen",
+              "name": "Verschmolzene Gestalt",
+              "quelle": "Verschmolzene Gestalt",
+              "text": "Taste R (statt Drachenflug): 10 Sekunden lang verschmolzen — +1 Schaden, 20 % der Treffer prallen ab, Drachenfeuer lädt doppelt so schnell. Lädt 40 Sekunden.",
+              "aktion": {
+                "taste": "R",
+                "art": "rausch",
+                "dauer": 10000,
+                "boni": {
+                  "schaden": 1,
+                  "schutz": 0.2,
+                  "qTempo": 50
+                },
+                "abklingzeit": 40000
+              }
+            }
+          ]
+        }
+      }
+    }
   }
 }

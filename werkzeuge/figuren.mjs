@@ -17,7 +17,7 @@ const STIEFEL = ['#6b4426', '#8c5d37'];
 // o: Aussehen einer Figur
 //   tunika   [grund, hell, dunkel]   hose [grund, dunkel]
 //   haar, frisur ('kurz' | 'lang' | 'glatze'), bart (null | 'schnurr' | 'voll'), bartFarbe
-//   kopf     null | { art: 'helm', farbe, dunkel, busch } | { art: 'kapuze', farben: [g, h, d] }
+//   kopf     null | { art: 'helm', farbe, dunkel, busch, hoerner } | { art: 'kapuze', farben: [g, h, d] }
 //            | { art: 'hut', farben: [g, h, d] } | { art: 'kochmuetze' } | { art: 'barett', farben: [g, h, d], feder }
 //            | { art: 'doktorhut', farbe, quaste }
 //   brille   Farbe der Fassung (oder nichts)
@@ -146,6 +146,12 @@ function kopfVorneHinten(b, o, hinten) {
     b.ellipse(13, 7, 2.5, 1.5, '#e8e8f4');
     b.rechteck(8, hinten ? 14 : 11, 16, 2, k.dunkel);
     if (!hinten) b.rechteck(15, 11, 2, 5, k.dunkel);
+    // Drachenhelm: zwei Hörner, nach oben außen gebogen.
+    if (k.hoerner) for (const [x, s] of [[8, -1], [23, 1]]) {
+      b.rechteck(x, 5, 2, 4, k.hoerner);
+      b.rechteck(x + s, 2, 2, 3, k.hoerner);
+      b.setze(x + 2 * s, 1, k.hoerner);
+    }
   }
   if (k?.art === 'hut') hut(b, k.farben, 16);
   if (k?.art === 'kochmuetze') kochmuetze(b, 16);
@@ -286,6 +292,11 @@ function seite(b, o, s, holt) {
     b.ellipse(15.5, 10, 7.5, 6.5, k.farbe, (x, y) => y <= 11 || x >= 17);
     b.ellipse(13, 7, 2.5, 1.5, '#e8e8f4');
     b.rechteck(8, 11, 16, 2, k.dunkel);
+    if (k.hoerner) {
+      b.rechteck(18, 4, 2, 4, k.hoerner);
+      b.rechteck(19, 1, 2, 3, k.hoerner);
+      b.setze(21, 0, k.hoerner);
+    }
   }
   if (k?.art === 'hut') hut(b, k.farben, 15);
   if (k?.art === 'kochmuetze') kochmuetze(b, 15);

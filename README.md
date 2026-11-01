@@ -151,6 +151,7 @@ die Stärke ihrer Fähigkeit.
 | Bogenschütze | Pfeil (schnell, weit) | — |
 | Koch | Messerwurf | — |
 | Musiker | Klangstoß: stößt die Gegner vor ihm zurück | — |
+| Drachenreiter | Drachenfeuer: sein Drache speit einen Feuerball | ein Drache fliegt mit |
 
 Dazu je Klasse Fähigkeiten auf F, R, T und ab Stufe 3 ein Pfad (Taste C).
 
@@ -296,6 +297,7 @@ node pruefstand/arzt.mjs            # Diagnose-Balken, Heilsalbe beim anderen
 node pruefstand/koch.mjs            # Koch wählen, Kochmütze beim anderen, Mahl
 node pruefstand/musiker.mjs         # Musiker wählen, Barett beim anderen, Lied mit Note
 node pruefstand/gelehrter.mjs       # Technologe: Doktorhut und Drohne beim anderen
+node pruefstand/drachenreiter.mjs   # Drache neben der Reiterin, Drachenfeuer orange beim anderen
 node pruefstand/tempel.mjs          # Stacheln, Idol, Beben, Kugel rollt, Flucht, Kugel liegt am Bildpunkt
 node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs Stadttor in den Wald
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Bolzen, Heilung, Tempo

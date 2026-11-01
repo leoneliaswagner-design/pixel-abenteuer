@@ -1810,6 +1810,76 @@ const arena = (art, abstand) => {
   pruefe(g.leben === 48, `Reagenzienfeld: der Krug trifft auch eine Kachel daneben (${50 - g.leben} Schaden mit Formeln)`);
 }
 
+// ---------- Drachenreiter ----------
+{
+  const sp = new Spiel(karten, werteWald, { jetzt: () => uhr, zufall: () => 0.99 });
+  const t = werte.stufen.erfahrung;
+  const wald = sp.gebiete.get('wald');
+  const mk = (name, stufe, pfad, klasse = 'drachenreiter') => {
+    const x = mitCharakter(sp, name, () => {}, klasse);
+    x.erfahrung = t[Math.min(stufe, 3) - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    if (pfad) sp.pfadWaehlen(x, pfad);
+    x.erfahrung = t[stufe - 1] - 1;
+    sp.erfahrungGeben(x, 1);
+    sp.wechseln(x, 'wald', 'von_riftside');
+    // Ein freier Fleck vor Riftside (s. Drohne): keine Hecke im Schussweg.
+    Object.assign(x, { x: 272, y: 856, unverwundbarBis: uhr + 1e9 });
+    return x;
+  };
+  const still = (g) => Object.assign(g, { tot: false, leben: 50, getroffenBis: 0, stossBis: 0, betaeubtBis: uhr + 1e6, verwirrtBis: 0, langsamBis: 0, markiertBis: 0, giftBei: 0, vx: 0, vy: 0, wechselBei: uhr + 1e6, zielId: 'x', wiederBei: 0 });
+  const alleWeg = () => { for (const g of wald.gegner) Object.assign(g, { tot: true, wiederBei: uhr + 1e9 }); };
+  const lauf = (ms) => { for (let i = 0; i < ms; i += 50) { uhr += 50; sp.schritt(0.05); } };
+  const dora = mk('Dora', 2);
+  const stand = () => wald.stand(uhr).spieler.find((x) => x.id === dora.id);
+  pruefe(dora.werte.faehigkeit.name === 'Drachenfeuer' && dora.werte.aktionen.map((a) => a.taste + a.id).join(',') === 'Ffeueratem' && stand().e.includes('D') && !dora.werte.kampf.drache,
+    `Drachenreiter Stufe 2: Q ${dora.werte.faehigkeit.name}, ${dora.werte.aktionen.map((a) => a.taste + ' ' + a.name).join(', ')}, Drache im Stand („${stand().e}"), greift noch nicht von selbst an`);
+  // Feueratem: vorn 2 Schaden und eine Sekunde später noch einmal (brennt), hinten nichts.
+  alleWeg();
+  const [vorn, hinten] = wald.gegner;
+  Object.assign(still(vorn), { x: dora.x, y: dora.y - 50 });
+  Object.assign(still(hinten), { x: dora.x, y: dora.y + 50 });
+  dora.richtung = 'oben';
+  sp.aktion(dora, { id: 'feueratem' });
+  const sofort = 50 - vorn.leben;
+  lauf(1100);
+  pruefe(sofort === 2 && vorn.leben === 47 && hinten.leben === 50, `Feueratem: vorn ${sofort} Schaden, nach einer Sekunde brennt es (${50 - vorn.leben}), hinten ${50 - hinten.leben}`);
+  // Ohne Drachenbindung (Stufe 7) speit der Drache nicht von selbst.
+  alleWeg();
+  Object.assign(still(vorn), { x: dora.x + 60, y: dora.y - 20 });
+  wald.geschosse.clear();
+  lauf(1000);
+  pruefe(wald.geschosse.size === 0 && vorn.leben === 50, 'Stufe 2: der Drache greift nicht von selbst an');
+  sp.verlassen(dora.id);
+  // Stufe 7: Drachenbindung — ein Feuerball von selbst, mit Natürlicher Entwicklung 2 Schaden.
+  const d7 = mk('Drago', 7);
+  alleWeg();
+  Object.assign(still(vorn), { x: d7.x + 60, y: d7.y - 20 });
+  wald.geschosse.clear();
+  let baelle = 0;
+  for (let i = 0; i < 30 && vorn.leben === 50; i++) {
+    uhr += 50;
+    sp.schritt(0.05);
+    baelle = Math.max(baelle, [...wald.geschosse.values()].filter((p) => p.von === d7.id && p.art === 'feuerball').length);
+  }
+  pruefe(baelle === 1 && vorn.leben === 48, `Drachenbindung: der Drache speit von selbst einen Feuerball (${50 - vorn.leben} Schaden)`);
+  sp.verlassen(d7.id);
+  // Stufe 15: Drachenflug (R) und Sturzflug (T, vier Kacheln, nicht durch Wände).
+  const d15 = mk('Flug', 15);
+  sp.aktion(d15, { id: 'flugmeister' });
+  const fliegt = uhr < d15.sprintBis;
+  const x0 = d15.x;
+  d15.richtung = 'rechts';
+  sp.aktion(d15, { id: 'sturzflug', r: 'rechts' });
+  pruefe(fliegt && d15.x - x0 > 64 && d15.x - x0 <= 128, `Drachenflug ${fliegt ? 'an' : 'aus'}; Sturzflug ${d15.x - x0} px nach rechts`);
+  sp.verlassen(d15.id);
+  // Zwei Körper, eine Seele 18: R ist die Verschmolzene Gestalt (statt Drachenflug).
+  const zk = mk('Zwei', 18, 'zwei_koerper');
+  const r = zk.werte.aktionen.find((a) => a.taste === 'R');
+  sp.aktion(zk, { id: r.id });
+  pruefe(r.id === 'verschmolzen' && uhr < zk.rauschBis, `Zwei Körper 18: R ${r.name}, wirkt`);
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

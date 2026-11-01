@@ -471,6 +471,26 @@ probe client/figur.js "    this.drohne.setVisible(drohne);" "    this.drohne.set
 probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/gelehrter.mjs \
   "Figuren ohne Klassenbild (kein Doktorhut)"
 
+# Drachenreiter
+probe server/spiel.js "      this.drachenSchiessen(s, jetzt);" "" pruefstand/server-regeln.mjs \
+  "der Drache speit nicht von selbst"
+probe gemeinsam/regeln.js "      drache: p.drache ?" "      drache: (p.drache = p.drache || 4000) ?" pruefstand/server-regeln.mjs \
+  "der Drache greift schon vor der Drachenbindung an"
+probe server/spiel.js "        if (!g.tot) [g.giftBei, g.giftVon] = [jetzt + 1000, s.id];" "" pruefstand/server-regeln.mjs \
+  "Feueratem brennt nicht nach"
+probe server/spiel.js "|| (g.x - s.x) * dx + (g.y - s.y) * dy < 0) continue;
+        gebiet.gegnerTreffen(g, { id: s.id, x: s.x, y: s.y }, jetzt, a.schaden + k.atemPlus" ") continue;
+        gebiet.gegnerTreffen(g, { id: s.id, x: s.x, y: s.y }, jetzt, a.schaden + k.atemPlus" pruefstand/server-regeln.mjs \
+  "Feueratem trifft auch hinter einem"
+probe server/gebiet.js " + (s.werte?.kampf.drachenbegleiter ? 'D' : '')," "," pruefstand/drachenreiter.mjs \
+  "der Stand meldet den Drachen nicht"
+probe client/figur.js "      this.drache.setVisible(drache);" "      this.drache.setVisible(false);" pruefstand/drachenreiter.mjs \
+  "der Drache ist nicht zu sehen"
+probe client/szenen/Spiel.js "    this.load.spritesheet('drache', 'grafik/drache.png', { frameWidth: 32, frameHeight: 32 });" "" pruefstand/drachenreiter.mjs \
+  "das Drachenbild wird nicht geladen"
+probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/drachenreiter.mjs \
+  "Figuren ohne Klassenbild (kein Drachenhelm)"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

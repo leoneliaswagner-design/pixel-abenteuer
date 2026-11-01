@@ -75,7 +75,7 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   bringen (Herz, Schaden, Fähigkeit) rechnet `werteBerechnen()`. Erfahrung
   für Siege bekommen alle im Gebiet, für Dinge mit `erfahrung` (Idol, Eule)
   alle Spieler. Nachrichten `erfahrung` (an einen) und `aufstieg` (ans Gebiet).
-- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`, Koch = `koch`, Musiker = `musiker`, Gelehrter = `gelehrter`): in
+- **Klassen-Fähigkeiten** (Krieger = intern `kaempfer`, Bogenschütze = `waldlaeufer`, Dieb = `schurke`, Arzt = `kleriker`, Koch = `koch`, Musiker = `musiker`, Gelehrter = `gelehrter`, Drachenreiter = `drachenreiter`): in
   `klassen.json` unter `stufen` und `pfade.<id>.stufen`, je Fähigkeit `boni`
   (passiv, werden summiert) oder `aktion` (Taste F/R/T). `werteBerechnen()`
   macht daraus `werte.kampf` (Schutz, Ausweichen, Krit …), `aktionen`,
@@ -94,7 +94,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Musikers ebenso (`s.liedBis`, `s.liedBoni`; Stand-Flag `n` → Note). Eine neue Klasse
   braucht ein Aussehen in `KLASSEN` (grafik.mjs) und `npm run grafik`, sonst
   trägt sie die Kapuze in Spielerfarbe. Die Drohne des Technologen schießt
-  der Server selbst (`drohneSchiessen`, Stand-Flag `d`). Den Magier gibt es
+  der Server selbst (`drohneSchiessen`, Stand-Flag `d`), ebenso den Drachen des
+  Drachenreiters (`drachenSchiessen`, Feuerball; Stand-Flag `D` → Bild `drache`). Den Magier gibt es
   nicht mehr; ein Spielstand mit `magier` wählt beim nächsten Beitreten neu.
 - **Menü** (Esc oder Knopf ≡): Verlassen lädt die Seite neu (der Server
   speichert wie bei jedem Gehen). `neu_anfangen` löscht den eigenen Eintrag
@@ -152,6 +153,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   das Barett und nach dem Lied (F) die goldene Note über beiden (Bildpunkte).
 - `node pruefstand/gelehrter.mjs` — Technologe (Stufe 10) aus dem Spielstand:
   der andere sieht Doktorhut und Drohne (Bildpunkte), Leiste Q/F/R/T.
+- `node pruefstand/drachenreiter.mjs` — Drachenreiterin (Stufe 9): der andere
+  sieht den Drachen neben ihr und ihr Drachenfeuer orange (Bildpunkte).
 - `node pruefstand/tempel.mjs` — Stacheln im Takt, Idol nehmen, Beben beim
   anderen, Flucht vor der Kugel, Kugel liegt am Bildpunkt und ist fest.
 - Schleime machen Prüfstände zufällig: wer in einem Gebiet mit Gegnern etwas

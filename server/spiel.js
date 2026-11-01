@@ -257,6 +257,16 @@ export class Spiel {
         if (starr) g.betaeubtBis = Math.max(g.betaeubtBis ?? 0, jetzt + starr);
       }
       gebiet.anAlle({ t: 'mixtur', x: s.x, y: s.y, r: a.umkreis, farbe: 'lethargie' });
+    } else if (a.art === 'feueratem') {
+      // Der Drache faucht vor dem Reiter: trifft alle vorn im Umkreis, und
+      // sie brennen eine Sekunde später noch einmal (wie Gift).
+      const k = s.werte.kampf, [dx, dy] = RICHTUNGEN[s.richtung], umkreis = a.umkreis * (1 + k.atemWeit / 100);
+      for (const g of gebiet.gegner) {
+        if (g.tot || Math.hypot(g.x - s.x, g.y - s.y) > umkreis || (g.x - s.x) * dx + (g.y - s.y) * dy < 0) continue;
+        gebiet.gegnerTreffen(g, { id: s.id, x: s.x, y: s.y }, jetzt, a.schaden + k.atemPlus, { ohneStoss: true });
+        if (!g.tot) [g.giftBei, g.giftVon] = [jetzt + 1000, s.id];
+      }
+      gebiet.anAlle({ t: 'mixtur', x: s.x + dx * umkreis * 0.5, y: s.y + dy * umkreis * 0.5, r: umkreis * 0.55, farbe: 'feuer' });
     } else if (a.art === 'festmahl') {
       const ziele = gebiet.spieler().filter((p) => !p.tot);
       for (const p of ziele) p.leben = this.maxLeben(p);
@@ -1035,6 +1045,7 @@ export class Spiel {
         }
       } else s.erholtBei = 0;
       this.drohneSchiessen(s, jetzt);
+      this.drachenSchiessen(s, jetzt);
     }
     if (jetzt - this.zuletztGespeichert >= SPEICHER_ABSTAND) {
       for (const s of this.spieler.values()) this.merken(s);
@@ -1060,6 +1071,26 @@ export class Spiel {
     gebiet.geschossAbfeuern({
       von: s.id, art: 'pfeil', richtung: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'rechts' : 'links') : dy > 0 ? 'unten' : 'oben',
       x: ax, y: ay, vx: (dx / l) * tempo, vy: (dy / l) * tempo, rest: 200, schaden: k.drohneSchaden,
+      kritChance: 0, kritFaktor: 1, betaeubenChance: 0, durch: 0, getroffen: new Set(),
+    });
+  }
+
+  // Drachenbindung: der Drache des Drachenreiters speit von selbst einen
+  // Feuerball auf den nächsten Gegner. Er fliegt links neben dem Reiter; der
+  // Ball startet auf Hüfthöhe wie beim Drohnenbolzen (s. dort).
+  drachenSchiessen(s, jetzt) {
+    const k = s.werte?.kampf;
+    if (!k?.drache || s.tot || s.waehlt || jetzt < (s.drachenBei ?? 0)) return;
+    const gebiet = this.gebiete.get(s.gebiet);
+    if (gebiet.meer) return;
+    const [ax, ay] = [s.x - 16, s.y - 14], weit = 128 * (1 + k.drachenWeit / 100);
+    const ziel = gebiet.gegner.filter((g) => !g.tot && Math.hypot(g.x - ax, g.y - 6 - ay) <= weit).sort((a, b) => Math.hypot(a.x - ax, a.y - ay) - Math.hypot(b.x - ax, b.y - ay))[0];
+    if (!ziel) return;
+    s.drachenBei = jetzt + k.drache;
+    const [dx, dy] = [ziel.x - ax, ziel.y - 6 - ay], l = Math.hypot(dx, dy) || 1, tempo = 200;
+    gebiet.geschossAbfeuern({
+      von: s.id, art: 'feuerball', richtung: Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'rechts' : 'links') : dy > 0 ? 'unten' : 'oben',
+      x: ax, y: ay, vx: (dx / l) * tempo, vy: (dy / l) * tempo, rest: weit + 40, schaden: k.drachenSchaden,
       kritChance: 0, kritFaktor: 1, betaeubenChance: 0, durch: 0, getroffen: new Set(),
     });
   }

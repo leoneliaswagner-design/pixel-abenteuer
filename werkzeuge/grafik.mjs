@@ -812,6 +812,7 @@ const KLASSEN = {
   kleriker: (t) => ({ tunika: t, haar: P.haare, kopf: { art: 'kapuze', farben: ['#ece6d6', '#ffffff', '#b8ae98'] }, symbol: P.gold }),
   waldlaeufer: (t) => ({ tunika: t, haar: '#a0602a', kopf: { art: 'kapuze', farben: ['#4a6a2a', '#6a8a3a', '#2e4618'] }, koecher: true }),
   koch: (t) => ({ tunika: t, haar: '#7a4a24', bart: 'schnurr', bartFarbe: '#5a3418', kopf: { art: 'kochmuetze' }, schuerze: '#f4f0e6' }),
+  drachenreiter: (t) => ({ tunika: t, haar: '#3a2a1a', kopf: { art: 'helm', farbe: '#a83a2a', dunkel: '#6a2018', hoerner: '#f0e6c8' }, schultern: '#a83a2a' }),
   musiker: (t) => ({ tunika: t, haar: '#c88a3a', kopf: { art: 'barett', farben: ['#8a2a4a', '#b04a6a', '#5a1a30'], feder: '#f0d060' }, schal: '#f0d060' }),
 };
 for (const [klasse, aussehen] of Object.entries(KLASSEN))
@@ -1359,6 +1360,41 @@ function monsterBlatt(name, bilder) {
     }
   };
   monsterBlatt('riesenfledermaus', [fledermaus(true), fledermaus(false)]);
+}
+
+// ---------- Der Drache des Drachenreiters: klein, rot, Blick nach links ----------
+// Zwei Bilder: Flügel oben, Flügel unten. Er fliegt — unten im Bild ist Luft
+// (der Browser setzt ihn neben den Reiter, ohne Schatten).
+{
+  const rot = '#c83a2a', dunkel = '#8a2420', bauch = '#f0c060', horn = '#f0e6c8', fluegel = '#a02a24', haut = '#e06a4a';
+  const drache = (oben) => (b) => {
+    // Schwanz nach rechts hinten, mit Spitze.
+    for (let i = 0; i < 8; i++) b.rechteck(20 + i, 20 + Math.round(Math.sin(i / 2) * 1.5), 2, 2, i < 6 ? rot : dunkel);
+    b.rechteck(28, 18, 2, 2, dunkel);
+    // Körper und Bauch.
+    b.ellipse(16, 20, 6.5, 4.5, rot);
+    b.ellipse(15, 22, 5, 2, bauch, (x, y) => y >= 21);
+    // Beinchen.
+    b.rechteck(12, 24, 2, 2, dunkel);
+    b.rechteck(18, 24, 2, 2, dunkel);
+    // Hals und Kopf, Schnauze nach links.
+    b.rechteck(10, 15, 4, 5, rot);
+    b.ellipse(8, 13, 4.5, 3.5, rot);
+    b.rechteck(3, 13, 4, 3, rot);
+    b.setze(3, 14, dunkel);
+    b.rechteck(7, 12, 2, 1, '#ffd84a');
+    b.setze(7, 12, '#2a1e2e');
+    b.rechteck(9, 8, 1, 3, horn);
+    b.rechteck(11, 9, 1, 2, horn);
+    // Flügel: oben gespreizt oder nach unten geschlagen.
+    if (oben) {
+      for (let i = 0; i < 9; i++) b.rechteck(14 + i, 16 - i, 2, 1 + Math.floor(i / 3), i % 3 ? fluegel : haut);
+      b.rechteck(22, 7, 2, 2, dunkel);
+    } else {
+      for (let i = 0; i < 8; i++) b.rechteck(14 + i, 19 + Math.floor(i / 2), 2, 2, i % 3 ? fluegel : haut);
+    }
+  };
+  monsterBlatt('drache', [drache(true), drache(false)]);
 }
 
 // ---------- Herzen 16×16: voll, halb, leer ----------

@@ -63,6 +63,8 @@ export class SpielSzene extends Phaser.Scene {
       for (const f of FARBEN)
         if (!this.textures.exists(`held-${k}-${f}`)) this.load.spritesheet(`held-${k}-${f}`, `grafik/held-${k}-${f}.png`, FIGURBILD);
     this.load.spritesheet('geschosse', 'grafik/geschosse.png', { frameWidth: 16, frameHeight: 16 });
+    // Der Drache des Drachenreiters (zwei Flügelschläge, Blick nach links).
+    this.load.spritesheet('drache', 'grafik/drache.png', { frameWidth: 32, frameHeight: 32 });
     this.load.image('funke', 'grafik/funke.png');
     // Monster: welche es gibt, steht in monster.json — geladen wie die Leute.
     this.load.json('monster', 'daten/monster.json');
@@ -674,9 +676,10 @@ export class SpielSzene extends Phaser.Scene {
     });
     // Eine geworfene Mixtur (Alchemist, Wildniskoch): ein grüner Kreis, wo sie
     // platzt; Curry orange, Chili rot (Koch); Lied gold, Lethargie blau,
-    // Klangstoß weiß (Musiker); Säure gelbgrün (Gelehrter).
+    // Klangstoß weiß (Musiker); Säure gelbgrün (Gelehrter); Feueratem orange
+    // (Drachenreiter).
     n.bei('mixtur', (m) => {
-      const [fuell, rand] = { curry: [0xf0a030, 0xffe080], gewuerz: [0xe04030, 0xffa080], lied: [0xffd84a, 0xfff0a0], lethargie: [0x5070d0, 0xa0b8ff], klang: [0xe8e8ff, 0xffffff], saeure: [0xb8e030, 0xe8ff90] }[m.farbe] ?? [0x7ee070, 0xc8ffb0];
+      const [fuell, rand] = { curry: [0xf0a030, 0xffe080], gewuerz: [0xe04030, 0xffa080], lied: [0xffd84a, 0xfff0a0], lethargie: [0x5070d0, 0xa0b8ff], klang: [0xe8e8ff, 0xffffff], saeure: [0xb8e030, 0xe8ff90], feuer: [0xf06020, 0xffc040] }[m.farbe] ?? [0x7ee070, 0xc8ffb0];
       const k = this.add.circle(m.x, m.y - 8, m.r, fuell, 0.35).setDepth(6000).setStrokeStyle(2, rand);
       this.mixturen++;
       this.tweens.add({ targets: k, alpha: 0, scale: 1.2, duration: 600, onComplete: () => k.destroy() });
