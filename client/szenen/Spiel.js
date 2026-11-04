@@ -108,6 +108,8 @@ export class SpielSzene extends Phaser.Scene {
     this.abgewehrt ??= 0;
     this.geschosse = new Map();
     this.funken = 0;
+    this.aufgestanden = 0;
+    this.gegnerGeheilt = 0;
     // Auf dem Meer: Boot, Schwung, Dunst, Kompass (s. eigeneFigur).
     this.meer = !!this.welt.eigenschaftenKarte.meer;
     this.dunst = null;
@@ -235,12 +237,12 @@ export class SpielSzene extends Phaser.Scene {
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key, effekt: f.effekt, tint: f.koerper.tintTopLeft, alpha: f.koerper.alpha })),
         krits: this.krits, abgewehrt: this.abgewehrt, mixturen: this.mixturen, spielerFallen: this.spielerFallen?.size ?? 0,
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
-        funken: this.funken,
+        funken: this.funken, aufgestanden: this.aufgestanden, gegnerGeheilt: this.gegnerGeheilt,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt, balken: g.balken?.visible ? g.balken.width : null,
+          bilder: g.sprite.texture.frameTotal - 1, alpha: Math.round(g.sprite.alpha * 100) / 100, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt, balken: g.balken?.visible ? g.balken.width : null,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -666,6 +668,19 @@ export class SpielSzene extends Phaser.Scene {
       this.ich.laeuft = false;
       this.oberflaeche().dialogZeigen(m.name ?? '', m.seiten);
     });
+    // Untoter Starrsinn: der Zombie steht noch einmal auf.
+    n.bei('aufgestanden', (m) => {
+      const g = this.gegner.get(m.id);
+      if (!g) return;
+      this.aufgestanden++;
+      this.aufschrift(g.x, g.y + 16, 'Steht wieder auf!', '#b8d890');
+    });
+    // Ein Akolyth heilt einen Verbündeten: es funkelt beim Geheilten.
+    n.bei('gegner_heilung', (m) => {
+      const g = this.gegner.get(m.id);
+      this.gegnerGeheilt++;
+      this.funkeln(g?.x ?? m.x, g?.y ?? m.y);
+    });
     n.bei('gegner_treffer', (m) => {
       const g = this.gegner.get(m.id);
       this.aufblitzen(g?.sprite);
@@ -871,6 +886,14 @@ export class SpielSzene extends Phaser.Scene {
     for (const g of this.gegner.values()) {
       gleiten(g);
       g.sprite.setPosition(g.x + (g.duckt ? Math.sin(jetzt / 25) : 0), g.y + 2).setDepth(10 + g.y);
+      // Schattenschleichen: ein Schatten ist kaum zu sehen, bis er nah ist —
+      // gerechnet vom eigenen Spieler, jeder sieht ihn also anders.
+      const schleichen = this.cache.json.get('monster')?.[g.art]?.schleichen;
+      if (schleichen) {
+        const nah = Math.hypot(g.x - this.ich.x, g.y - this.ich.y) <= schleichen;
+        g.sprite.setAlpha(Phaser.Math.Linear(g.sprite.alpha, nah ? 1 : 0.15, 0.15));
+        g.schatten.setAlpha(g.sprite.alpha);
+      }
       g.schatten.setPosition(g.x, g.y).setDepth(9);
       g.marke?.setPosition(g.x, g.y - 34).setDepth(6000);
       g.frage?.setPosition(g.x + 10, g.y - 30).setDepth(6000);

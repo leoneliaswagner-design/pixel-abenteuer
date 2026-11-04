@@ -266,8 +266,8 @@ XXXXXXXXXXXAXXXXXXXXXXXXXXXX
   tiefwald: {
     titel: 'den tiefen Wald',
     grund: 'gras',
-    uebergaenge: { Q: { ziel: 'wald', ankunft: 'vom_tiefwald', kachel: 'gras' } },
-    ankuenfte: { z: { id: 'vom_inselwald', richtung: 'rechts' } },
+    uebergaenge: { Q: { ziel: 'wald', ankunft: 'vom_tiefwald', kachel: 'gras' }, O: { ziel: 'ruinen', ankunft: 'vom_tiefwald', kachel: 'gras' } },
+    ankuenfte: { z: { id: 'vom_inselwald', richtung: 'rechts' }, j: { id: 'von_ruinen', richtung: 'links' } },
     gegner: ['riesenratte', 'riesenratte', 'goblin', 'wolf', 'riesenfledermaus', 'riesenfledermaus', 'skelett', 'goblin', 'wolf', 'skelett'],
     dinge: {
       '!': [{ text: 'Vorsicht!\n\nHinter diesem Schild beginnt der tiefe Wald.' }],
@@ -282,9 +282,9 @@ T.,..........""""".......,...T
 T......o...........T.........T
 T...b......,..........o....g.T
 T........T.......~~~~........T
-Q.z.!............~~~~...T....T
-Q.......g........~~~~........T
-Q........,...T...~~~~....,...T
+Q.z.!............~~~~...T....O
+Q.......g........~~~~.......jO
+Q........,...T...~~~~....,...O
 T.....b..........~~~~.g......T
 T..T........o.........b...g..T
 T.........,......T...........T
@@ -294,6 +294,44 @@ T.,..............b.......g...T
 T......b.....g........o......T
 T...T.............,......b...T
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+`,
+  },
+  // Östlich vom tiefen Wald: Sumpf und eine Ruine, in der Kultisten des
+  // Nemroth lagern — die zweite Runde Monster aus der SRD (Foundry). Kein
+  // Prüfstand braucht hier Ruhe; monster2.mjs prüft die Monster selbst.
+  ruinen: {
+    titel: 'die Ruinen im Sumpf',
+    grund: 'gras',
+    uebergaenge: { O: { ziel: 'tiefwald', ankunft: 'von_ruinen', kachel: 'gras' } },
+    ankuenfte: { z: { id: 'vom_tiefwald', richtung: 'rechts' } },
+    gegner: ['kobold', 'ork', 'kobold', 'giftschlange', 'kobold', 'zombie', 'giftschlange', 'kultist', 'kultist', 'zombie', 'akolyth', 'schattenwesen', 'giftschlange', 'kultist', 'schattenwesen'],
+    dinge: {
+      '!': [{ text: 'Jemand hat ein Zeichen in das Holz gebrannt: ein Auge in einem Riss.\n\nDarunter, kaum lesbar: „Nemroth sieht dich."' }],
+      '$': [{ inhalt: 'kettenhemd', id: 'ruinen_kettenhemd' }],
+    },
+    text: `
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+T~~~""...T.......o..o....g..o..T
+T~~~~"",...........g......o..g.T
+T~~""..g..""...o.......g....o..T
+T~"".....""""......,...........T
+T""..~~~...""..##########......T
+T...~~~~.,.....#;;;;;;;;#..g...T
+T....~~.g.""...#;;g;;;g;#......T
+T......,...""..#;;;;;;;;#..,...T
+O.z....."......;;;;;;;;;;......T
+O.!...""""..g..#;;g;;g;;#......T
+O......""~~....#;;;;;;;;#...o..T
+T..,..""~~~~...#;;;;$;;;#......T
+T.....~~~~"....###;;;;###......T
+T..g...~~"..........;;.........T
+T......""...,....F..;;..F...,..T
+T..""".......g.................T
+T..~~~.."..........,.......""..T
+T.~~~~~..."".....g........"""..T
+T..~~~..........""............,T
+T.......,.....""""......T......T
+TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
 `,
   },
   // Der Dschungeltempel hinter dem Riss in der Fischergasse — angelehnt an

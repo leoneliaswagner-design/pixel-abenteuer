@@ -133,5 +133,180 @@
     ],
     "zickzack": 1.1,
     "bildTempo": 10
+  },
+  "kobold": {
+    "erfahrung": 3,
+    "name": "Kobold",
+    "srd": "Kobold",
+    "verhalten": "jagen",
+    "leben": 1,
+    "schaden": 1,
+    "geschwindigkeit": 40,
+    "jagdGeschwindigkeit": 62,
+    "sichtweite": 140,
+    "stossGeschwindigkeit": 260,
+    "stossDauer": 160,
+    "neuErscheinen": 10000,
+    "herzChance": 0.2,
+    "gold": [
+      0,
+      2
+    ],
+    "rudel": {
+      "abstand": 56,
+      "schaden": 1
+    },
+    "bildTempo": 7
+  },
+  "zombie": {
+    "erfahrung": 8,
+    "name": "Zombie",
+    "srd": "Zombie",
+    "verhalten": "jagen",
+    "leben": 5,
+    "schaden": 1,
+    "geschwindigkeit": 18,
+    "jagdGeschwindigkeit": 26,
+    "sichtweite": 120,
+    "stossGeschwindigkeit": 120,
+    "stossDauer": 120,
+    "neuErscheinen": 20000,
+    "herzChance": 0.4,
+    "gold": [
+      0,
+      2
+    ],
+    "untot": true,
+    "bildTempo": 4
+  },
+  "ork": {
+    "erfahrung": 10,
+    "name": "Ork",
+    "srd": "Orc",
+    "verhalten": "anspringen",
+    "leben": 4,
+    "schaden": 2,
+    "geschwindigkeit": 34,
+    "jagdGeschwindigkeit": 52,
+    "sichtweite": 160,
+    "stossGeschwindigkeit": 200,
+    "stossDauer": 160,
+    "neuErscheinen": 18000,
+    "herzChance": 0.5,
+    "gold": [
+      2,
+      5
+    ],
+    "sprung": {
+      "abstand": 110,
+      "laden": 350,
+      "tempo": 260,
+      "dauer": 380,
+      "pause": 700
+    },
+    "bildTempo": 6
+  },
+  "giftschlange": {
+    "erfahrung": 3,
+    "name": "Giftschlange",
+    "srd": "Poisonous Snake",
+    "verhalten": "jagen",
+    "leben": 1,
+    "schaden": 1,
+    "geschwindigkeit": 30,
+    "jagdGeschwindigkeit": 58,
+    "sichtweite": 100,
+    "stossGeschwindigkeit": 260,
+    "stossDauer": 160,
+    "neuErscheinen": 12000,
+    "herzChance": 0.2,
+    "gold": [
+      0,
+      1
+    ],
+    "gift": {
+      "schaden": 1,
+      "nach": 1500
+    },
+    "bildTempo": 6
+  },
+  "kultist": {
+    "erfahrung": 6,
+    "name": "Kultist",
+    "srd": "Cultist",
+    "verhalten": "jagen",
+    "leben": 2,
+    "schaden": 1,
+    "geschwindigkeit": 32,
+    "jagdGeschwindigkeit": 50,
+    "sichtweite": 150,
+    "stossGeschwindigkeit": 240,
+    "stossDauer": 180,
+    "neuErscheinen": 15000,
+    "herzChance": 0.35,
+    "gold": [
+      2,
+      6
+    ],
+    "standhaft": true,
+    "bildTempo": 6
+  },
+  "akolyth": {
+    "erfahrung": 8,
+    "name": "Akolyth des Nemroth",
+    "srd": "Acolyte",
+    "verhalten": "heilen",
+    "leben": 2,
+    "schaden": 1,
+    "geschwindigkeit": 30,
+    "jagdGeschwindigkeit": 42,
+    "sichtweite": 170,
+    "stossGeschwindigkeit": 240,
+    "stossDauer": 180,
+    "neuErscheinen": 18000,
+    "herzChance": 0.5,
+    "gold": [
+      3,
+      8
+    ],
+    "standhaft": true,
+    "schuss": {
+      "art": "feuerball",
+      "abstand": 120,
+      "tempo": 140,
+      "reichweite": 200,
+      "abklingzeit": 2600,
+      "schaden": 1
+    },
+    "heilung": {
+      "menge": 2,
+      "umkreis": 112,
+      "abklingzeit": 4000
+    },
+    "bildTempo": 5
+  },
+  "schattenwesen": {
+    "erfahrung": 8,
+    "name": "Schatten",
+    "srd": "Shadow",
+    "verhalten": "jagen",
+    "leben": 3,
+    "schaden": 1,
+    "geschwindigkeit": 28,
+    "jagdGeschwindigkeit": 46,
+    "sichtweite": 130,
+    "stossGeschwindigkeit": 200,
+    "stossDauer": 160,
+    "neuErscheinen": 18000,
+    "herzChance": 0.35,
+    "gold": [
+      1,
+      4
+    ],
+    "schwaechen": {
+      "dauer": 8000
+    },
+    "schleichen": 80,
+    "bildTempo": 5
   }
 }

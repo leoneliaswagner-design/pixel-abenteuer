@@ -491,6 +491,28 @@ probe client/szenen/Spiel.js "    this.load.spritesheet('drache', 'grafik/drache
 probe client/figur.js "    this.textur = klasse && szene.textures.exists(\`held-\${klasse}-\${farbe}\`) ? \`held-\${klasse}-\${farbe}\` : \`held-\${farbe}\`;" "    this.textur = \`held-\${farbe}\`;" pruefstand/drachenreiter.mjs \
   "Figuren ohne Klassenbild (kein Drachenhelm)"
 
+# Monster, zweite Runde (Ruinen im Sumpf)
+probe server/gebiet.js "      const rudel = g.w.rudel &&" "      const rudel = false &&" pruefstand/server-regeln.mjs \
+  "Kobolde ohne Rudeltaktik"
+probe server/gebiet.js "      if (g.w.gift) [s.giftBei, s.giftSchaden] = [jetzt + g.w.gift.nach, g.w.gift.schaden];" "" pruefstand/server-regeln.mjs \
+  "der Giftbiss vergiftet nicht"
+probe server/spiel.js "    if (!k || art === 'gift') return 0;" "    if (!k) return 0;" pruefstand/server-regeln.mjs \
+  "Gift prallt an Schutz ab"
+probe server/gebiet.js "    if (g.leben <= 0 && g.w.untot && !g.aufgestanden && !wirkung.krit) {" "    if (false) {" pruefstand/server-regeln.mjs \
+  "Zombie steht nicht wieder auf"
+probe server/gebiet.js "    if (g.leben <= 0 && g.w.untot && !g.aufgestanden && !wirkung.krit) {" "    if (g.leben <= 0 && g.w.untot && !wirkung.krit) {" pruefstand/server-regeln.mjs \
+  "Zombie steht immer wieder auf"
+probe server/gebiet.js "    const verwirrt = !g.w.standhaft && jetzt < (g.verwirrtBis ?? 0);" "    const verwirrt = jetzt < (g.verwirrtBis ?? 0);" pruefstand/server-regeln.mjs \
+  "Kultisten lassen sich ablenken"
+probe server/gebiet.js "        ziel.leben = Math.min(ziel.w.leben, ziel.leben + h.menge);" "" pruefstand/server-regeln.mjs \
+  "der Akolyth heilt nicht"
+probe server/spiel.js "    if (jetzt < (s.geschwaechtBis ?? 0)) schaden = Math.max(1, schaden - 1);" "" pruefstand/server-regeln.mjs \
+  "Schatten schwächt nicht"
+probe client/szenen/Spiel.js "        const nah = Math.hypot(g.x - this.ich.x, g.y - this.ich.y) <= schleichen;" "        const nah = true;" pruefstand/ruinen.mjs \
+  "Schatten schleicht nicht (für alle gleich sichtbar)"
+probe inhalte/daten/welt.json '  "ruinen": {' '  "ruinen_weg": {' pruefstand/server-regeln.mjs \
+  "Ruinen fehlen auf der Weltkarte"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

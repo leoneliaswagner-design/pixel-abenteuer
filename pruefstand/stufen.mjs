@@ -92,6 +92,10 @@ try {
   const GRUEN = 'g > 180 && r > 110 && r < 170 && b < 120';   // Balken 0x8ee05a
   const GELB = 'r > 220 && g > 190 && b < 110';               // „Stufe 3!" 0xffd84a
   const ROT = 'r > 170 && g < 90 && b < 100';                 // volles Herz
+  // Ein Herz überhaupt (voll, halb oder leer): sein Rot oder sein leeres Grau-
+  // violett (0x5a3a4a). Nur Rot zählte nicht, wenn Ana gleich nach dem Idol
+  // getroffen wurde — das fünfte Herz war da, aber schon leer (4.11.).
+  const HERZ = `(${ROT}) || (Math.abs(r - 90) < 7 && Math.abs(g - 58) < 7 && Math.abs(b - 74) < 7)`;
 
   const ben = await oeffnen('Ben');
   const ana = await oeffnen('Ana');
@@ -102,7 +106,7 @@ try {
   pruefe(Math.abs(za.stufenAnzeige.balken - soll1) <= 1, `Balken ${za.stufenAnzeige.balken} von ${za.stufenAnzeige.voll} (Soll ${soll1.toFixed(0)})`);
   const gruenVor = await zaehle(ana, 6, 20, 60, 4, GRUEN);
   const herz5 = [6 + 4 * 14 - 1, 5, 14, 14];
-  const herzVor = await zaehle(ana, ...herz5, ROT);
+  const herzVor = await zaehle(ana, ...herz5, HERZ);
   const herz4 = await zaehle(ana, 6 + 3 * 14 - 1, 5, 14, 14, ROT);
   const gelbVor = await zaehle(ana, 160, 90, 160, 50, GELB);
   const maxVor = za.ich.max;
@@ -115,7 +119,7 @@ try {
   // Gleich messen: nach dem Idol rollt die Steinkugel los und trifft Ana nach
   // gut 2 s — dann war das fünfte Herz in der vollen Runde schon wieder leer.
   const gruenNach = await zaehle(ana, 6, 20, 60, 4, GRUEN);
-  const herzNach = await zaehle(ana, ...herz5, ROT);
+  const herzNach = await zaehle(ana, ...herz5, HERZ);
   const zb = await zustand(ben);
   pruefe(za.ich.stufe === 3 && za.ich.erfahrung === 75 && za.stufenAnzeige.text === 'St. 3', `Ana: Stufe ${za.ich.stufe}, ${za.ich.erfahrung} Erfahrung, Anzeige „${za.stufenAnzeige.text}"`);
   pruefe(za.stufenAnzeige.aufstieg === 'Stufe 3!' && gelbNach > gelbVor + 150, `„Stufe 3!" in der Mitte: ${gelbVor} → ${gelbNach} gelbe Bildpunkte`);
@@ -125,7 +129,7 @@ try {
   // 75 Erfahrung: Stufe 3 beginnt bei 50, Stufe 4 bei 100 — halb voll.
   const soll3 = za.stufenAnzeige.voll * ((75 - t[2]) / (t[3] - t[2]));
   pruefe(Math.abs(za.stufenAnzeige.balken - soll3) <= 1 && gruenNach > 0, `Balken nach dem Aufstieg ${za.stufenAnzeige.balken} (Soll ${soll3.toFixed(0)}), grün am Bildpunkt ${gruenVor} → ${gruenNach}`);
-  pruefe(herz4 > 40 && herzVor < 10 && herzNach > 40, `fünftes Herz am Bildpunkt: ${herzVor} → ${herzNach} rote Bildpunkte (viertes vorher ${herz4})`);
+  pruefe(herz4 > 40 && herzVor < 10 && herzNach > 40, `fünftes Herz am Bildpunkt: ${herzVor} → ${herzNach} Herz-Bildpunkte (viertes vorher ${herz4})`);
 
   // Neu laden: Stufe bleibt.
   await ana.close();

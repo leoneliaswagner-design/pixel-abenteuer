@@ -54,6 +54,13 @@
     372
    ]
   },
+  "ruinen": {
+   "region": "insel-047",
+   "punkt": [
+    447,
+    372
+   ]
+  },
   "tempel": {
    "riss": true
   },

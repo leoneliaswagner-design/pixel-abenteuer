@@ -1362,6 +1362,137 @@ function monsterBlatt(name, bilder) {
   monsterBlatt('riesenfledermaus', [fledermaus(true), fledermaus(false)]);
 }
 
+// ---------- Monster aus der SRD (Foundry), zweite Runde ----------
+// Kobold, Zombie, Ork, Giftschlange, Kultist, Akolyth, Schatten(wesen) — Seitenansicht,
+// Blick nach links wie alle Monster. Der Ork hat ein drittes Bild (geduckt
+// vor dem Sturmlauf), wie der Wolf.
+{
+  // Kobold: klein, rotbraune Schuppen, Hörnchen, ein Speer.
+  const schuppe = '#b0603a', schuppeDunkel = '#7a3a22', bauch = '#e0a070';
+  const kobold = (schritt) => (b) => {
+    b.rechteck(13 + schritt, 25, 2, 4, schuppeDunkel);
+    b.rechteck(17 - schritt, 25, 2, 4, schuppeDunkel);
+    b.rechteck(20, 22, 6, 2, schuppe); // Schwanz
+    b.rechteck(25, 20, 2, 2, schuppe);
+    b.ellipse(16, 21, 5, 5, schuppe);
+    b.ellipse(15, 22, 3, 3, bauch);
+    b.ellipse(13, 14, 5, 4.5, schuppe);
+    b.rechteck(7, 15, 4, 2, schuppe); // Schnauze
+    b.rechteck(10, 12, 2, 2, '#f8e040');
+    b.setze(10, 12, UMRISS);
+    b.rechteck(14, 8, 1, 3, '#f0e6c8');
+    b.rechteck(17, 9, 1, 2, '#f0e6c8');
+    // Speer schräg nach vorn
+    for (let i = 0; i < 14; i++) b.setze(6 + i, 12 + Math.round(i * 0.7), P.holz);
+    b.rechteck(4, 10, 3, 3, '#c6c6d0');
+  };
+  monsterBlatt('kobold', [kobold(0), kobold(1)]);
+
+  // Zombie: graugrüne Haut, zerrissene Kleider, Arme nach vorn.
+  const haut = '#8aa070', hautDunkel = '#5e7048', lumpen = '#6a5a4a';
+  const zombie = (schritt) => (b) => {
+    b.rechteck(12 + schritt, 22, 3, 7, '#4a4038');
+    b.rechteck(17 - schritt, 22, 3, 7, '#4a4038');
+    b.rechteck(11, 13, 10, 10, lumpen);
+    b.setze(13, 21, haut);
+    b.setze(19, 18, haut);
+    b.rechteck(4, 14 + schritt, 8, 3, haut); // Arme nach vorn
+    b.rechteck(5, 18 - schritt, 7, 2, hautDunkel);
+    b.ellipse(15, 8, 5.5, 5.5, haut);
+    b.rechteck(10, 7, 3, 2, '#f0f0c0');
+    b.setze(11, 7, '#c03030');
+    b.rechteck(10, 11, 4, 1, hautDunkel);
+    b.rechteck(16, 3, 4, 2, '#5a4a3a'); // Haarreste
+  };
+  monsterBlatt('zombie', [zombie(0), zombie(1)]);
+
+  // Ork: breit, grün, Hauer, Axt. Drittes Bild: geduckt.
+  const ork = '#6a9a48', orkDunkel = '#4a7030', leder = '#6a4a2a';
+  const orkBild = (schritt, geduckt = false) => (b) => {
+    const t = geduckt ? 3 : 0;
+    b.rechteck(11 + schritt, 23, 4, 6, leder);
+    b.rechteck(18 - schritt, 23, 4, 6, leder);
+    b.rechteck(9, 13 + t, 14, 11 - t, leder);
+    b.rechteck(9, 20, 14, 2, '#3a2a1a');
+    b.rechteck(9, 13 + t, 4, 6, ork); // Schulter
+    b.ellipse(14, 9 + t, 6.5, 5.5, ork);
+    b.rechteck(8, 10 + t, 3, 2, orkDunkel);
+    b.rechteck(9, 12 + t, 1, 2, '#f8f0d8'); // Hauer
+    b.rechteck(12, 12 + t, 1, 2, '#f8f0d8');
+    b.rechteck(9, 7 + t, 2, 2, '#e04030');
+    b.rechteck(13, 4 + t, 6, 2, '#2a2a2a');
+    // Axt
+    b.rechteck(5, 10 + t, 2, 14, P.holz);
+    b.rechteck(1, 9 + t, 5, 6, '#b8b8c8');
+    b.rechteck(1, 9 + t, 1, 6, '#e8e8f4');
+  };
+  monsterBlatt('ork', [orkBild(0), orkBild(1), orkBild(0, true)]);
+
+  // Giftschlange: grün mit gelben Bändern, flach am Boden.
+  const gruen = '#4a9a3a', gruenDunkel = '#2e6a24', gelb = '#e8d040';
+  const schlange = (welle) => (b) => {
+    for (let i = 0; i < 20; i++) {
+      const x = 8 + i, y = 25 + Math.round(Math.sin(i / 3 + welle * Math.PI) * 1.5);
+      b.rechteck(x, y, 1, 3, i % 5 === 2 ? gelb : i > 16 ? gruenDunkel : gruen);
+    }
+    b.ellipse(7, 23, 3.5, 2.5, gruen);
+    b.setze(5, 22, '#f8e040');
+    b.rechteck(2, 24, 2, 1, '#e04050'); // Zunge
+    b.setze(1, 23 + welle, '#e04050');
+  };
+  monsterBlatt('giftschlange', [schlange(0), schlange(1)]);
+
+  // Kultist: dunkle Kutte, Kapuze, rotes Zeichen des Nemroth, Dolch.
+  const kutte = '#3a2a3e', kutteHell = '#5a4260', zeichen = '#d03838';
+  const kultist = (schritt) => (b) => {
+    b.rechteck(12 + schritt, 26, 3, 3, '#2a1e22');
+    b.rechteck(17 - schritt, 26, 3, 3, '#2a1e22');
+    b.rechteck(10, 13, 12, 14, kutte);
+    b.rechteck(11, 14, 2, 11, kutteHell);
+    b.rechteck(14, 17, 4, 4, zeichen);
+    b.rechteck(15, 18, 2, 2, kutte);
+    b.ellipse(15, 9, 6, 6, kutte);
+    b.ellipse(12, 10, 3, 3.5, P.hautDunkel);
+    b.rechteck(10, 9, 2, 1, '#f0d060');
+    b.rechteck(6, 17, 4, 2, P.hautDunkel);
+    b.rechteck(3, 16, 4, 1, '#c6c6d0'); // Dolch
+  };
+  monsterBlatt('kultist', [kultist(0), kultist(1)]);
+
+  // Akolyth des Nemroth: rote Robe, Hörnerkrone, leuchtende Hand.
+  const robe = '#8a2030', robeHell = '#b03a48', gold = '#e8b84a';
+  const akolyth = (schritt) => (b) => {
+    b.rechteck(12 + schritt, 27, 3, 2, '#2a1e22');
+    b.rechteck(17 - schritt, 27, 3, 2, '#2a1e22');
+    b.rechteck(9, 13, 14, 15, robe);
+    b.rechteck(10, 14, 2, 13, robeHell);
+    b.rechteck(9, 20, 14, 1, gold);
+    b.ellipse(15, 9, 5.5, 5.5, P.haut);
+    b.rechteck(10, 9, 2, 2, UMRISS);
+    b.rechteck(11, 3, 9, 2, gold); // Krone mit Hörnern
+    b.rechteck(11, 1, 1, 2, gold);
+    b.rechteck(19, 1, 1, 2, gold);
+    b.rechteck(5, 15, 5, 2, P.haut); // Arm mit Flamme
+    b.ellipse(4, 13 - schritt, 2.5, 3, '#ffa040');
+    b.ellipse(4, 14 - schritt, 1.2, 1.5, '#fff0a0');
+  };
+  monsterBlatt('akolyth', [akolyth(0), akolyth(1)]);
+
+  // Schatten: dunkle, ausfransende Gestalt mit fahlen Augen — schwebt.
+  const dunkel = '#1e1a2e', mitte = '#2e2842';
+  const schatten = (welle) => (b) => {
+    b.ellipse(15, 14, 7, 9, dunkel);
+    b.ellipse(14, 12, 5, 6, mitte);
+    for (let i = 0; i < 6; i++) b.rechteck(9 + i * 2, 22 + ((i + welle) % 2) * 2, 2, 4 - ((i + welle) % 2), dunkel);
+    b.rechteck(4, 13 + welle, 6, 2, dunkel); // Klaue
+    b.rechteck(3, 15 + welle, 2, 2, dunkel);
+    b.rechteck(10, 10, 2, 2, '#c8f0ff');
+    b.rechteck(14, 10, 2, 2, '#c8f0ff');
+  };
+  // „schattenwesen“, nicht „schatten“: so heißt schon der Bodenschatten unter allen Figuren.
+  monsterBlatt('schattenwesen', [schatten(0), schatten(1)]);
+}
+
 // ---------- Der Drache des Drachenreiters: klein, rot, Blick nach links ----------
 // Zwei Bilder: Flügel oben, Flügel unten. Er fliegt — unten im Bild ist Luft
 // (der Browser setzt ihn neben den Reiter, ohne Schatten).

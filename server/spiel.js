@@ -402,6 +402,8 @@ export class Spiel {
     // Beflügelt vom Lied des Musikers.
     if (jetzt < (s.liedBis ?? 0)) schaden += s.liedBoni?.schaden ?? 0;
     if (k.haltung && jetzt - s.stehtSeit >= 600) schaden += k.haltung;
+    // Stärkeentzug (Schatten): ein Schaden weniger, aber nie unter eins.
+    if (jetzt < (s.geschwaechtBis ?? 0)) schaden = Math.max(1, schaden - 1);
     // Sprungangriff: wer gerade gelaufen ist.
     if (k.laufSchlag && jetzt - s.stehtSeit < 300) schaden += k.laufSchlag;
     const kc = k.krit + (this.ruhig(s, jetzt) ? k.ruheKrit : 0);
@@ -419,7 +421,8 @@ export class Spiel {
   // Fallen und Geschosse dazu das Ausweichen.
   schutzGegen(s, art, jetzt) {
     const k = s.werte?.kampf;
-    if (!k) return 0;
+    // Gift ist schon drin — dagegen hilft kein Schild.
+    if (!k || art === 'gift') return 0;
     let p = k.schutz;
     if (jetzt < s.rauschBis) p += s.rauschBoni?.schutz ?? 0;
     if (jetzt < (s.mahlBis ?? 0)) p += s.mahlBoni?.schutz ?? 0;
@@ -969,7 +972,7 @@ export class Spiel {
     if (this.zufall() < this.schutzGegen(s, art, jetzt)) {
       s.unverwundbarBis = jetzt + 400;
       this.gebiete.get(s.gebiet).anAlle({ t: 'abgeprallt', id: s.id });
-      return;
+      return false;
     }
     s.leben = Math.max(0, s.leben - g.w.schaden);
     s.unverwundbarBis = jetzt + ws.unverwundbar;
@@ -991,7 +994,8 @@ export class Spiel {
     // Den Rückstoß rechnet der Browser des Getroffenen selbst — er bewegt
     // seine Figur ja ohnehin. Das Weg-Guthaben oben lässt ihn zu. Wer
     // standfest ist, bekommt nur das Wackeln, keinen Stoß.
-    const stoss = s.werte?.kampf.standfest ? 0 : ws.stossGeschwindigkeit;
+    // Gift wirkt von innen: kein Stoß.
+    const stoss = s.werte?.kampf.standfest || art === 'gift' ? 0 : ws.stossGeschwindigkeit;
     s.senden({ t: 'getroffen', vx: rx * stoss, vy: ry * stoss, dauer: stoss ? ws.stossDauer : 0 });
     // Etwas länger als der Stoß selbst: die letzten Positionen davon sind
     // noch unterwegs, wenn er beim Browser schon vorbei ist.
@@ -1008,12 +1012,14 @@ export class Spiel {
         gebiet.anAlle({ t: 'heilung', von: arzt.id, ziele: [s.id] });
       }
     }
-    if (s.leben > 0) return;
+    // true: der Treffer saß (für Gift und Stärkeentzug des Gegners).
+    if (s.leben > 0) return true;
     s.tot = true;
     s.wiederBei = jetzt + ws.wiederbelebung;
     // Meister der Stabilisierung: wer neben einem Arzt fällt, steht dort wieder auf.
     s.vorOrt = this.gebiete.get(s.gebiet).spieler().some((p) => p !== s && !p.tot && p.werte?.kampf.stabilisieren && Math.hypot(p.x - s.x, p.y - s.y) <= 96);
     this.anAlle({ t: 'nachricht', text: `${s.name} wurde besiegt.` });
+    return true;
   }
 
   // Wiederbelebt wird an der letzten Ankunft — dem Eingang des Gebiets, in
@@ -1044,6 +1050,11 @@ export class Spiel {
           s.erholtBei = jetzt + e;
         }
       } else s.erholtBei = 0;
+      // Giftbiss: der Schaden kommt etwas später, von innen.
+      if (s.giftBei && jetzt >= s.giftBei) {
+        s.giftBei = 0;
+        if (!s.tot) this.spielerTreffen(s, { x: s.x, y: s.y, w: { schaden: s.giftSchaden ?? 1 } }, jetzt, 'gift');
+      }
       this.drohneSchiessen(s, jetzt);
       this.drachenSchiessen(s, jetzt);
     }

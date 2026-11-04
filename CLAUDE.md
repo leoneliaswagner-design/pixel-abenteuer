@@ -50,7 +50,14 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - **Monster**: `monster.json`, Verhalten in `VERHALTEN` (server/gebiet.js).
   Gegner-Pfeile sind Geschosse mit `feind: true` und treffen Spieler. Neue
   Monster nur in Gebieten, die kein Prüfstand für Ruhe braucht — der tiefe
-  Wald ist dafür da; Wald und Höhle bleiben bei Schleimen.
+  Wald ist dafür da; Wald und Höhle bleiben bei Schleimen. Die zweite Runde
+  (Kobold, Zombie, Ork, Giftschlange, Kultist, Akolyth, Schatten =
+  `schattenwesen` — „schatten" ist das Bodenschatten-Bild) steht in den
+  Ruinen östlich davon. Eigenschaften in monster.json: `rudel`, `untot`,
+  `gift` (Spieler: `s.giftBei`, Art `gift` ohne Schutz und Stoß), `standhaft`,
+  `heilung` (Verhalten `heilen`), `schwaechen` (`s.geschwaechtBis`),
+  `schleichen` (nur der Browser: blass, bis der eigene Spieler nah ist).
+  Vorlagen für weitere: `konzept/foundry/monster-srd.json`.
 - **Licht**: Tageszeit 0…1 vom Server (`tageszeit()`, in `willkommen`, `gebiet`
   und jedem `stand`), der Browser malt sie (`client/licht.js`). Karteneigenschaft
   `licht`: ohne = draußen, `innen` = immer hell, `dunkel` = Höhle.
@@ -167,6 +174,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Ladenfenster bei 360 Punkten.
 - `node pruefstand/monster.mjs` — alle Monsterbilder geladen und gespiegelt,
   Goblin-Pfeil trifft im Browser, Wolf duckt sich sichtbar.
+- `node pruefstand/ruinen.mjs` — alle sieben Monsterbilder der Ruinen; der
+  Schatten zugleich nah bei Ben deutlich und fern bei Ana kaum (Bildpunkte).
 - `node pruefstand/optik.mjs` — Nacht/Tag am Bildpunkt (Laterne hell, abseits
   dunkel), Höhle mittags dunkel, Rathaus nachts hell, Deko, Wind, Hausschatten,
   Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.

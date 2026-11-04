@@ -138,6 +138,13 @@ export class Gebiet {
       if (k.gift && this.spiel.zufall() < k.gift) [g.giftBei, g.giftVon] = [jetzt + 1000, wer.id];
     }
     g.leben -= schaden;
+    // Untoter Starrsinn (Zombie): der erste tödliche Treffer lässt ihn noch
+    // einmal aufstehen — außer, er war kritisch.
+    if (g.leben <= 0 && g.w.untot && !g.aufgestanden && !wirkung.krit) {
+      g.leben = 1;
+      g.aufgestanden = true;
+      this.anAlle({ t: 'aufgestanden', id: g.id });
+    }
     if (wirkung.betaeuben) g.betaeubtBis = jetzt + wirkung.betaeuben;
     if (wirkung.verlangsamen) g.langsamBis = jetzt + wirkung.verlangsamen;
     g.getroffenBis = jetzt + 250;
@@ -281,7 +288,7 @@ export class Gebiet {
       if (jetzt < g.wiederBei) return;
       const nah = hier.some((s) => Math.hypot(s.x - g.start.x, s.y - g.start.y) < 96);
       if (nah) return;
-      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0, phase: null, sieht: false });
+      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0, phase: null, sieht: false, aufgestanden: false });
       this.anAlle({ t: 'gegner_neu', id: g.id });
       return;
     }
@@ -307,8 +314,9 @@ export class Gebiet {
     // Betäubt: steht still und tut niemandem etwas.
     if (jetzt < (g.betaeubtBis ?? 0) && jetzt >= g.stossBis) return;
     let vx, vy;
-    // Abgelenkt: sieht niemanden, wandert nur herum.
-    const verwirrt = jetzt < (g.verwirrtBis ?? 0);
+    // Abgelenkt: sieht niemanden, wandert nur herum. Kultisten sind standhaft
+    // (Dunkle Hingabe) — Ablenkung und Chili wirken bei ihnen nicht.
+    const verwirrt = !g.w.standhaft && jetzt < (g.verwirrtBis ?? 0);
     const ziel = jetzt < g.stossBis || verwirrt ? null : naechster(g, hier, jetzt);
     g.zielId = ziel?.id ?? null;
     if (jetzt < g.stossBis) {
@@ -346,7 +354,14 @@ export class Gebiet {
     for (const s of hier) {
       if (s.tot || jetzt < s.unverwundbarBis) continue;
       if (Math.hypot(s.x - g.x, s.y - 8 - (g.y - 6)) > 16) continue;
-      this.spiel.spielerTreffen(s, g, jetzt);
+      // Rudeltaktik (Kobold): steht ein zweiter Gegner beim Spieler, trifft er härter.
+      const rudel = g.w.rudel && this.gegner.some((o) => o !== g && !o.tot && Math.hypot(o.x - s.x, o.y - s.y) <= g.w.rudel.abstand);
+      const traf = this.spiel.spielerTreffen(s, rudel ? { x: g.x, y: g.y, w: { schaden: g.w.schaden + g.w.rudel.schaden } } : g, jetzt);
+      if (!traf || s.tot) continue;
+      // Giftbiss: etwas später noch einmal Schaden, von innen.
+      if (g.w.gift) [s.giftBei, s.giftSchaden] = [jetzt + g.w.gift.nach, g.w.gift.schaden];
+      // Stärkeentzug (Schatten): eine Weile schwächere Hiebe.
+      if (g.w.schwaechen) s.geschwaechtBis = jetzt + g.w.schwaechen.dauer;
     }
   }
 
@@ -360,12 +375,13 @@ export class Gebiet {
         id: s.id, name: s.name, farbe: s.farbe, x: rund(s.x), y: rund(s.y), r: s.richtung, l: s.laeuft,
         leben: s.leben, tot: s.tot, unv: jetzt < s.unverwundbarBis, klasse: s.klasse, max: this.spiel.maxLeben(s),
         // Was man an der Figur sieht: Rausch (rot), Leerer Körper (durchscheinend), Sprint.
-        e: (jetzt < s.rauschBis ? 'r' : '') + (jetzt < s.leereBis ? 'l' : '') + (jetzt < s.sprintBis ? 's' : '') + (jetzt < (s.liedBis ?? 0) ? 'n' : '') + (s.werte?.kampf.drohne ? 'd' : '') + (s.werte?.kampf.drachenbegleiter ? 'D' : ''),
+        // Vergiftet (v, grün) und geschwächt (w, fahl) gehören auch dazu.
+        e: (jetzt < s.rauschBis ? 'r' : '') + (s.giftBei ? 'v' : '') + (jetzt < (s.geschwaechtBis ?? 0) ? 'w' : '') + (jetzt < s.leereBis ? 'l' : '') + (jetzt < s.sprintBis ? 's' : '') + (jetzt < (s.liedBis ?? 0) ? 'n' : '') + (s.werte?.kampf.drohne ? 'd' : '') + (s.werte?.kampf.drachenbegleiter ? 'D' : ''),
       })),
       // vx/vy: der Browser rechnet zwischen zwei Ständen weiter, und schräg
       // fliegende Pfeile der Goblins dreht er danach.
       geschosse: [...this.geschosse.values()].map((p) => ({ id: p.id, art: p.art, x: rund(p.x), y: rund(p.y), r: p.richtung, vx: rund(p.vx), vy: rund(p.vy) })),
-      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0), vw: jetzt < (g.verwirrtBis ?? 0), l: Math.max(0, g.leben), lm: g.w.leben })),
+      gegner: this.gegner.map((g) => ({ id: g.id, art: g.art, x: rund(g.x), y: rund(g.y), tot: g.tot, b: g.blick, z: g.phase, bt: jetzt < (g.betaeubtBis ?? 0), mk: jetzt < (g.markiertBis ?? 0), vw: !g.w.standhaft && jetzt < (g.verwirrtBis ?? 0), l: Math.max(0, g.leben), lm: g.w.leben })),
       sf: this.spielerFallen.map((f) => ({ id: f.id, x: f.x, y: f.y })),
       herzen: [...this.herzen.values()].map((h) => ({ id: h.id, x: h.x, y: h.y })),
       ...this.fallen.stand(jetzt),
@@ -417,6 +433,22 @@ const VERHALTEN = {
       return [0, 0];
     }
     return zu(g, z, g.w.jagdGeschwindigkeit);
+  },
+
+  // Akolyth: kämpft wie der Goblin aus der Ferne und heilt dabei den
+  // Verbündeten (sich eingeschlossen), dem am meisten fehlt.
+  heilen(g, z, jetzt) {
+    const h = g.w.heilung;
+    if (jetzt >= (g.heilBereit ?? 0)) {
+      const ziel = this.gegner.filter((o) => !o.tot && o.leben < o.w.leben && Math.hypot(o.x - g.x, o.y - g.y) <= h.umkreis)
+        .sort((a, b) => (b.w.leben - b.leben) - (a.w.leben - a.leben))[0];
+      if (ziel) {
+        ziel.leben = Math.min(ziel.w.leben, ziel.leben + h.menge);
+        g.heilBereit = jetzt + h.abklingzeit;
+        this.anAlle({ t: 'gegner_heilung', id: ziel.id, von: g.id, x: ziel.x, y: ziel.y });
+      }
+    }
+    return VERHALTEN.fernkampf.call(this, g, z, jetzt);
   },
 
   // Fledermaus: auf das Ziel zu, aber im Zickzack quer dazu.

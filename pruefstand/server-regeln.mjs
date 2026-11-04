@@ -1880,6 +1880,88 @@ const arena = (art, abstand) => {
   pruefe(r.id === 'verschmolzen' && uhr < zk.rauschBis, `Zwei Körper 18: R ${r.name}, wirkt`);
 }
 
+// ---------- Monster, zweite Runde: die Ruinen im Sumpf ----------
+{
+  let wurf = 0.99;
+  const sp = new Spiel(karten, werte, { jetzt: () => uhr, zufall: () => wurf });
+  const ruinen = sp.gebiete.get('ruinen');
+  const arten = new Set(ruinen.gegner.map((g) => g.art));
+  pruefe(['kobold', 'zombie', 'ork', 'giftschlange', 'kultist', 'akolyth', 'schattenwesen'].every((a) => arten.has(a)), `Ruinen: ${ruinen.gegner.length} Gegner, Arten ${[...arten].join(', ')}`);
+  const ben = mitCharakter(sp, 'Ben', () => {}, 'kaempfer');
+  sp.wechseln(ben, 'ruinen', 'vom_tiefwald');
+  const alleWeg = () => { for (const g of ruinen.gegner) Object.assign(g, { tot: true, wiederBei: uhr + 1e9 }); };
+  const hin = (art, n = 0) => {
+    const g = ruinen.gegner.filter((x) => x.art === art)[n];
+    Object.assign(g, { tot: false, leben: g.w.leben, aufgestanden: false, stossBis: 0, betaeubtBis: 0, verwirrtBis: 0, phase: null, getroffenBis: 0, wechselBei: uhr + 1e6, vx: 0, vy: 0, heilBereit: 0, schussBereit: uhr + 1e6 });
+    return g;
+  };
+  const beruehren = (g) => {
+    Object.assign(ben, { leben: 6, unverwundbarBis: 0, giftBei: 0, geschwaechtBis: 0 });
+    Object.assign(g, { x: ben.x, y: ben.y - 2 });
+    ruinen.gegnerSchritt(g, 0.001, uhr, ruinen.spieler());
+    return 6 - ben.leben;
+  };
+  // Kobold: allein 1, mit einem zweiten Kobold neben Ben 2 (Rudeltaktik).
+  alleWeg();
+  const k1 = hin('kobold', 0);
+  const allein = beruehren(k1);
+  const k2 = hin('kobold', 1);
+  Object.assign(k2, { x: ben.x + 30, y: ben.y, betaeubtBis: uhr + 1e6 });
+  const imRudel = beruehren(k1);
+  pruefe(allein === 1 && imRudel === 2, `Kobold: allein ${allein}, im Rudel ${imRudel} Schaden`);
+  // Giftschlange: Biss 1, anderthalb Sekunden später noch 1 — ohne Stoß.
+  alleWeg();
+  const s1 = hin('giftschlange');
+  const biss = beruehren(s1);
+  const vergiftet = ruinen.stand(uhr).spieler.find((x) => x.id === ben.id).e.includes('v');
+  alleWeg();
+  for (let i = 0; i < 40; i++) { uhr += 50; sp.schritt(0.05); }
+  pruefe(biss === 1 && vergiftet && ben.leben === 4 && !ben.giftBei, `Giftschlange: Biss ${biss}, vergiftet (v), nach 1,5 s Leben ${ben.leben}`);
+  // Zombie: steht nach dem ersten tödlichen Treffer wieder auf, nicht nach dem zweiten.
+  const z = hin('zombie');
+  ruinen.gegnerTreffen(z, ben, uhr, 9);
+  const steht = !z.tot && z.leben === 1;
+  ruinen.gegnerTreffen(z, ben, uhr, 9);
+  const z2 = hin('zombie', 1);
+  ruinen.gegnerTreffen(z2, ben, uhr, 9, { krit: true });
+  pruefe(steht && z.tot && z2.tot, `Zombie: steht nach tödlichem Treffer auf (${steht ? 'ja' : 'nein'}), fällt beim zweiten; ein kritischer Treffer fällt ihn gleich`);
+  // Kultist: Ablenkung wirkt nicht (standhaft) — er jagt Ben weiter.
+  alleWeg();
+  const ku = hin('kultist');
+  Object.assign(ku, { x: ben.x + 60, y: ben.y, verwirrtBis: uhr + 5000 });
+  ruinen.gegnerSchritt(ku, 0.05, uhr, ruinen.spieler());
+  const kStand = ruinen.stand(uhr).gegner.find((x) => x.id === ku.id);
+  pruefe(ku.zielId === ben.id && !kStand.vw, 'Kultist: Ablenkung wirkt nicht, er jagt Ben weiter');
+  // Akolyth: heilt den verletzten Kultisten neben sich, sobald er Ben sieht.
+  const ak = hin('akolyth');
+  Object.assign(ak, { x: ben.x + 100, y: ben.y });
+  Object.assign(ku, { x: ben.x + 120, y: ben.y + 20, leben: 1, betaeubtBis: uhr + 1e6 });
+  ruinen.gegnerSchritt(ak, 0.05, uhr, ruinen.spieler());
+  pruefe(ku.leben === 2, `Akolyth heilt den Kultisten (Leben 1 → ${ku.leben})`);
+  // Schatten: schwächt — Bens Hieb macht einen weniger (nie unter 1).
+  alleWeg();
+  const vorher = sp.hiebSchaden(ben, uhr).schaden;
+  const sw = hin('schattenwesen');
+  beruehren(sw);
+  const nachher = sp.hiebSchaden(ben, uhr).schaden;
+  const schwach = ruinen.stand(uhr).spieler.find((x) => x.id === ben.id).e.includes('w');
+  uhr += 9000;
+  const wieder = sp.hiebSchaden(ben, uhr).schaden;
+  pruefe(vorher >= 2 && nachher === vorher - 1 && schwach && wieder === vorher, `Schatten: Hieb ${vorher} → ${nachher} (geschwächt), nach 8 s wieder ${wieder}`);
+  // Ork: duckt sich vor dem Sturmlauf, wenn Ben nah ist.
+  const o = hin('ork');
+  Object.assign(o, { x: ben.x + 80, y: ben.y });
+  ruinen.gegnerSchritt(o, 0.05, uhr, ruinen.spieler());
+  pruefe(o.phase === 'laden', `Ork: duckt sich zum Sturmlauf (${o.phase})`);
+  // Gift prallt an keinem Schutz ab, auch nicht bei Wurf 0,01.
+  Object.assign(ben, { leben: 6, giftBei: uhr, giftSchaden: 1 });
+  wurf = 0.01;
+  uhr += 50;
+  sp.schritt(0.05);
+  wurf = 0.99;
+  pruefe(ben.leben === 5, `Gift ignoriert Schutz und Glück (Leben 6 → ${ben.leben})`);
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

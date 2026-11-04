@@ -109,9 +109,26 @@ CC BY 4.0) und stehen als Daten in `inhalte/daten/monster.json`:
 | Skelett | Skeleton | langsam, zäh (4 Treffer), trifft doppelt |
 | Riesenfledermaus | Giant Bat | fliegt im Zickzack auf einen zu |
 
+Östlich vom tiefen Wald liegen **die Ruinen im Sumpf** — dort lagern
+Kultisten des Nemroth, und es gibt sieben weitere:
+
+| Monster | SRD | Was es kann |
+|---|---|---|
+| Kobold | Kobold | Rudeltaktik: steht ein zweiter Gegner bei dir, trifft er härter |
+| Zombie | Zombie | langsam, steht nach dem ersten tödlichen Treffer wieder auf (außer kritisch) |
+| Ork | Orc | duckt sich und stürmt (wie der Wolf), trifft doppelt |
+| Giftschlange | Poisonous Snake | Biss vergiftet: anderthalb Sekunden später noch ein Schaden, gegen den kein Schutz hilft |
+| Kultist | Cultist | standhaft: Ablenkung und Chili wirken nicht |
+| Akolyth des Nemroth | Acolyte | hält Abstand, wirft Flammen und heilt seine Verbündeten |
+| Schatten | Shadow | kaum zu sehen, bis er nah ist; sein Treffer schwächt deine Hiebe |
+
+Alle 331 SRD-Monster aus Foundry stehen gekürzt in
+`konzept/foundry/monster-srd.json` — als Vorlage für die nächsten.
+
 Jedes Monster hat Leben, Schaden, Tempo, Sichtweite, Beute (`gold`),
-Herz-Chance und ein `verhalten`: `jagen`, `fernkampf`, `anspringen` oder
-`flattern`. Ein neues Monster ist ein Eintrag dort und ein Bild
+Herz-Chance und ein `verhalten`: `jagen`, `fernkampf`, `anspringen`,
+`flattern` oder `heilen`; dazu nach Bedarf `rudel`, `untot`, `gift`,
+`standhaft`, `schwaechen`, `schleichen`. Ein neues Monster ist ein Eintrag dort und ein Bild
 `inhalte/grafik/<name>.png` (32×32, zwei Bilder nebeneinander, Blick nach
 links). Auf einer Karte ist ein Gegner ein Punkt `gegner` mit der
 Eigenschaft `art`; im Kartengenerator nimmt die Liste `gegner` die Arten
@@ -303,6 +320,7 @@ node pruefstand/riftside.mjs        # Start in Riftside, Hafenmeisterin, durchs 
 node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, Bolzen, Heilung, Tempo
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
+node pruefstand/ruinen.mjs          # Ruinen: sieben neue Monster, Schatten nah deutlich und fern kaum
 node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48
 node pruefstand/weltkarte.mjs       # Weltkarte: Nebel am Bildpunkt, eigener Punkt, Mitspieler hinter dem Riss
 node pruefstand/meer.mjs            # Segeln: Boot, Dunst, Schwung, Kompass, Karte ohne Punkt, Anlegen

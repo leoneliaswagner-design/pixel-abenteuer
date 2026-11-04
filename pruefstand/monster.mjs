@@ -80,7 +80,9 @@ try {
   z.monster = s.gegner.length;
   const arten = [...new Set(s.gegner.map((g) => g.art))];
   const falsch = s.gegner.filter((g) => g.textur !== g.art || g.bilder < 2);
-  pruefe(s.gebiet === 'tiefwald' && arten.length === 5 && Object.keys(monster).filter((a) => a !== 'schleim').every((a) => arten.includes(a)),
+  // Die erste Runde SRD-Monster steht im tiefen Wald; die zweite in den Ruinen (ruinen.mjs).
+  const ersteRunde = ['riesenratte', 'goblin', 'wolf', 'riesenfledermaus', 'skelett'];
+  pruefe(s.gebiet === 'tiefwald' && arten.length === 5 && ersteRunde.every((a) => arten.includes(a) && monster[a]),
     `${z.monster} Monster im tiefen Wald, ${arten.length} Arten: ${arten.join(', ')}`);
   pruefe(falsch.length === 0, `jedes Monster hat sein Bild (falsch: ${falsch.map((g) => `${g.art}→${g.textur}`).join(', ') || 'keins'})`);
   pruefe(s.gegner.find((g) => g.art === 'wolf')?.bilder === 3, 'der Wolf hat drei Bilder (das dritte: geduckt)');

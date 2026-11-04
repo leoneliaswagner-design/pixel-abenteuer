@@ -140,11 +140,13 @@ export class Figur {
     }
     // Leerer Körper: durchscheinend statt Blinken. Rausch: rot getönt —
     // für alle sichtbar, der Stand schickt es mit („e").
-    const leer = this.effekt?.includes('l'), rot = this.effekt?.includes('r');
+    // Vergiftet (Giftschlange): grün; geschwächt (Schatten): fahl blau.
+    const leer = this.effekt?.includes('l');
+    const ton = this.effekt?.includes('r') ? 0xff6a50 : this.effekt?.includes('v') ? 0x80e070 : this.effekt?.includes('w') ? 0x8890c0 : null;
     if (!this.tot) this.koerper.setAlpha(leer ? 0.35 : this.unverwundbar && Math.floor(jetzt / 70) % 2 ? 0.25 : 1);
-    if (rot) this.koerper.setTint(0xff6a50);
+    if (ton) this.koerper.setTint(ton);
     else if (this.getoent) this.koerper.clearTint();
-    this.getoent = rot;
+    this.getoent = !!ton;
     this.schild?.setPosition(Math.round(x), Math.round(y - 48));
     const lied = !this.tot && !!this.effekt?.includes('n');
     this.note.setVisible(lied);

@@ -55,6 +55,13 @@
   Wolf, Goblin, Skelett, Riesenfledermaus mit vier Verhalten (jagen,
   fernkampf, anspringen, flattern). Neues Gebiet „tiefer Wald" östlich vom
   Inselwald. Prüfstand `monster.mjs`.
+- **Monster, zweite Runde** (04.11.2026), aus dem Foundry-Export (SRD): neues
+  Gebiet „die Ruinen im Sumpf" östlich vom tiefen Wald, mit Kobold
+  (Rudeltaktik), Zombie (steht wieder auf), Ork (Sturmlauf), Giftschlange
+  (Gift), Kultist (standhaft), Akolyth des Nemroth (heilt Verbündete,
+  wirft Flammen), Schatten (schleicht, schwächt). Truhe mit Kettenhemd,
+  ein Schild mit dem Zeichen des Nemroth. Alle 331 SRD-Monster gekürzt in
+  `konzept/foundry/monster-srd.json`. Prüfstand `ruinen.mjs`.
 
 - **Neuer Stil** (eher Stardew Valley / Necesse): Figuren 32×48, Ränder in
   Eigenfarbe, Gras ohne Raster, Pflaster aus Steinen, runder Grasrand,
@@ -159,6 +166,14 @@
   der Kugel nach oben statt nach unten geschoben. Offen: Bens Lage vor dem
   Laufen mitschreiben und `freiSchieben` die Richtung vorgeben.
 
+- **monster.mjs schwankt** (4.11.2026, auch ohne die Ruinen, auf dem Stand
+  vom 1.11.): „Wolf geduckt" (2 von 5), „Pfeil nach oben" (Winkel −109°, der
+  Goblin zielt schräg auf die laufende Figur) und „Bildwechsel" fallen ab und
+  zu durch. Alle drei hängen am Takt der Abfragen — vermutlich ist die
+  Maschine langsamer als im Oktober. Offen: die Phasen über den Stand des
+  Servers zählen statt über Bildschirm-Blicke. Seltener auch `dieb.mjs`
+  (gelbe Bildpunkte „daneben", wenn der Schleim Tom sehr nah ist; 1–2 von 10).
+
 ## Grundgerüst — als Nächstes
 
 1. ~~Häuser betreten~~ — Rathaus (Ratsschreiber Theo), Hafenmeisterei
@@ -169,7 +184,10 @@
 3. ~~Inventar~~ — offen: Ausrüstung sieht man der Figur noch nicht an;
    Gegenstände fallen nur aus Truhen und aus dem Laden (keine Funde auf dem
    Boden, kein Tauschen zwischen Spielern); Gegenstände der Kampagne eintragen.
-4. ~~Monster~~ — offen: Monster der Kampagne eintragen; Fledermäuse fliegen
+4. ~~Monster~~ — zweite Runde steht (Ruinen). Offen: welche weiteren
+   Monster die Kampagne braucht (Vorlagen in `monster-srd.json`, Homebrew-
+   Monster gab es im Export keine); Spinnennetz u. ä. (verlangsamt den
+   Spieler — dafür muss der Browser sein Tempo ändern); Fledermäuse fliegen
    noch nicht über Hindernisse; kein Sichtlinien-Test (ein Goblin schießt
    auch, wenn ein Baum dazwischen steht — der Pfeil bleibt dann am Baum
    hängen); Bosse.
