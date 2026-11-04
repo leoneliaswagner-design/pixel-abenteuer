@@ -79,7 +79,9 @@ export class Gebiet {
     const art = ort.eig?.art ?? 'schleim';
     const w = this.w.monster?.[art];
     if (!w) throw new Error(`Unbekannte Gegnerart „${art}" in „${this.name}"`);
-    return { id, art, w, start: ort, x: ort.x, y: ort.y + 8, leben: w.leben, tot: false, vx: 0, vy: 0, wechselBei: 0, stossBis: 0, getroffenBis: 0, phase: null, phaseBis: 0, schussBereit: 0, blick: 'links', takt: Math.random() * 10 };
+    // Einmalige Gegner (der Demilich) bleiben tot, wenn ihr Zustand schon gilt.
+    const besiegt = w.einmalig && this.spiel.zustaende()[w.einmalig];
+    return { id, art, w, start: ort, x: ort.x, y: ort.y + 8, leben: w.leben, tot: !!besiegt, vx: 0, vy: 0, wechselBei: 0, stossBis: 0, getroffenBis: 0, phase: null, phaseBis: 0, schussBereit: 0, blick: 'links', takt: Math.random() * 10 };
   }
 
   // Wer noch Klasse und Spezies wählt, ist für das Gebiet nicht da.
@@ -137,6 +139,12 @@ export class Gebiet {
       // Gift und Klinge: eine Sekunde später noch einmal.
       if (k.gift && this.spiel.zufall() < k.gift) [g.giftBei, g.giftVon] = [jetzt + 1000, wer.id];
     }
+    // Wasserspeier: als Statue nimmt er keinen Schaden — der Hieb weckt ihn nur.
+    if (g.w.lauern && !g.erwacht) {
+      g.erwacht = true;
+      this.anAlle({ t: 'gegner_treffer', id: g.id, krit: false, schaden: 0 });
+      return;
+    }
     g.leben -= schaden;
     // Untoter Starrsinn (Zombie): der erste tödliche Treffer lässt ihn noch
     // einmal aufstehen — außer, er war kritisch.
@@ -168,6 +176,7 @@ export class Gebiet {
     g.tot = true;
     g.wiederBei = jetzt + g.w.neuErscheinen;
     g.giftBei = 0;
+    if (g.w.einmalig) this.spiel.zustandSetzen(g.w.einmalig, g.w.meldung);
     // Lautloser Kill: wer einen überraschten Gegner besiegt, verschwindet kurz.
     if (k?.lautlos && ueberrascht) {
       wer.leereBis = jetzt + 2000;
@@ -285,10 +294,10 @@ export class Gebiet {
 
   gegnerSchritt(g, dt, jetzt, hier) {
     if (g.tot) {
-      if (jetzt < g.wiederBei) return;
+      if (jetzt < g.wiederBei || (g.w.einmalig && this.spiel.zustaende()[g.w.einmalig])) return;
       const nah = hier.some((s) => Math.hypot(s.x - g.start.x, s.y - g.start.y) < 96);
       if (nah) return;
-      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0, phase: null, sieht: false, aufgestanden: false });
+      Object.assign(g, { tot: false, leben: g.w.leben, x: g.start.x, y: g.start.y + 8, stossBis: 0, phase: null, sieht: false, aufgestanden: false, erwacht: false });
       this.anAlle({ t: 'gegner_neu', id: g.id });
       return;
     }
@@ -433,6 +442,41 @@ const VERHALTEN = {
       return [0, 0];
     }
     return zu(g, z, g.w.jagdGeschwindigkeit);
+  },
+
+  // Wasserspeier: steht als Statue (Bild 3), bis jemand nah kommt — dann jagt er.
+  lauern(g, z) {
+    if (!g.erwacht && Math.hypot(z.x - g.x, z.y - g.y) > g.w.lauern) {
+      g.phase = 'stein';
+      return [0, 0];
+    }
+    g.erwacht = true;
+    g.phase = null;
+    return zu(g, z, g.w.jagdGeschwindigkeit);
+  },
+
+  // Der Demilich: ein schwebender Schädel, der Abstand hält und Ringe aus
+  // Seelenfeuer nach allen Seiten schießt — wütend (halbes Leben) öfter. Den
+  // Ringen weicht man durch die Lücken aus, nicht durch Weglaufen.
+  schaedel(g, z, jetzt) {
+    const r = g.w.ring, d = Math.hypot(z.x - g.x, z.y - g.y);
+    if (!g.sieht) g.schussBereit = Math.max(g.schussBereit, jetzt + 1200);
+    g.sieht = true;
+    if (jetzt >= g.schussBereit) {
+      g.schussBereit = jetzt + (g.leben <= g.w.leben / 2 ? r.wuetend : r.abklingzeit);
+      // Jeder zweite Ring ist um eine halbe Lücke gedreht.
+      const versatz = (g.ringe = (g.ringe ?? 0) + 1) % 2 ? 0 : Math.PI / r.anzahl;
+      for (let i = 0; i < r.anzahl; i++) {
+        const w = versatz + (i / r.anzahl) * Math.PI * 2, dx = Math.cos(w), dy = Math.sin(w);
+        this.geschossAbfeuern({
+          von: g.id, feind: true, art: 'feuerball', x: g.x + dx * 12, y: g.y - 14 + dy * 12, vx: dx * r.tempo, vy: dy * r.tempo,
+          rest: r.reichweite, schaden: r.schaden, richtung: Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'links' : 'rechts') : dy < 0 ? 'oben' : 'unten',
+        });
+      }
+    }
+    if (d < r.abstand - 20) return zu(g, z, -g.w.jagdGeschwindigkeit);
+    if (d > r.abstand + 20) return zu(g, z, g.w.jagdGeschwindigkeit);
+    return [0, 0];
   },
 
   // Akolyth: kämpft wie der Goblin aus der Ferne und heilt dabei den

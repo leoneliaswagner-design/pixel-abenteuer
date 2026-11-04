@@ -302,8 +302,9 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
   ruinen: {
     titel: 'die Ruinen im Sumpf',
     grund: 'gras',
-    uebergaenge: { O: { ziel: 'tiefwald', ankunft: 'von_ruinen', kachel: 'gras' } },
-    ankuenfte: { z: { id: 'vom_tiefwald', richtung: 'rechts' } },
+    // E: Stufen im Hügel hinab ins Grabmal (das Grab der Schrecken).
+    uebergaenge: { O: { ziel: 'tiefwald', ankunft: 'von_ruinen', kachel: 'gras' }, E: { ziel: 'grabmal', ankunft: 'von_ruinen' } },
+    ankuenfte: { z: { id: 'vom_tiefwald', richtung: 'rechts' }, Y: { id: 'aus_grabmal', richtung: 'unten' } },
     gegner: ['kobold', 'ork', 'kobold', 'giftschlange', 'kobold', 'zombie', 'giftschlange', 'kultist', 'kultist', 'zombie', 'akolyth', 'schattenwesen', 'giftschlange', 'kultist', 'schattenwesen'],
     dinge: {
       '!': [{ text: 'Jemand hat ein Zeichen in das Holz gebrannt: ein Auge in einem Riss.\n\nDarunter, kaum lesbar: „Nemroth sieht dich."' }],
@@ -311,8 +312,8 @@ TTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
     },
     text: `
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-T~~~""...T.......o..o....g..o..T
-T~~~~"",...........g......o..g.T
+T~~~""...T...E...o..o....g..o..T
+T~~~~"",.....Y.....g......o..g.T
 T~~""..g..""...o.......g....o..T
 T~"".....""""......,...........T
 T""..~~~...""..##########......T
@@ -332,6 +333,93 @@ T.~~~~~..."".....g........"""..T
 T..~~~..........""............,T
 T.......,.....""""......T......T
 TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+`,
+  },
+  // Das Grabmal unter den Ruinen — frei nach dem „Grab der Schrecken"
+  // (Tomb of Horrors) für die eigene Runde: drei Gänge aus der Eingangshalle,
+  // alle drei Sackgassen mit einstürzender Decke (1); der echte Weg ist eine
+  // Geheimtür im linken Gang. Dahinter der Freskengang mit Fallgruben (0, man
+  // klettert bei Y wieder heraus), das Teufelsgesicht — sein Mund (2) ist der
+  // Tod —, drei Platten (4) für das Tor, die Halle der Wasserspeier mit
+  // Stacheln (3), die falsche Gruft (Truhe mit Einsturz davor) und hinter
+  // einer zweiten Geheimtür die Gruft des Demilich. Die Inschriften sind
+  // eigene Texte, nicht die des Moduls.
+  grabmal: {
+    titel: 'das Grabmal',
+    licht: 'dunkel',
+    grund: 'tempelboden',
+    uebergaenge: { A: { ziel: 'ruinen', ankunft: 'aus_grabmal' } },
+    ankuenfte: { a: { id: 'von_ruinen', richtung: 'oben' }, Y: { id: 'freskengang', richtung: 'rechts' } },
+    gegner: ['demilich', 'schattenwesen', 'skelett', 'wasserspeier', 'zombie', 'wasserspeier', 'zombie', 'zombie', 'skelett', 'skelett'],
+    dinge: {
+      '$': [
+        { inhalt: 'gold:150', id: 'grabmal_schatz', erfahrung: 80, setzt: 'grabmal_schatz', meldung: 'Der Schatz des Demilich — das Grabmal ist bezwungen!' },
+        { inhalt: 'gold:5', id: 'grabmal_falsch' },
+      ],
+      D: [
+        { id: 'grabmal_geheim2', geheim: true },
+        { id: 'grabmal_tor', oeffnet_bei: 'grabmal_tor', text: 'Ein Tor aus schwarzem Stein. Kein Griff, kein Schloss — nur drei Kerben am Boden.' },
+        { id: 'grabmal_geheim1', geheim: true },
+      ],
+      '!': [
+        { magisch: true, text: 'In verblassten Runen:\n\n„Wer hier ruht, ist nur ein Diener. Der Herr schläft westlich, hinter dem Stein, der hohl klingt."' },
+        { text: 'In den Stein geschlagen:\n\n„Der Mund des Teufels nimmt alles und gibt nichts zurück. Drei Steine sprechen, wo er schweigt."' },
+        { text: 'Verblasste Fresken: Gestalten, die über den Boden schreiten — und andere, die zwischen den Platten verschwinden.' },
+        { text: 'In Gold über dem Gang:\n\n„Nur der Würdige schreitet durch das große Tor."\n\nDer Gang ist prächtig. Zu prächtig.' },
+      ],
+    },
+    punkte: {
+      '0': { name: 'falle', art: 'grube', zurueck: 'freskengang' },
+      '1': { name: 'falle', art: 'einsturz' },
+      '2': { name: 'falle', art: 'schlund' },
+      '3': [0, 1000, 0, 1000, 0, 1000].map((versatz) => ({ name: 'falle', art: 'stacheln', versatz })),
+      '4': { name: 'falle', art: 'platte', setzt: 'grabmal_tor', meldung: 'Ein Knirschen im Stein — das schwarze Tor gleitet zur Seite!' },
+    },
+    text: `
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WW;;$;;;;;;;;;;;;;;;;W;;;;;;;;;;;WWWWWWWW
+WW;;;;;;;;;;;;;;;;;;;W;;;;;$;;;;;;;;;;;;W
+WF;;;;;;;;;g;;;;;;;;;D;;;;;1;;;;;;;;;g;;W
+WW;;;;;;;;;;;;;;;;;;;W;;;;;;g;;;;W;;;;;;W
+WW;;;;;;;;;;;;;;;;;;;W;;;;;;;;;!;W;;;;;;W
+WW;;;;;;;;;;;;;;;;;;;W;;;;;;;;;;;W;;g;;;W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW;;;;;;W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW;;;;;;W
+WWWWWWWWWWWWWWWWWWWF2FWWWWWWWWWWWW333333W
+WWWWWW;;;;;;;;;;;;;;;;;;;;;;;;;;;W;;;;;;W
+WWWWWW;;;;g;;;;;;;;;;;;;;;;;;;;;;W;;;;;;W
+WWWWWW;;;;;;;;;;!;;;;;;;;;;;;;;;;W;;;;;;W
+WWWWWW;;;;;;;;;;;;;;;;;;;;;;;;;;;D;;;;;;W
+WWWWWW;;;4;;;;;;;;;;;;;;;;;;;;;4;W;;;;g;W
+WWWWWW;;;;;;;;;;;;;;4;;;;;;;;;g;;W;;;;;;W
+WWWWWW;;;;;;;;;;;;;;;;;;;;;;;;;;;W;;;;;;W
+WWWWWWWWWWWW;;;WWWWWWWWWWWWWWWWWWW;g;;;;W
+WWWWWWWWWWWW;;0WWWWWWWWWWWWWWWWWWW;;;;;;W
+WWWWWWWWWWWW;;;WWWWWWWWWWWWWWWWWWW;;;;;;W
+WWWWWWWWWWWW;;;WWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWW0;;WWWWWWWWWWWWWWWWWWWWWWWWWW
+WWW;1;WWWWWW;;;WWW;;1;;WWWWWWWWWWWW;1;WWW
+WWW;;;WWWWWW;;;WWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWW;0;WWF;;;;;FWWWWWWWWWWW;;;WWW
+WWW;;;W;!;;;;;;WWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;D;;Y;;;;;WWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;W;;;;;;;;WWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWF;;;;;FWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWW;;!;;WWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWW;;;;;WWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWF;;;;;FWWWWWWWWWWW;;;WWW
+WWW;;;WWWWWWWWWWWW;;;;;WWWWWWWWWWWW;;;WWW
+WW;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;WW
+WW;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;WW
+WF;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;FW
+WW;;;;;;g;;;;;;;;;;;;;;;;;;;;;;;g;;;;;;WW
+WW;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;WW
+WW;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;WW
+WF;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;FW
+WW;;;;;;;;;;;;;;;;;;a;;;;;;;;;;;;;;;;;;WW
+WWWWWWWWWWWWWWWWWWWWAWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 `,
   },
   // Der Dschungeltempel hinter dem Riss in der Fischergasse — angelehnt an

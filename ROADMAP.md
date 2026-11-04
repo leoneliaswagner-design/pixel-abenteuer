@@ -62,6 +62,13 @@
   wirft Flammen), Schatten (schleicht, schwächt). Truhe mit Kettenhemd,
   ein Schild mit dem Zeichen des Nemroth. Alle 331 SRD-Monster gekürzt in
   `konzept/foundry/monster-srd.json`. Prüfstand `ruinen.mjs`.
+- **Das Grabmal** (04.11.2026), frei nach dem *Grab der Schrecken* für die
+  eigene Runde (eigener Grundriss, eigene Inschriften): Stufen im Hügel der
+  Ruinen. Eingangshalle mit drei einstürzenden Sackgassen, Geheimtür,
+  Freskengang mit Fallgruben, Teufelsgesicht (Schlund), Platten-Tor, Halle
+  der Wasserspeier mit Stacheln, falsche Gruft (Einsturz vor der Truhe),
+  zweite Geheimtür (Hinweis nur für den Gelehrten), Gruft des Demilich —
+  der erste Endgegner (Lebensbalken, einmalig). Prüfstand `grabmal.mjs`.
 
 - **Neuer Stil** (eher Stardew Valley / Necesse): Figuren 32×48, Ränder in
   Eigenfarbe, Gras ohne Raster, Pflaster aus Steinen, runder Grasrand,
@@ -173,6 +180,9 @@
   Maschine langsamer als im Oktober. Offen: die Phasen über den Stand des
   Servers zählen statt über Bildschirm-Blicke. Seltener auch `dieb.mjs`
   (gelbe Bildpunkte „daneben", wenn der Schleim Tom sehr nah ist; 1–2 von 10).
+  Am 4.11. abends auch `bogen.mjs` (3 von 4, Zeitüberschreitung beim
+  Neuladen, rote Bildpunkte „daneben") — ebenso auf dem Stand vor dem
+  Grabmal; die Maschine lief mit Last 4 auf 4 Kernen.
 
 ## Grundgerüst — als Nächstes
 
@@ -184,7 +194,10 @@
 3. ~~Inventar~~ — offen: Ausrüstung sieht man der Figur noch nicht an;
    Gegenstände fallen nur aus Truhen und aus dem Laden (keine Funde auf dem
    Boden, kein Tauschen zwischen Spielern); Gegenstände der Kampagne eintragen.
-4. ~~Monster~~ — zweite Runde steht (Ruinen). Offen: welche weiteren
+4. ~~Monster~~ — zweite Runde steht (Ruinen), erster Boss (Demilich im
+   Grabmal). Offen fürs Grabmal: die Truhe des Demilich geht auch auf,
+   solange er lebt; der Demilich zieht keine Seelen und ruft keine Diener
+   (nur Ringe); Fallen sind für alle gleich (kein Aufspüren durch den Dieb). Offen: welche weiteren
    Monster die Kampagne braucht (Vorlagen in `monster-srd.json`, Homebrew-
    Monster gab es im Export keine); Spinnennetz u. ä. (verlangsamt den
    Spieler — dafür muss der Browser sein Tempo ändern); Fledermäuse fliegen

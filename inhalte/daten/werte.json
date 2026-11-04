@@ -11,6 +11,7 @@
     "akropolis",
     "tiefwald",
     "ruinen",
+    "grabmal",
     "meer"
   ],
   "aussehen": [
@@ -69,6 +70,18 @@
     "dunst": 110
   },
   "fallen": {
+    "grube": {
+      "schaden": 1,
+      "offen": 3000
+    },
+    "einsturz": {
+      "verzoegerung": 900,
+      "radius": 52,
+      "schaden": 3,
+      "liegt": 5000,
+      "abklingzeit": 8000
+    },
+    "schlund": {},
     "kugel": {
       "verzoegerung": 1200,
       "anfang": 30,

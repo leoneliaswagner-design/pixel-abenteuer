@@ -13,6 +13,7 @@ export class Fallen {
     this.liste = welt.orte.filter((o) => o.name === 'falle').map((o) => ({
       art: o.eig.art, kachel: kachelVon(o), x: o.x, y: o.y, versatz: Number(o.eig.versatz ?? 0),
       richtung: o.eig.richtung ?? 'rechts', bereit: 0, schussBei: 0, gedruecktBis: 0, setzt: o.eig.setzt, meldung: o.eig.meldung,
+      zurueck: o.eig.zurueck, offenBis: 0, faelltBei: 0, gefallenBis: 0,
     }));
     for (const f of this.liste) if (!this.w[f.art]) throw new Error(`Unbekannte Falle „${f.art}" in „${gebiet.name}"`);
 
@@ -62,6 +63,49 @@ export class Fallen {
         f.gedruecktBis = jetzt + 500;
         f.zielY = s.y - 10;
         g.anAlle({ t: 'falle', art: 'klick', x: f.x, y: f.y });
+      } else if (f.art === 'grube') {
+        // Fallgrube (Grabmal): sieht aus wie Boden. Wer hineintritt, fällt,
+        // nimmt Schaden und klettert am Anfang des Gangs wieder heraus
+        // (Ankunft „zurueck"); offen bleibt sie eine Weile sichtbar.
+        for (const s of hier) {
+          if (s.tot || jetzt < s.unverwundbarBis || fussKachel(s) !== f.kachel) continue;
+          f.offenBis = jetzt + this.w.grube.offen;
+          g.anAlle({ t: 'falle', art: 'grube', x: f.x, y: f.y });
+          g.spiel.spielerTreffen(s, { x: s.x, y: s.y, w: { schaden: this.w.grube.schaden } }, jetzt, 'gift');
+          const ziel = welt.orte.find((o) => o.name === 'ankunft' && o.eig.id === f.zurueck);
+          if (!s.tot && ziel) {
+            [s.x, s.y] = [ziel.x, ziel.y + 8];
+            g.spiel.korrigiere(s);
+          }
+        }
+      } else if (f.art === 'einsturz') {
+        // Einsturz (die falschen Gänge): ein Tritt, ein Knirschen, dann
+        // kommt die Decke herunter — auf alle im Umkreis, nicht nur auf den,
+        // der ausgelöst hat. Wer das Beben spürt und rennt, kommt davon.
+        const e = this.w.einsturz;
+        if (f.faelltBei && jetzt >= f.faelltBei) {
+          f.faelltBei = 0;
+          f.gefallenBis = jetzt + e.liegt;
+          g.anAlle({ t: 'beben', dauer: 300, stark: 0.014 });
+          for (const s of hier)
+            if (!s.tot && Math.hypot(s.x - f.x, s.y - 8 - f.y) <= e.radius) {
+              s.unverwundbarBis = 0;
+              g.spiel.spielerTreffen(s, { x: f.x, y: f.y - 20, w: { schaden: e.schaden } }, jetzt, 'falle');
+            }
+        }
+        if (jetzt >= f.bereit && !f.faelltBei && hier.some((s) => !s.tot && fussKachel(s) === f.kachel)) {
+          f.bereit = jetzt + e.abklingzeit;
+          f.faelltBei = jetzt + e.verzoegerung;
+          g.anAlle({ t: 'beben', dauer: e.verzoegerung, stark: 0.004 });
+        }
+      } else if (f.art === 'schlund') {
+        // Der Schlund des Teufelsgesichts: wer hineingeht, ist fort. Kein
+        // Schutz, kein Ausweichen — nur ein Lebensretter in der Nähe.
+        for (const s of hier) {
+          if (s.tot || fussKachel(s) !== f.kachel) continue;
+          g.anAlle({ t: 'nachricht', text: `${s.name} verschwindet im Schlund des Teufelsgesichts.` });
+          g.spiel.spielerTreffen(s, { x: s.x, y: s.y, w: { schaden: 999 } }, jetzt, 'gift');
+        }
       } else if (f.art === 'platte') {
         if (hier.some((s) => !s.tot && fussKachel(s) === f.kachel)) {
           if (jetzt >= f.gedruecktBis) g.anAlle({ t: 'falle', art: 'klick', x: f.x, y: f.y });
@@ -139,7 +183,11 @@ export class Fallen {
     const kg = this.kugel;
     return {
       // Eine Platte, deren Rätsel gelöst ist, bleibt unten.
-      fallen: this.liste.map((f) => (f.art === 'stacheln' ? this.stachelnOben(f, jetzt) : jetzt < f.gedruecktBis || (f.art === 'platte' && this.gebiet.spiel.zustaende()[f.setzt])) ? 1 : 0),
+      fallen: this.liste.map((f) => (f.art === 'stacheln' ? this.stachelnOben(f, jetzt)
+        : f.art === 'grube' ? jetzt < f.offenBis
+          : f.art === 'einsturz' ? jetzt < f.gefallenBis
+            : f.art === 'schlund' ? false
+              : jetzt < f.gedruecktBis || (f.art === 'platte' && this.gebiet.spiel.zustaende()[f.setzt])) ? 1 : 0),
       kugel: kg && { x: kg.x, y: Math.round(kg.y * 10) / 10, z: kg.z, w: Math.round(kg.winkel * 100) / 100 },
     };
   }

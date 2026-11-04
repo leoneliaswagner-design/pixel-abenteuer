@@ -519,6 +519,30 @@ probe werkzeuge/kartenbau.mjs "KACHELN[n].hindernis && !u) oben = n;" "KACHELN[n
 probe server/gebiet.js "    if (!this.spiel.gegnerStill) for" "    if (this.spiel.gegnerStill) for" pruefstand/server-regeln.mjs \
   "Gegner stehen immer still (Prüfstand-Schalter falsch herum)"
 
+# Grabmal (frei nach dem Grab der Schrecken)
+probe server/fallen.js "            [s.x, s.y] = [ziel.x, ziel.y + 8];" "" pruefstand/server-regeln.mjs \
+  "Fallgrube wirft nicht zurück"
+probe server/fallen.js "            if (!s.tot && Math.hypot(s.x - f.x, s.y - 8 - f.y) <= e.radius) {" "            if (!s.tot) {" pruefstand/server-regeln.mjs \
+  "Einsturz trifft das ganze Gebiet"
+probe server/fallen.js "          g.spiel.spielerTreffen(s, { x: s.x, y: s.y, w: { schaden: 999 } }, jetzt, 'gift');" "" pruefstand/server-regeln.mjs \
+  "der Schlund tut nichts"
+probe server/spiel.js "      if (gebiet.welt.geoeffnet.has(ding.schluessel)) return;
+      gebiet.tuerOeffnen(ding);" "      if (gebiet.welt.geoeffnet.has(ding.schluessel)) return;
+      return;" pruefstand/server-regeln.mjs \
+  "Geheimtür geht nicht auf"
+probe server/gebiet.js "    if (g.w.lauern && !g.erwacht) {" "    if (false) {" pruefstand/server-regeln.mjs \
+  "Wasserspeier nimmt als Statue Schaden"
+probe server/gebiet.js "      for (let i = 0; i < r.anzahl; i++) {" "      for (let i = 0; i < 1; i++) {" pruefstand/server-regeln.mjs \
+  "Demilich schießt nur einen statt eines Rings"
+probe server/gebiet.js "      if (jetzt < g.wiederBei || (g.w.einmalig && this.spiel.zustaende()[g.w.einmalig])) return;" "      if (jetzt < g.wiederBei) return;" pruefstand/server-regeln.mjs \
+  "Demilich erscheint wieder"
+probe client/szenen/Spiel.js "&& g.lebenMax && v.contains(g.x, g.y - 16));" "&& g.lebenMax);" pruefstand/grabmal.mjs \
+  "Lebensbalken überall im Gebiet"
+probe client/szenen/Spiel.js "      .map((o) => this.add.image(Math.floor(o.x / k) * k + k / 2, Math.floor(o.y / k) * k + k, 'teufelsgesicht')" "      .map((o) => this.add.image(-999, -999, 'teufelsgesicht')" pruefstand/grabmal.mjs \
+  "kein Teufelsgesicht zu sehen"
+probe client/szenen/Spiel.js "'tuer', (d.eig.geheim ? 2 : 0) + (this.welt" "'tuer', 0 + (this.welt" pruefstand/grabmal.mjs \
+  "Geheimtür sieht aus wie eine Holztür"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

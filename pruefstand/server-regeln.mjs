@@ -1962,6 +1962,84 @@ const arena = (art, abstand) => {
   pruefe(ben.leben === 5, `Gift ignoriert Schutz und Glück (Leben 6 → ${ben.leben})`);
 }
 
+// ---------- Das Grabmal (frei nach dem Grab der Schrecken) ----------
+{
+  const sp = new Spiel(karten, werte, { jetzt: () => uhr, zufall: () => 0.99 });
+  const grab = sp.gebiete.get('grabmal');
+  const K = 32, auf = (x, y) => ({ x: x * K + 16, y: y * K + 24 });
+  const arten = grab.gegner.map((g) => g.art);
+  pruefe(arten.includes('demilich') && arten.filter((a) => a === 'wasserspeier').length === 2 && grab.fallen.liste.length >= 14,
+    `Grabmal: ${grab.gegner.length} Gegner (Demilich, 2 Wasserspeier …), ${grab.fallen.liste.length} Fallen`);
+  // Vom Hügel in den Ruinen hinab: die Stufen führen ins Grabmal.
+  const ru = sp.gebiete.get('ruinen');
+  const stufe = ru.welt.orte.find((o) => o.name === 'uebergang' && o.eig.ziel === 'grabmal');
+  pruefe(!!stufe && ru.welt.frei(stufe.x + 16, stufe.y + 24), 'in den Ruinen führen betretbare Stufen ins Grabmal');
+  const ana = mitCharakter(sp, 'Ana', () => {}, 'kaempfer');
+  const ben = mitCharakter(sp, 'Ben', () => {}, 'kaempfer');
+  for (const s of [ana, ben]) sp.wechseln(s, 'grabmal', 'von_ruinen');
+  const still = () => { for (const g of grab.gegner) Object.assign(g, { tot: true, wiederBei: uhr + 1e9 }); };
+  still();
+  const schritt = (ms) => { for (let t = 0; t < ms; t += 50) { uhr += 50; sp.schritt(0.05); } };
+  const bereit = (s, x, y) => Object.assign(s, auf(x, y), { leben: 6, unverwundbarBis: 0, tot: false, stossBis: 0 });
+  // Fallgrube im Freskengang: Schaden, und man klettert am Anfang wieder heraus.
+  bereit(ana, 13, 24);
+  bereit(ben, 2, 40);
+  schritt(50);
+  const ankunft = grab.welt.orte.find((o) => o.name === 'ankunft' && o.eig.id === 'freskengang');
+  const offen = grab.fallen.stand(uhr).fallen[grab.fallen.liste.findIndex((f) => f.art === 'grube' && f.x === 13 * K + 16)];
+  pruefe(ana.leben === 5 && Math.abs(ana.x - ankunft.x) < 1 && offen === 1, `Fallgrube: Leben 6 → ${ana.leben}, zurück am Anfang des Gangs (${Math.round(ana.x)}, ${Math.round(ana.y)}), Grube offen`);
+  // Einsturz in der Sackgasse: erst Beben, dann trifft es alle im Umkreis — nicht den drei Kacheln weiter.
+  bereit(ana, 20, 22);
+  bereit(ben, 20, 25);
+  schritt(100);
+  const nochHeil = ana.leben;
+  schritt(1000);
+  pruefe(nochHeil === 6 && ana.leben === 3 && ben.leben === 6, `Einsturz: erst nichts (${nochHeil}), dann Leben ${ana.leben}; Ben drei Kacheln weiter ${ben.leben}`);
+  // Der Schlund des Teufelsgesichts: wer hineingeht, ist besiegt.
+  bereit(ana, 20, 9);
+  ana.y -= 2;
+  schritt(50);
+  pruefe(ana.tot, 'Schlund des Teufelsgesichts: Ana ist besiegt');
+  uhr += 10000;
+  sp.schritt(0.05);
+  // Geheimtür im linken Gang: E an der Wand öffnet sie, danach ist sie frei.
+  bereit(ben, 5, 26);
+  ben.richtung = 'rechts';
+  const zuVorher = grab.welt.frei(6 * K + 16, 26 * K + 24);
+  sp.nachricht(ben.id, { t: 'ansprechen', r: 'rechts' });
+  pruefe(!zuVorher && grab.welt.geoeffnet.has('grabmal_geheim1') && grab.welt.frei(6 * K + 16, 26 * K + 24), 'Geheimtür: zu wie Wand, nach E offen und begehbar');
+  // Die drei Platten im Raum des Teufelsgesichts öffnen das Tor.
+  const platten = grab.fallen.liste.filter((f) => f.art === 'platte');
+  for (const f of platten) f.gedruecktBis = uhr + 5000;
+  schritt(50);
+  pruefe(platten.length === 3 && sp.zustaende().grabmal_tor && grab.welt.geoeffnet.has('grabmal_tor'), 'drei Platten zugleich: das schwarze Tor ist offen');
+  // Wasserspeier: Statue, solange niemand nah ist — ein Hieb weckt ihn nur.
+  const ws = grab.gegner.find((g) => g.art === 'wasserspeier');
+  Object.assign(ws, { tot: false, leben: ws.w.leben, erwacht: false, x: auf(36, 6).x, y: auf(36, 6).y, wechselBei: uhr + 1e6, stossBis: 0, betaeubtBis: 0 });
+  bereit(ben, 36, 10);
+  grab.gegnerSchritt(ws, 0.05, uhr, grab.spieler());
+  const statue = ws.phase === 'stein' && ws.x === auf(36, 6).x;
+  grab.gegnerTreffen(ws, ben, uhr, 3);
+  pruefe(statue && ws.leben === ws.w.leben && ws.erwacht, `Wasserspeier: Statue (${statue}), der Hieb weckt ihn ohne Schaden (Leben ${ws.leben})`);
+  ws.tot = true;
+  // Der Demilich: sieht er jemanden, kommt ein Ring aus acht Seelenfeuern.
+  const dl = grab.gegner.find((g) => g.art === 'demilich');
+  Object.assign(dl, { tot: false, leben: dl.w.leben, x: auf(11, 3).x, y: auf(11, 3).y, sieht: false, schussBereit: 0, wechselBei: uhr + 1e6, stossBis: 0, betaeubtBis: 0 });
+  bereit(ben, 11, 5);
+  ben.unverwundbarBis = uhr + 1e6;
+  grab.geschosse.clear();
+  for (let i = 0; i < 30; i++) { uhr += 50; grab.gegnerSchritt(dl, 0.05, uhr, grab.spieler()); }
+  const ring = [...grab.geschosse.values()].filter((p) => p.von === dl.id && p.feind).length;
+  pruefe(ring === 8, `Demilich: ein Ring aus ${ring} Seelenfeuern`);
+  // Besiegt: der Zustand gilt, er kommt nicht wieder — auch nicht in einem neuen Spiel.
+  grab.gegnerTreffen(dl, ben, uhr, 99);
+  uhr += 2e9;
+  ben.x = 2 * K;
+  grab.gegnerSchritt(dl, 0.05, uhr, grab.spieler());
+  const neu = new Spiel(karten, werte, { jetzt: () => uhr, spielstand: sp.spielstand });
+  pruefe(dl.tot && sp.zustaende().demilich_bezwungen && neu.gebiete.get('grabmal').gegner.find((g) => g.art === 'demilich').tot, 'Demilich besiegt: Zustand gesetzt, er erscheint nicht wieder (auch nach dem Neustart)');
+}
+
 // ---------- Menü: Charakter neu, Welt zurücksetzen ----------
 {
   const datei = join(mkdtempSync(join(tmpdir(), 'spielstand-')), 'stand.json');

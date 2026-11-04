@@ -805,6 +805,14 @@ export class Spiel {
       if (e.erfahrung) for (const p of this.spieler.values()) this.erfahrungGeben(p, Number(e.erfahrung));
       this.merken(s);
       this.speichern();
+    } else if (ding.name === 'tuer' && e.geheim) {
+      // Geheimtür (Grabmal): sieht aus wie Wand. Wer davor steht und E drückt,
+      // klopft — sie klingt hohl und gibt nach. Kein Schlüssel nötig.
+      if (gebiet.welt.geoeffnet.has(ding.schluessel)) return;
+      gebiet.tuerOeffnen(ding);
+      gebiet.anAlle({ t: 'tuer', ding: ding.schluessel, offen: true });
+      gebiet.anAlle({ t: 'nachricht', text: `${s.name} klopft an die Wand — sie klingt hohl und gibt nach!` });
+      this.speichern();
     } else if (ding.name === 'tuer' && e.oeffnet_bei) {
       // Ein Tor ohne Schloss: es geht nur über sein Rätsel auf.
       if (!gebiet.welt.geoeffnet.has(ding.schluessel)) s.senden({ t: 'dialog', seiten: seiten(e.text ?? 'Es rührt sich nicht.') });

@@ -61,6 +61,13 @@
     372
    ]
   },
+  "grabmal": {
+   "region": "insel-047",
+   "punkt": [
+    447,
+    371
+   ]
+  },
   "tempel": {
    "riss": true
   },

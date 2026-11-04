@@ -122,6 +122,14 @@ Kultisten des Nemroth, und es gibt sieben weitere:
 | Akolyth des Nemroth | Acolyte | hält Abstand, wirft Flammen und heilt seine Verbündeten |
 | Schatten | Shadow | kaum zu sehen, bis er nah ist; sein Treffer schwächt deine Hiebe |
 
+Unter dem Hügel der Ruinen liegt **das Grabmal** — frei nach dem *Grab der
+Schrecken* für unsere Runde: drei Gänge aus der Eingangshalle (alle drei
+stürzen ein), eine Geheimtür (E an der Wand), der Freskengang mit
+unsichtbaren Fallgruben, das Teufelsgesicht (sein Mund ist der Tod), drei
+Platten für das schwarze Tor, die Halle der Wasserspeier, die falsche Gruft
+und hinter einer zweiten Geheimtür Acererak, der Demilich — ein schwebender
+Schädel, der Ringe aus Seelenfeuer schießt. Er kommt nur einmal.
+
 Alle 331 SRD-Monster aus Foundry stehen gekürzt in
 `konzept/foundry/monster-srd.json` — als Vorlage für die nächsten.
 
@@ -321,6 +329,7 @@ node pruefstand/klassen.mjs         # Charakterwahl (auch am Handy), Aussehen, B
 node pruefstand/inventar.mjs        # Laden, Kaufen, Anlegen, Trank, Spielstand, Ladenfenster am Handy
 node pruefstand/monster.mjs         # Monsterbilder, Goblin-Pfeil trifft, Wolf duckt sich sichtbar
 node pruefstand/ruinen.mjs          # Ruinen: sieben neue Monster, Schatten nah deutlich und fern kaum
+node pruefstand/grabmal.mjs         # Grabmal: Teufelsgesicht, Geheimtür beim anderen, Boss-Balken, Schlund
 node pruefstand/optik.mjs           # Tag und Nacht am Bildpunkt, Höhle, Innenräume, Deko, Wind, Figuren 32×48
 node pruefstand/weltkarte.mjs       # Weltkarte: Nebel am Bildpunkt, eigener Punkt, Mitspieler hinter dem Riss
 node pruefstand/meer.mjs            # Segeln: Boot, Dunst, Schwung, Kompass, Karte ohne Punkt, Anlegen

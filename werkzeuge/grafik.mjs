@@ -992,9 +992,11 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
 
 // ---------- Tempel: Fallen, Steinkugel, Sockel ----------
 // fallen.png (32×32): 0 Stacheln unten (Löcher), 1 Stacheln oben,
-// 2 Druckplatte, 3 Druckplatte gedrückt.
+// 2 Druckplatte, 3 Druckplatte gedrückt, 4 leer (Grube zu — sie sieht aus
+// wie Boden), 5 Grube offen, 6 Riss in der Decke (Einsturz, kaum zu sehen),
+// 7 Geröll nach dem Einsturz.
 {
-  const blatt = new Bild(4 * K, K);
+  const blatt = new Bild(8 * K, K);
   const loecher = (b) => {
     for (let y = 6; y < K; y += 9) for (let x = 5; x < K; x += 9) {
       b.ellipse(x, y, 2, 1.5, '#2e2a22');
@@ -1019,7 +1021,23 @@ for (const [name, o] of Object.entries(LEUTE)) figurenBlatt(o).speichern(ziel + 
     b.rechteck(13, 13, 6, 6, gedrueckt ? '#6a6650' : '#8e8a6c');
     return b;
   };
-  [unten, oben, platte(0), platte(2)].forEach((b, i) => blatt.einfuegen(b, i * K, 0));
+  const leer = new Bild(K, K);
+  const grube = new Bild(K, K);
+  grube.rechteck(2, 2, 28, 28, '#1a1418');
+  grube.rechteck(2, 2, 28, 3, '#3a3028');
+  for (let x = 5; x < 28; x += 6) {
+    grube.rechteck(x, 16, 2, 12, '#8a8a98');
+    grube.setze(x, 15, '#c8c8d4');
+  }
+  const riss = new Bild(K, K);
+  for (const [x, y, l] of [[6, 8, 7], [14, 14, 9], [20, 22, 6]]) riss.linie(x, y, x + l, y + 3, '#4a4038');
+  const geroell = new Bild(K, K);
+  for (const [x, y, r] of [[9, 20, 6], [20, 18, 7], [15, 11, 5], [24, 26, 4], [6, 27, 4]]) {
+    geroell.ellipse(x, y, r, r * 0.8, '#7a7064');
+    geroell.ellipse(x - 1, y - 1, r * 0.6, r * 0.5, '#9a9084');
+  }
+  geroell.umriss(RAND);
+  [unten, oben, platte(0), platte(2), leer, grube, riss, geroell].forEach((b, i) => blatt.einfuegen(b, i * K, 0));
   blatt.speichern(ziel + 'fallen.png');
 }
 // kugel.png: 4 Bilder 64×64 — die Kugel rollt nach unten; Risse und Flecken
@@ -1138,9 +1156,9 @@ function eule(b, cx, cy, g = 1) {
   truhen.speichern(ziel + 'truhe.png');
 }
 
-// ---------- Tür (zu, offen) ----------
+// ---------- Tür (zu, offen; Geheimtür zu, offen) ----------
 {
-  const blatt = new Bild(64, 32);
+  const blatt = new Bild(128, 32);
   [false, true].forEach((offen, i) => {
     const t = new Bild(32, 32);
     // Steinrahmen wie die Höhlenwand, damit die Tür in der Wand sitzt.
@@ -1161,6 +1179,18 @@ function eule(b, cx, cy, g = 1) {
     }
     blatt.einfuegen(t, i * 32, 0);
   });
+  // Geheimtür (Grabmal): zu wie die Tempelwand, mit einem feinen Spalt, den
+  // nur sieht, wer hinschaut; offen ein dunkler Durchgang in der Wand.
+  const zu = new Bild(32, 32);
+  tempelwand(zu);
+  zu.linie(9, 6, 9, 30, '#3a2e2a');
+  zu.linie(23, 6, 23, 30, '#3a2e2a');
+  const auf = new Bild(32, 32);
+  tempelwand(auf);
+  auf.rechteck(8, 6, 16, 26, '#141014');
+  auf.rechteck(8, 6, 16, 2, '#2a1e2e');
+  blatt.einfuegen(zu, 64, 0);
+  blatt.einfuegen(auf, 96, 0);
   blatt.speichern(ziel + 'tuer.png');
 }
 
@@ -1491,6 +1521,79 @@ function monsterBlatt(name, bilder) {
   };
   // „schattenwesen“, nicht „schatten“: so heißt schon der Bodenschatten unter allen Figuren.
   monsterBlatt('schattenwesen', [schatten(0), schatten(1)]);
+}
+
+// ---------- Das Grabmal: Teufelsgesicht, Wasserspeier, Demilich ----------
+// Teufelsgesicht 96×96: grünes Steinrelief mit Hörnern und glühenden Augen;
+// der weit offene Mund unten in der Mitte ist genau eine Kachel breit — dort
+// liegt der Schlund, und dort hinein kann man gehen.
+{
+  const b = new Bild(96, 96);
+  const gruen = '#4a7a4a', dunkel = '#2e5232', hell = '#6a9a62';
+  b.ellipse(48, 52, 40, 40, gruen);
+  b.ellipse(42, 44, 26, 24, hell, (x, y) => y < 44);
+  for (const s of [-1, 1]) {
+    for (let i = 0; i < 14; i++) b.rechteck(48 + s * (22 + i), 18 - Math.round(i * 1.1), 4, 4, i > 9 ? '#d8d0b0' : dunkel); // Hörner
+    b.ellipse(48 + s * 16, 40, 8, 5, dunkel); // Augenhöhlen
+    b.ellipse(48 + s * 16, 40, 4, 3, '#ff5a3a');
+    b.setze(48 + s * 16 - 1, 39, '#ffd0a0');
+    b.rechteck(48 + s * 6, 26, 3, 8, dunkel); // Stirnfalten
+  }
+  b.rechteck(44, 48, 8, 10, dunkel); // Nase
+  // Der Mund: schwarz, unten offen bis zum Rand, eine Kachel breit.
+  b.ellipse(48, 76, 20, 12, dunkel);
+  b.rechteck(32, 64, 32, 32, '#06040a');
+  b.ellipse(48, 72, 16, 9, '#06040a');
+  for (const x of [34, 42, 50, 58]) b.rechteck(x, 64, 4, 5, '#e8e0c8'); // Zähne
+  b.umriss(RAND);
+  b.speichern(ziel + 'teufelsgesicht.png');
+}
+{
+  // Wasserspeier (Gargoyle): grauer Stein, Flügel, Hörner. Drittes Bild: Statue
+  // (Flügel angelegt, kauernd, blasser — so steht er herum, bis man nah ist).
+  const stein = '#8a8a96', dunkel = '#5e5e6a', hell = '#b0b0bc';
+  const speier = (oben, statue = false) => (b) => {
+    const t = statue ? 3 : 0;
+    b.rechteck(12, 24, 3, 5, dunkel);
+    b.rechteck(18, 24, 3, 5, dunkel);
+    b.ellipse(16, 19 + t, 6, 6, statue ? hell : stein);
+    b.ellipse(11, 11 + t, 5, 4.5, statue ? hell : stein);
+    b.rechteck(5, 12 + t, 4, 3, statue ? hell : stein); // Schnauze
+    b.rechteck(9, 4 + t, 2, 4, dunkel);
+    b.rechteck(13, 5 + t, 2, 3, dunkel);
+    b.rechteck(8, 10 + t, 2, 2, statue ? dunkel : '#f0a030');
+    if (statue) {
+      b.ellipse(21, 17 + t, 5, 7, hell);
+    } else {
+      // Ledrige Flügel, oben gespreizt oder herabgeschlagen; Fingerknochen hell.
+      for (let i = 0; i < 12; i++) {
+        const x = 17 + i, oberkante = oben ? 13 - Math.round(i * 0.9) : 14 + Math.round(i * 0.25), h = Math.max(2, 9 - Math.round(i * 0.6));
+        b.rechteck(x, oberkante, 1, h, dunkel);
+        if (i % 4 === 3) b.rechteck(x, oberkante, 1, h, hell);
+      }
+    }
+  };
+  monsterBlatt('wasserspeier', [speier(true), speier(false), speier(true, true)]);
+
+  // Der Demilich: ein schwebender Schädel mit Edelsteinaugen und -zähnen,
+  // in einem violetten Schein. Zwei Bilder: der Schein pulsiert.
+  const knochen = '#ece6d2', schatten = '#b8b09a';
+  const schaedel = (gross) => (b) => {
+    b.ellipse(16, 13, gross ? 13 : 11, gross ? 12 : 10, '#5a2a7a');
+    b.ellipse(16, 13, gross ? 10 : 9, gross ? 9 : 8, '#7a3aa0');
+    b.ellipse(16, 12, 7, 6.5, knochen);
+    b.rechteck(11, 16, 10, 4, knochen);
+    b.ellipse(14, 9, 3, 2, '#ffffff');
+    b.rechteck(12, 11, 3, 3, '#e03050'); // Rubinaugen
+    b.rechteck(18, 11, 3, 3, '#e03050');
+    b.setze(12, 11, '#ffa0b0');
+    b.setze(18, 11, '#ffa0b0');
+    b.rechteck(15, 15, 2, 2, schatten);
+    for (let x = 12; x <= 19; x += 2) b.rechteck(x, 18, 1, 2, '#70e0ff'); // Diamantzähne
+    b.rechteck(11, 20, 10, 1, schatten);
+    b.ellipse(16, 28, 5, 1.5, '#3a1a4a'); // Schatten weit unten: er schwebt
+  };
+  monsterBlatt('demilich', [schaedel(true), schaedel(false)]);
 }
 
 // ---------- Der Drache des Drachenreiters: klein, rot, Blick nach links ----------

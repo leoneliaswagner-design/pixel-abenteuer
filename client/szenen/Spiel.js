@@ -13,6 +13,10 @@ const FIGURBILD = { frameWidth: 32, frameHeight: 48 };
 // Geschosse zeigen im Bild nach rechts; so weit werden sie gedreht.
 const WINKEL = { rechts: 0, unten: 90, links: 180, oben: 270 };
 const GESCHOSS_BILD = { dolch: 0, pfeil: 1, feuerball: 2 };
+// Erstes Bild je Falle in fallen.png; das nächste ist „ausgelöst". Grube und
+// Schlund sind zu unsichtbar (Bild 4 ist leer) — man sieht sie erst, wenn
+// jemand hineingefallen ist. Pfeilfallen sehen aus wie Platten.
+const FALLEN_BILD = { stacheln: 0, platte: 2, pfeile: 2, grube: 4, schlund: 4, einsturz: 6 };
 
 export class SpielSzene extends Phaser.Scene {
   constructor() {
@@ -65,6 +69,7 @@ export class SpielSzene extends Phaser.Scene {
     this.load.spritesheet('geschosse', 'grafik/geschosse.png', { frameWidth: 16, frameHeight: 16 });
     // Der Drache des Drachenreiters (zwei Flügelschläge, Blick nach links).
     this.load.spritesheet('drache', 'grafik/drache.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.image('teufelsgesicht', 'grafik/teufelsgesicht.png');
     this.load.image('funke', 'grafik/funke.png');
     // Monster: welche es gibt, steht in monster.json — geladen wie die Leute.
     this.load.json('monster', 'daten/monster.json');
@@ -109,6 +114,9 @@ export class SpielSzene extends Phaser.Scene {
     this.geschosse = new Map();
     this.funken = 0;
     this.aufgestanden = 0;
+    // Beim Gebietswechsel neu (scene.restart behält das Objekt).
+    this.boss = null;
+    this.bossAngabe = null;
     this.gegnerGeheilt = 0;
     // Auf dem Meer: Boot, Schwung, Dunst, Kompass (s. eigeneFigur).
     this.meer = !!this.welt.eigenschaftenKarte.meer;
@@ -237,12 +245,12 @@ export class SpielSzene extends Phaser.Scene {
         andere: [...this.andere.entries()].map(([id, f]) => ({ id, x: f.x, y: f.y, farbe: f.farbe, textur: f.koerper.texture.key, effekt: f.effekt, tint: f.koerper.tintTopLeft, alpha: f.koerper.alpha })),
         krits: this.krits, abgewehrt: this.abgewehrt, mixturen: this.mixturen, spielerFallen: this.spielerFallen?.size ?? 0,
         geschosse: [...this.geschosse.values()].map((g) => ({ art: g.art, x: g.bild.x, y: g.bild.y, winkel: g.bild.angle })),
-        funken: this.funken, aufgestanden: this.aufgestanden, gegnerGeheilt: this.gegnerGeheilt,
+        funken: this.funken, aufgestanden: this.aufgestanden, gegnerGeheilt: this.gegnerGeheilt, boss: this.bossAngabe ?? null,
         licht: { zeit: this.tageszeitJetzt(), dunkelheit: this.licht.dunkelheit, art: this.licht.art },
         meer: this.meer, kurs: this.kurs, fahrt: Math.hypot(this.bootV.x, this.bootV.y), imBoot: !!this.ich.boot, dunst: !!this.dunst,
         gegner: [...this.gegner.entries()].map(([id, g]) => ({
           id, x: g.x, y: g.y, sichtbar: g.sprite.visible, art: g.art, textur: g.sprite.texture.key,
-          bilder: g.sprite.texture.frameTotal - 1, alpha: Math.round(g.sprite.alpha * 100) / 100, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt, balken: g.balken?.visible ? g.balken.width : null,
+          bilder: g.sprite.texture.frameTotal - 1, alpha: Math.round(g.sprite.alpha * 100) / 100, bild: g.sprite.frame.name, gespiegelt: g.sprite.flipX, blick: g.blick, duckt: !!g.duckt, stein: !!g.stein, betaeubt: !!g.betaeubt, markiert: !!g.markiert, verwirrt: !!g.verwirrt, balken: g.balken?.visible ? g.balken.width : null,
         })),
         geschnitten: [...this.welt.geschnitten],
         dialog: this.dialogOffen ? this.oberflaeche().dialogText() : null,
@@ -362,7 +370,8 @@ export class SpielSzene extends Phaser.Scene {
       else if (d.name === 'truhe') bild = this.add.image(d.x, fuss, 'truhe', offen.includes(d.schluessel) ? 1 : 0);
       // Sockel: 0/1 Stein (Tempel), 2/3 Marmor (Akropolis); das zweite Bild ist leer.
       else if (d.name === 'sockel') bild = this.add.image(d.x, fuss, 'sockel', (d.eig.aussehen === 'marmor' ? 2 : 0) + (offen.includes(d.schluessel) ? 1 : 0));
-      else if (d.name === 'tuer') bild = this.add.image(d.x, fuss, 'tuer', this.welt.geoeffnet.has(d.schluessel) ? 1 : 0);
+      // Geheimtür: Bild 2/3 — zu sieht sie aus wie die Tempelwand.
+      else if (d.name === 'tuer') bild = this.add.image(d.x, fuss, 'tuer', (d.eig.geheim ? 2 : 0) + (this.welt.geoeffnet.has(d.schluessel) ? 1 : 0));
       else {
         const art = `figur-${d.eig.aussehen ?? 'alter_mann'}`;
         const schluessel = this.textures.exists(art) ? art : 'figur-alter_mann';
@@ -370,7 +379,7 @@ export class SpielSzene extends Phaser.Scene {
         bild = this.add.image(d.x, fuss, schluessel, ZEILE[blicke[d.schluessel] ?? d.eig.richtung ?? 'unten'] * 4);
       }
       bild.setOrigin(0.5, 1).setDepth(10 + fuss - 4);
-      this.dinge.set(d.schluessel, { ding: d, bild, basis: d.name === 'sockel' && d.eig.aussehen === 'marmor' ? 2 : 0 });
+      this.dinge.set(d.schluessel, { ding: d, bild, basis: (d.name === 'sockel' && d.eig.aussehen === 'marmor') || (d.name === 'tuer' && d.eig.geheim) ? 2 : 0 });
     }
   }
 
@@ -380,8 +389,12 @@ export class SpielSzene extends Phaser.Scene {
     const k = this.welt.kachel;
     this.fallen = this.welt.orte.filter((o) => o.name === 'falle').map((o) => ({
       art: o.eig.art, an: 0,
-      bild: this.add.image(Math.floor(o.x / k) * k, Math.floor(o.y / k) * k, 'fallen', o.eig.art === 'stacheln' ? 0 : 2).setOrigin(0).setDepth(2),
+      bild: this.add.image(Math.floor(o.x / k) * k, Math.floor(o.y / k) * k, 'fallen', FALLEN_BILD[o.eig.art] ?? 2).setOrigin(0).setDepth(o.eig.art === 'einsturz' ? 3 : 2),
     }));
+    // Über dem Schlund hängt das Teufelsgesicht: sein offener Mund ist die
+    // Kachel des Schlunds, der Rest liegt auf der Wand darüber.
+    this.teufel = this.welt.orte.filter((o) => o.name === 'falle' && o.eig.art === 'schlund')
+      .map((o) => this.add.image(Math.floor(o.x / k) * k + k / 2, Math.floor(o.y / k) * k + k, 'teufelsgesicht').setOrigin(0.5, 1).setDepth(4));
     this.kugel = null;
     const start = this.welt.orte.find((o) => o.name === 'kugel_start');
     if (start) {
@@ -396,7 +409,7 @@ export class SpielSzene extends Phaser.Scene {
       const f = this.fallen[i];
       if (!f || f.an === an) return;
       f.an = an;
-      f.bild.setFrame((f.art === 'stacheln' ? 0 : 2) + an);
+      f.bild.setFrame((FALLEN_BILD[f.art] ?? 2) + an);
     });
     const k = this.kugel;
     if (!k || !m.kugel) return;
@@ -495,6 +508,28 @@ export class SpielSzene extends Phaser.Scene {
         duration: 450, ease: 'Quad.Out', onComplete: () => b.destroy(),
       });
     }
+  }
+
+  // Ein Endgegner (monster.json: boss) im Gebiet, lebendig: Name und
+  // Lebensbalken oben in der Mitte, für alle gleich — fest am Schirm.
+  bossBalken() {
+    const liste = this.cache.json.get('monster') ?? {};
+    // Nur, wenn er im Bild ist — sonst stand der Balken schon in der
+    // Eingangshalle, drei Räume vom Demilich entfernt.
+    const v = this.cameras.main.worldView;
+    const boss = [...this.gegner.values()].find((g) => liste[g.art]?.boss && g.sprite.visible && g.lebenMax && v.contains(g.x, g.y - 16));
+    if (boss && !this.boss) {
+      const b = this.scale.width;
+      this.boss = {
+        grund: this.add.rectangle(b / 2, 52, 204, 10, 0x1b1424).setScrollFactor(0).setDepth(7000).setStrokeStyle(1, 0x6a4a7a),
+        balken: this.add.rectangle(b / 2 - 100, 52, 200, 6, 0xb048d8).setOrigin(0, 0.5).setScrollFactor(0).setDepth(7001),
+        name: this.add.text(b / 2, 42, liste[boss.art].name, { fontFamily: SCHRIFT, fontSize: '8px', color: '#e8c8ff', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(7001),
+      };
+    }
+    if (!this.boss) return;
+    for (const t of Object.values(this.boss)) t.setVisible(!!boss);
+    if (boss) this.boss.balken.width = Math.round(200 * Math.max(0, boss.leben) / boss.lebenMax);
+    this.bossAngabe = boss ? { art: boss.art, leben: boss.leben, max: boss.lebenMax, breite: this.boss.balken.width } : null;
   }
 
   funkeln(x, y) {
@@ -604,7 +639,8 @@ export class SpielSzene extends Phaser.Scene {
     n.bei('blick', (m) => this.dinge.get(m.ding)?.bild.setFrame(ZEILE[m.r] * 4));
     n.bei('tuer', (m) => {
       if (m.offen) this.welt.geoeffnet.add(m.ding);
-      this.dinge.get(m.ding)?.bild.setFrame(m.offen ? 1 : 0);
+      const d = this.dinge.get(m.ding);
+      d?.bild.setFrame(d.basis + (m.offen ? 1 : 0));
     });
     n.bei('zustand', (m) => {
       this.zustaende[m.name] = m.wert;
@@ -806,7 +842,9 @@ export class SpielSzene extends Phaser.Scene {
       // Der Wolf duckt sich vor dem Sprung — drittes Bild, und er zittert.
       // So sieht man den Sprung kommen und kann ausweichen.
       e.duckt = g.z === 'laden';
-      if (e.duckt && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
+      // Der Wasserspeier als Statue: drittes Bild, still (ohne Zittern).
+      e.stein = g.z === 'stein';
+      if ((e.duckt || e.stein) && e.sprite.texture.has(2)) e.sprite.anims.stop(), e.sprite.setFrame(2);
       else if (!e.sprite.anims.isPlaying) e.sprite.play(g.art);
       // Abgelenkt (Dieb): ein Fragezeichen über dem Kopf.
       if (g.vw && !e.frage) e.frage = this.add.text(0, 0, '?', { fontFamily: SCHRIFT, fontSize: '8px', color: '#ffe680', stroke: '#1b1424', strokeThickness: 3 }).setOrigin(0.5);
@@ -909,6 +947,8 @@ export class SpielSzene extends Phaser.Scene {
         g.balken.width = Math.round(18 * Math.max(0, g.leben) / (g.lebenMax || 1));
       }
     }
+
+    this.bossBalken();
 
     // Wer nachts unterwegs ist, sieht wenigstens sich und die anderen.
     const bewegte = figuren.filter((f) => !f.tot).map((f) => ({ x: f.x, y: f.y - 20, radius: 88, farbe: 0xfff0d8, staerke: 0.85 }));

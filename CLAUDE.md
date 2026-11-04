@@ -114,6 +114,16 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Der Stand schickt `fallen` als Liste in Ortsreihenfolge und `kugel`. Die
   liegende Kugel sperrt Kacheln über `welt.kugelSperren()` — Server und
   Browser rechnen dasselbe. Tore mit `oeffnet_bei` öffnet ein Weltzustand.
+- **Grabmal** (unter den Ruinen, frei nach dem *Grab der Schrecken* für die
+  eigene Runde — eigene Texte, eigener Grundriss): neue Fallen `grube`
+  (unsichtbar, `zurueck` = Ankunft, wo man wieder herausklettert),
+  `einsturz` (verzögert, trifft alle im Umkreis), `schlund` (sofort besiegt;
+  der Browser hängt `teufelsgesicht.png` darüber). Bilder je Falle:
+  `FALLEN_BILD` in Spiel.js. Geheimtüren: `tuer` mit `geheim` (E öffnet,
+  Bild 2/3 in tuer.png). Monster: `wasserspeier` (`lauern`: Statue bis nah,
+  ein Hieb weckt ihn nur) und der Boss `demilich` (`schaedel`: Ringe aus
+  Seelenfeuer; `boss` → Lebensbalken oben, solange er im Bild ist;
+  `einmalig` → Weltzustand, kommt nie wieder).
 - Kollision und Trefferfläche stehen **einmal** in `gemeinsam/welt.js` und
   werden von beiden Seiten benutzt. Nicht doppelt schreiben.
 
@@ -178,6 +188,9 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Schatten zugleich nah bei Ben deutlich und fern bei Ana kaum (Bildpunkte).
   Mit `GEGNER_STILL=1` beim Server-Start: Gegner stehen still — für Messungen
   an einem Gegner statt an seinem Verhalten (gegen die echte KI schwankte es).
+- `node pruefstand/grabmal.mjs` — Teufelsgesicht grün am Bildpunkt, Geheimtür
+  beim anderen (vorher wie Wand, dann dunkle Öffnung), Lebensbalken nur in
+  der Gruft, Schritt in den Schlund. Höchstens drei Fenster zugleich.
 - `node pruefstand/optik.mjs` — Nacht/Tag am Bildpunkt (Laterne hell, abseits
   dunkel), Höhle mittags dunkel, Rathaus nachts hell, Deko, Wind, Hausschatten,
   Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.

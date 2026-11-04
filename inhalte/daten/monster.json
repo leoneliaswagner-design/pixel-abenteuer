@@ -308,5 +308,57 @@
     },
     "schleichen": 80,
     "bildTempo": 5
+  },
+  "wasserspeier": {
+    "erfahrung": 12,
+    "name": "Wasserspeier",
+    "srd": "Gargoyle",
+    "verhalten": "lauern",
+    "leben": 6,
+    "schaden": 2,
+    "geschwindigkeit": 30,
+    "jagdGeschwindigkeit": 58,
+    "sichtweite": 150,
+    "stossGeschwindigkeit": 120,
+    "stossDauer": 120,
+    "neuErscheinen": 30000,
+    "herzChance": 0.5,
+    "gold": [
+      2,
+      6
+    ],
+    "lauern": 56,
+    "bildTempo": 6
+  },
+  "demilich": {
+    "erfahrung": 80,
+    "name": "Acererak, der Demilich",
+    "verhalten": "schaedel",
+    "leben": 24,
+    "schaden": 2,
+    "geschwindigkeit": 20,
+    "jagdGeschwindigkeit": 34,
+    "sichtweite": 260,
+    "stossGeschwindigkeit": 60,
+    "stossDauer": 80,
+    "neuErscheinen": 999999999,
+    "herzChance": 1,
+    "gold": [
+      60,
+      90
+    ],
+    "boss": true,
+    "einmalig": "demilich_bezwungen",
+    "meldung": "Der Schädel zerfällt zu Staub. Das Grab ist still.",
+    "ring": {
+      "anzahl": 8,
+      "abklingzeit": 2600,
+      "wuetend": 1500,
+      "tempo": 110,
+      "reichweite": 260,
+      "schaden": 1,
+      "abstand": 90
+    },
+    "bildTempo": 3
   }
 }
