@@ -30,7 +30,10 @@ const spielstand = new Spielstand(process.env.SPIELSTAND || join(wurzel, 'spiels
 // ZUFALL=0.99: kein Abprallen, Ausweichen oder kritischer Treffer — für
 // Prüfstände, die einen Treffer erwarten. ZUFALL=0: alles davon gelingt.
 const zufall = process.env.ZUFALL ? () => Number(process.env.ZUFALL) : Math.random;
-const spiel = new Spiel(karten, werte, { spielstand, zufall });
+// GEGNER_STILL=1: Gegner stehen still und greifen nicht an — für Prüfstände,
+// die etwas an einem Gegner messen, nicht an seinem Verhalten (ruinen.mjs:
+// der Schatten lief gegen die echte KI mal hierhin, mal dorthin).
+const spiel = new Spiel(karten, werte, { spielstand, zufall, gegnerStill: process.env.GEGNER_STILL === '1' });
 console.log(`Spielstand: ${spielstand.pfad} (${Object.keys(spielstand.daten.spieler).length} bekannte Spieler)`);
 
 const ARTEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.json': 'application/json', '.svg': 'image/svg+xml' };

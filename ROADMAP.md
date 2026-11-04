@@ -239,6 +239,12 @@
 
 ## Gelernt
 
+- Ein Zeichen der Textkarten kann Kachel und Übergang zugleich sein. Die
+  Marmorwand bekam „Q", das schon der Übergang Inselwald ↔ tiefer Wald war —
+  der Weg war seitdem zugemauert, und kein Prüfstand merkte es, weil alle die
+  Spieler direkt in den tiefen Wald setzen. Bemerkt hat es der Spieler am
+  Bildschirm (4.11.). Jetzt: Übergänge sind nie Hindernis, und karten.mjs
+  prüft, dass jedes Übergangsfeld betretbar ist.
 - Geschosse, die nicht aus der Hand kommen (Drohne), starten trotzdem auf
   Hüfthöhe: auf Kopfhöhe flog der Bolzen am Höhlenausgang durch die Hecke
   hinter dem Spieler und verschwand. Prüfstellen dafür sucht der Test in der

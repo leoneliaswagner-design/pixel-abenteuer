@@ -20,21 +20,25 @@ if (!process.env.OHNE_BAU) execSync('npx vite build --logLevel error', { cwd: wu
 const werte = JSON.parse(readFileSync(join(wurzel, 'inhalte/daten/werte.json'), 'utf8'));
 
 const spielstand = join(mkdtempSync(join(tmpdir(), 'pruefstand-')), 'stand.json');
-// Ben steht draußen vor der Ostmauer der Ruine, auf der Höhe des ersten
-// Schattens: der jagt geradeaus auf ihn zu, bleibt an der Mauer hängen und
-// steht dort ruhig gut 60 px vor Ben. (Stand Ben drinnen, war der Schatten
-// gleich auf ihm, verdeckt von Bens Figur, und sein Stoß schob Ben aus Anas
-// Bild.) Ana steht drinnen, knapp außerhalb seiner Sichtweite (143 px) — näher
-// jagte er sie statt Ben.
-const ankunft = { gebiet: 'ruinen', x: 2 * 32 + 16, y: 9 * 32 + 24 };
-const spieler = (name, farbe, x, y) => ({ name, farbe, klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', gebiet: 'ruinen', x: x * 32 + 16, y: y * 32 + 24, leben: 6, ankunft });
+// Die Gegner stehen still (GEGNER_STILL=1): gemessen wird, wie derselbe Schatten
+// bei zwei Spielern aussieht, nicht wie er jagt. Gegen die echte KI lief er mal
+// durch die Maueröffnung aus Anas Bild, mal wurde Ben herumgestoßen und fiel.
+// Ben steht zwei Kacheln neben dem ersten Schatten (64 px, im Schleich-Abstand
+// von 80), Ana gut viereinhalb weiter (140 px).
+// Ankunft = die eigene Stelle: wer dort fällt, steht dort wieder auf. Sonst
+// landete Ben nach einem Kobold- oder Kultistentreffer am Westeingang, 500 px
+// vom Schatten weg, und die Messung lief ins Leere.
+const spieler = (name, farbe, x, y) => {
+  const ort = { gebiet: 'ruinen', x: x * 32 + 16, y: y * 32 + 24 };
+  return { name, farbe, klasse: 'kaempfer', spezies: 'mensch', richtung: 'unten', ...ort, leben: 6, ankunft: ort };
+};
 writeFileSync(spielstand, JSON.stringify({
   version: 1,
   welt: {},
-  spieler: { ben: spieler('Ben', 'gruen', 25, 10), ana: spieler('Ana', 'blau', 17, 12) },
+  spieler: { ben: spieler('Ben', 'gruen', 23, 10), ana: spieler('Ana', 'blau', 17, 12) },
 }));
 
-const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', PORT: String(PORT), SPIELSTAND: spielstand } });
+const server = spawn('node', ['server/index.js'], { cwd: wurzel, env: { ...process.env, ZUFALL: '0.99', GEGNER_STILL: '1', PORT: String(PORT), SPIELSTAND: spielstand } });
 let log = '';
 await new Promise((gut, schlecht) => {
   const t = setTimeout(() => schlecht(new Error('Server startet nicht:\n' + log)), 8000);
@@ -89,10 +93,8 @@ try {
     }, [png.toString('base64'), bed]);
   };
 
-  // Ana zuerst: Bens Schonfrist fällt so in die Messung — sonst fanden ihn die
-  // Kultisten durch die Maueröffnung, bevor gemessen war.
-  const ana = await oeffnen('Ana');
   const ben = await oeffnen('Ben');
+  const ana = await oeffnen('Ana');
   let zb = await zustand(ben);
   const neu = ['kobold', 'zombie', 'ork', 'giftschlange', 'kultist', 'akolyth', 'schattenwesen'];
   const arten = new Set(zb.gegner.map((g) => g.art));

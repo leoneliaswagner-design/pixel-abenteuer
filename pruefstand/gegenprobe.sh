@@ -513,6 +513,12 @@ probe client/szenen/Spiel.js "        const nah = Math.hypot(g.x - this.ich.x, g
 probe inhalte/daten/welt.json '  "ruinen": {' '  "ruinen_weg": {' pruefstand/server-regeln.mjs \
   "Ruinen fehlen auf der Weltkarte"
 
+# Übergänge betretbar
+probe werkzeuge/kartenbau.mjs "KACHELN[n].hindernis && !u) oben = n;" "KACHELN[n].hindernis) oben = n;" pruefstand/karten.mjs \
+  "Übergang mit Hindernis-Zeichen wird zugemauert"
+probe server/gebiet.js "    if (!this.spiel.gegnerStill) for" "    if (this.spiel.gegnerStill) for" pruefstand/server-regeln.mjs \
+  "Gegner stehen immer still (Prüfstand-Schalter falsch herum)"
+
 echo
 if [ $fehlt -gt 0 ]; then echo "$fehlt Gegenproben ohne Wirkung."; exit 1; fi
 echo "Gegenproben in Ordnung."

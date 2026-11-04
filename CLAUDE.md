@@ -176,6 +176,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
   Goblin-Pfeil trifft im Browser, Wolf duckt sich sichtbar.
 - `node pruefstand/ruinen.mjs` — alle sieben Monsterbilder der Ruinen; der
   Schatten zugleich nah bei Ben deutlich und fern bei Ana kaum (Bildpunkte).
+  Mit `GEGNER_STILL=1` beim Server-Start: Gegner stehen still — für Messungen
+  an einem Gegner statt an seinem Verhalten (gegen die echte KI schwankte es).
 - `node pruefstand/optik.mjs` — Nacht/Tag am Bildpunkt (Laterne hell, abseits
   dunkel), Höhle mittags dunkel, Rathaus nachts hell, Deko, Wind, Hausschatten,
   Figuren 32×48, dieselbe Uhrzeit bei zwei Spielern.
@@ -187,7 +189,8 @@ ist möglich — deshalb liegen Inhalte als Daten vor (Tiled-Karten, PNGs,
 - Browser-Prüfstände melden sich mit `anmelden()` aus `pruefstand/anmelden.mjs`
   an (wählt, falls nötig); Spielstände darin brauchen `klasse` und `spezies`.
 - `node pruefstand/karten.mjs` — erzeugt die Karten in einen Wegwerf-Ordner
-  (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge; dazu das
+  (`KARTEN_ZIEL`) und prüft Boden unter Dingen und alle Übergänge (Ziel da,
+  Feld betretbar — ein Übergangszeichen kann zugleich eine Kachel sein); dazu das
   Gebiets-Werkzeug (`DATEN_ZIEL`, die echten Dateien bleiben unberührt).
 - Nach `gegenprobe.sh` ist `dist/` mit absichtlich kaputtem Code gebaut —
   vor dem nächsten `OHNE_BAU=1` neu bauen.

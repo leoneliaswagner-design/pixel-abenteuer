@@ -56,6 +56,20 @@ for (const [name, k] of Object.entries(karten))
     pruefe(da, `${name} → ${eig.ziel} / ${eig.ankunft}`);
   }
 
+// Und man kann ihn betreten: kein Übergang liegt unter einem Hindernis. Die
+// Marmorwand bekam das Zeichen „Q" — das war schon der Übergang in den tiefen
+// Wald, und der war danach zugemauert (bemerkt erst am Bildschirm, 4.11.).
+const zu = [];
+let betreten = 0;
+for (const [name, k] of Object.entries(karten)) {
+  const welt = new Welt(k);
+  for (const o of k.layers[2].objects.filter((o) => o.name === 'uebergang')) {
+    betreten++;
+    if (!welt.frei(o.x + 16, o.y + 24)) zu.push(`${name} ${o.x / 32},${o.y / 32}`);
+  }
+}
+pruefe(betreten === uebergaenge && !zu.length, `alle ${betreten} Übergänge betretbar (zu: ${zu.join(', ') || 'keiner'})`);
+
 // ---------- Werkzeug für neue Gebiete (werkzeuge/gebiet.mjs) ----------
 // In Wegwerf-Ordnern: die echten werte.json, welt.json und Karten bleiben unberührt.
 {

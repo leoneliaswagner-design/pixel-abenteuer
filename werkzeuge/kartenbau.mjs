@@ -79,7 +79,11 @@ export function karteBauen(name, def) {
         const n = nachZeichen[z];
         // Ein Übergang ohne eigene Kachel (ein Riss) steht auf dem Grund.
         if (n === undefined && !u) throw new Error(`${name}: unbekanntes Zeichen '${z}' bei ${x},${y}`);
-        if (n !== undefined && KACHELN[n].hindernis) oben = n;
+        // Ein Übergang ist nie ein Hindernis, auch wenn sein Zeichen zugleich
+        // eine Hindernis-Kachel ist: „Q" (Übergang Inselwald ↔ tiefer Wald)
+        // wurde mit der Akropolis auch die Marmorwand — und der Weg in den
+        // tiefen Wald war zugemauert, ohne dass ein Prüfstand es merkte.
+        if (n !== undefined && KACHELN[n].hindernis && !u) oben = n;
         else if (n !== undefined) grund = n;
         if (u?.kachel) grund = nummer(u.kachel);
         if (u)

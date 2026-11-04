@@ -197,7 +197,7 @@ export class Gebiet {
   schritt(dt, jetzt) {
     const hier = this.spieler();
     if (!hier.length) return;
-    for (const g of this.gegner) this.gegnerSchritt(g, dt, jetzt, hier);
+    if (!this.spiel.gegnerStill) for (const g of this.gegner) this.gegnerSchritt(g, dt, jetzt, hier);
     for (const s of hier) this.herzenAufheben(s);
     this.geschosseBewegen(dt, jetzt);
     this.fallen.schritt(dt, jetzt, hier);

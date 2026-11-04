@@ -20,8 +20,9 @@ export class Spiel {
   // karten: { gebietsname: tiled-json }
   // zufall: für Abprallen, Ausweichen, kritische Treffer — Prüfstände geben
   // eine feste Zahl vor, sonst wären ihre Ergebnisse Glückssache.
-  constructor(karten, werte, { jetzt = () => Date.now(), spielstand = fluechtigerStand(), zufall = Math.random } = {}) {
+  constructor(karten, werte, { jetzt = () => Date.now(), spielstand = fluechtigerStand(), zufall = Math.random, gegnerStill = false } = {}) {
     this.w = werte;
+    this.gegnerStill = gegnerStill;
     this.jetzt = jetzt;
     this.zufall = zufall;
     this.spielstand = spielstand;
